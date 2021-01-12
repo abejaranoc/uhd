@@ -633,15 +633,58 @@ module x300_core #(
       assign fp_gpio_r_in[i] = fp_gpio_in;
    end
 
+
+// dk wires for modules
+   wire [31:0] rx_data_dk;
+   wire [31:0] tx_data_dk;
+   wire [31:0] shift_sig;
+   wire [24:0] phase_inc = 8389;
+   wire in_tlast = 1'b0;
+   wire in_tvalid = 1'b1;
+   wire phase_tlast = 1'b0;
+   wire phase_tvalid = 1'b1;
+   wire out_tready = 1'b1;
+   reg DK_EN = 1'b1;
+   reg SS_EN = 1'b0;
+
+
+   assign rx_data_dk = rx_data_r[0][31:0] ;
+   //assign rx_data_dk = rx_data_r[1][63:32];
+
+   freq_shift_dk #(.DATA_WIDTH(16),
+                  .SIN_COS_WIDTH(16),
+                  .PHASE_WIDTH(24))
+           dk_mod(.clk(radio_clk),
+                  .reset(radio_rst),
+                  .iin(rx_data_dk[31:16]),
+                  .qin(rx_data_dk[15:0]),
+
+                  .in_tlast(in_tlast),
+                  .in_tvalid(in_tvalid),
+
+                  .phase_inc(phase_inc),
+                  .phase_tlast(phase_tlast),
+                  .phase_tvalid(phase_tvalid),
+
+                  .iout(tx_data_dk[31:16]),
+                  .qout(tx_data_dk[15:0]), 
+                  .out_tready(out_tready), 
+
+                  .sin(shift_sig[15:0]), 
+                  .cos(shift_sig[31:16]));
+
+
+
+
    //------------------------------------
    // Radio to ADC,DAC and IO Mapping
    //------------------------------------
 
    // Data
-   assign tx_data_r[0][31:0]  = tx_data[0];
-   assign tx_data_r[0][63:32] = tx_data[1];
-   assign tx_data_r[1][31:0]  = tx_data[2];
-   assign tx_data_r[1][63:32] = tx_data[3];
+   assign tx_data_r[0][31:0]  = DK_EN ? tx_data_dk : tx_data[0];
+   assign tx_data_r[0][63:32] = DK_EN ? tx_data_dk : tx_data[1];
+   assign tx_data_r[1][31:0]  = DK_EN ? tx_data_dk : tx_data[2];
+   assign tx_data_r[1][63:32] = DK_EN ? tx_data_dk : tx_data[3];
 
    assign tx_data_out[0] = tx_data_out_r[0][31:0] ;
    assign tx_data_out[1] = tx_data_out_r[0][63:32];
@@ -653,10 +696,10 @@ module x300_core #(
    assign tx_stb_r[1][0] = tx_stb[2];
    assign tx_stb_r[1][1] = tx_stb[3];
 
-   assign rx_data_in_r[0][31:0]  = rx_data_in[0];
-   assign rx_data_in_r[0][63:32] = rx_data_in[1];
-   assign rx_data_in_r[1][31:0]  = rx_data_in[2];
-   assign rx_data_in_r[1][63:32] = rx_data_in[3];
+   assign rx_data_in_r[0][31:0]  = SS_EN ? shift_sig : rx_data_in[0];
+   assign rx_data_in_r[0][63:32] = SS_EN ? shift_sig : rx_data_in[1];
+   assign rx_data_in_r[1][31:0]  = SS_EN ? shift_sig : rx_data_in[2];
+   assign rx_data_in_r[1][63:32] = SS_EN ? shift_sig : rx_data_in[3];
 
    assign rx_data[0] = rx_data_r[0][31:0] ;
    assign rx_data[1] = rx_data_r[0][63:32];

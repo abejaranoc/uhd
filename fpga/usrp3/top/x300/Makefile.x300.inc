@@ -36,6 +36,9 @@ include $(LIB_DIR)/io_port2/Makefile.srcs
 include $(LIB_DIR)/axi/Makefile.srcs
 include $(LIB_DIR)/io_cap_gen/Makefile.srcs
 include $(LIB_DIR)/rfnoc/Makefile.srcs
+# DK Addition
+include $(BASE_DIR)/../../dk_hdl/rx_anc/Makefile.srcs
+
 # For sake of convenience, we include the Makefile.srcs for DRAM FIFO, DDC, and
 # DUC, Replay, and of course the radio. Any other block needs to use the
 # RFNOC_OOT_MAKEFILE_SRCS variable (see below).
@@ -101,7 +104,7 @@ endif
 DESIGN_SRCS = $(abspath $(TOP_SRCS)) $(FIFO_SRCS) \
 $(CONTROL_LIB_SRCS) $(SDR_LIB_SRCS) $(SERDES_SRCS) \
 $(SIMPLE_GEMAC_SRCS) $(TIMING_SRCS) $(COREGEN_DSP_SRCS) \
-$(UDP_SRCS) $(EXTRAM_SRCS) \
+$(UDP_SRCS) $(EXTRAM_SRCS) $(DK_RX_ANC_SRCS) \
 $(ZPU_CORE_SRCS) $(WISHBONE_SRCS) \
 $(SFP_SERDES_SRCS) $(IOPORT2_SRCS) \
 $(PACKET_PROC_SRCS) $(DSP_SRCS) $(DRAM_SRCS) \
