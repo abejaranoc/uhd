@@ -1,12 +1,19 @@
 module mtx_sig #(
   parameter SIN_COS_WIDTH = 16,
-  parameter PHASE_WIDTH = 24 
+  parameter PHASE_WIDTH   = 24 ,
+  parameter NSYMB_WIDTH   = 16,
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 256, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 1280,
+  parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = 16384,
+  parameter [PHASE_WIDTH-1:0] START_PH     = 24'hC00000,
+  parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h400000
 )(
   input   clk,
   input   reset,
+  input   srst,
 
   /* phase data*/
-  
   input  phase_tvalid, 
   input  phase_tlast, 
   output phase_tready,
@@ -20,29 +27,21 @@ module mtx_sig #(
 
   /*debug*/
   output [PHASE_WIDTH-1:0] ph,
-  output [PHASE_WIDTH-1:0] sig_count,
-  output [PHASE_WIDTH-1:0] st_ph,
-  output [15:0] scount
+  output [PHASE_WIDTH-1:0] ph_start,
+  output [PHASE_WIDTH-1:0] sigN,
+  output [NSYMB_WIDTH-1:0] symbN
 );
 
-localparam [15:0] NSYMB        = 16;
-localparam [PHASE_WIDTH-1:0] NSIG         = 1280;
-localparam [PHASE_WIDTH-1:0] DPH_INC      = 16384;
-localparam [PHASE_WIDTH-1:0] START_PH_INC = 16384;
+reg  [PHASE_WIDTH-1:0]  ncount;
+reg  [NSYMB_WIDTH-1:0]  symb_count;
+reg  [PHASE_WIDTH-1:0]  phase_inc, start_phase, phase;
+wire [PHASE_WIDTH-1:0]  phase_tdata = phase;
 
-localparam [PHASE_WIDTH-1:0] START_PH =  (1 << (PHASE_WIDTH - 1)) 
-                                        + (1 << (PHASE_WIDTH - 2));
-localparam [PHASE_WIDTH-1:0] NPH_SHIFT = (1 << (PHASE_WIDTH - 2));
-reg  [PHASE_WIDTH-1:0] ncount;
+assign ph       = phase;
+assign ph_start = start_phase;
+assign sigN     = ncount;
+assign symbN    = symb_count;
 
-reg  [15:0] symb_count;
-reg  [PHASE_WIDTH-1:0]  phase_inc, start_phase, phase, ph_inc;
-wire [PHASE_WIDTH-1:0] phase_tdata = phase;
-
-assign ph = phase;
-assign st_ph = start_phase;
-assign sig_count = ncount;
-assign scount  = symb_count;
 dds_sin_cos_lut_only dds_inst (
     .aclk(clk),                                // input wire aclk
     .aresetn(~reset),            // input wire aresetn active low rst
@@ -57,38 +56,29 @@ dds_sin_cos_lut_only dds_inst (
 );
 
 always @(posedge clk) begin
-    if (reset ) begin
+    if (reset || srst) begin
       phase  <= START_PH;
       ncount <= NSIG;
       symb_count <= NSYMB;
-      ph_inc <= START_PH_INC;
+      phase_inc <= START_PH_INC;
       start_phase <= START_PH;
     end 
-    /*
-    else if (symb_count == NSYMB) begin
-      phase  <= START_PH;
-      ncount <= 0;
-      symb_count <= 0;
-      ph_inc <= START_PH_INC;
-      start_phase <= START_PH - NPH_SHIFT;
-    end 
-    */
     else if (ncount == NSIG) begin 
       ncount <= 1;
       if (symb_count == NSYMB) begin
         symb_count <= 1;
         phase  <= START_PH;
-        ph_inc <= START_PH_INC;
+        phase_inc <= START_PH_INC;
         start_phase <= START_PH - NPH_SHIFT;
       end else begin
         phase  <= start_phase;
         symb_count <= symb_count + 1;
-        ph_inc <= ph_inc + DPH_INC;
+        phase_inc <= phase_inc + DPH_INC;
         start_phase <= start_phase - NPH_SHIFT;
       end   
     end
     else begin
-      phase  <= phase + ph_inc;
+      phase  <= phase + phase_inc;
       ncount <= ncount + 1;
     end
 end
