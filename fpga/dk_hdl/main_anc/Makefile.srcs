@@ -3,6 +3,6 @@
 ##################################################
 # DK Sources
 ##################################################
-DK_RX_ANC_SRCS = $(abspath $(addprefix $(BASE_DIR)/../dk/rx_anc/, \
-freq_shift_dk.v \
+DK_MTX_ANC_SRCS = $(abspath $(addprefix $(BASE_DIR)/../../dk_hdl/main_anc/, \
+mtx_sig.v \
 ))

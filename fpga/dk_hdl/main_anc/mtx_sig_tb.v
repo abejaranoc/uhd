@@ -14,9 +14,25 @@ module mtx_sig_tb();
     wire phase_tlast = 1'b0;
     wire phase_tvalid = 1'b1;
     wire out_tready = 1'b1;
+
+    mtx_sig #(.SIN_COS_WIDTH(16),
+             .PHASE_WIDTH(24), 
+             .NSYMB_WIDTH(16), 
+             .NSYMB(64))
+        MTX_ANC(  .clk(clk),
+                  .reset(reset),
+                  .srst(srst),
+
+                  .phase_tlast(1'b0),
+                  .phase_tvalid(1'b1),
+
+                  .out_tready(1'b1),
+                  .symbN(scount),
+                  
+                  .sin(sin), 
+                  .cos(cos));
     
-    
-    
+  /*  
   mtx_sig #(.SIN_COS_WIDTH(SIN_COS_WIDTH),
             .PHASE_WIDTH(PHASEWIDTH), 
             .NSYMB_WIDTH(NSYMB_WIDTH), 
@@ -40,7 +56,7 @@ module mtx_sig_tb();
 
                   .sin(sin), 
                   .cos(cos));
-
+*/
     always #5 clk = ~clk;
     initial begin
         clk = 1'b0;
@@ -48,7 +64,7 @@ module mtx_sig_tb();
         srst  = 1'b0;
         #100 reset = 1'b0; 
         @(posedge clk);
-        repeat(100000) @(posedge clk);
+        repeat(1000000) @(posedge clk);
         $finish();
     end
 

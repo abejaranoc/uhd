@@ -136,12 +136,16 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
         settling_time + 0.1f; // expected settling time + padding for first recv
 
     // setup streaming
+    
+    uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
+    /*
     uhd::stream_cmd_t stream_cmd((num_requested_samples == 0)
                                      ? uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS
                                      : uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
+    */
     stream_cmd.num_samps  = num_requested_samples;
-    stream_cmd.stream_now = false;
-    stream_cmd.time_spec  = uhd::time_spec_t(settling_time);
+    stream_cmd.stream_now = true;
+    stream_cmd.time_spec  = uhd::time_spec_t();
     rx_stream->issue_stream_cmd(stream_cmd);
 
     /*
@@ -184,7 +188,7 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
         }
         
         /*if(num_total_samps >= num_requested_samples){ */
-        if(num_total_samps >= 2000000){
+        if(num_total_samps >= num_requested_samples){
           num_total_samps = 0;
           for (size_t i = 0; i < outfiles.size(); i++) {
             outfiles[i]->close();
@@ -193,7 +197,12 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
                                                                              std::ofstream::binary));
           }
           file_num += 1;
+          //rx_stream->issue_stream_cmd(stream_cmd);
         }
+        if(file_num >= 10){
+              break;
+        }
+        
     }
 
     // Shut down receiver
@@ -235,16 +244,16 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("rx-args", po::value<std::string>(&rx_args)->default_value("addr=192.168.10.2"), "uhd receive device address args")
         ("file", po::value<std::string>(&file)->default_value("usrp_samples.dat"), "name of the file to write binary samples to")
         ("type", po::value<std::string>(&type)->default_value("float"), "sample type in file: double, float, or short")
-        ("nsamps", po::value<size_t>(&total_num_samps)->default_value(0), "total number of samples to receive")
+        ("nsamps", po::value<size_t>(&total_num_samps)->default_value(100000), "total number of samples to receive")
         ("settling", po::value<double>(&settling)->default_value(double(0.2)), "settling time (seconds) before receiving")
         ("spb", po::value<size_t>(&spb)->default_value(20000), "samples per buffer, 0 for default")
-        ("tx-rate", po::value<double>(&tx_rate)->default_value(20e6), "rate of transmit outgoing samples")
-        ("rx-rate", po::value<double>(&rx_rate)->default_value(20e6), "rate of receive incoming samples")
-        ("tx-freq", po::value<double>(&tx_freq)->default_value(2.4e9), "transmit RF center frequency in Hz")
-        ("rx-freq", po::value<double>(&rx_freq)->default_value(2.4e9), "receive RF center frequency in Hz")
+        ("tx-rate", po::value<double>(&tx_rate)->default_value(10e6), "rate of transmit outgoing samples")
+        ("rx-rate", po::value<double>(&rx_rate)->default_value(10e6), "rate of receive incoming samples")
+        ("tx-freq", po::value<double>(&tx_freq)->default_value(5.9e9), "transmit RF center frequency in Hz")
+        ("rx-freq", po::value<double>(&rx_freq)->default_value(5.9e9), "receive RF center frequency in Hz")
         ("ampl", po::value<float>(&ampl)->default_value(float(0.3)), "amplitude of the waveform [0 to 0.7]")
-        ("tx-gain", po::value<double>(&tx_gain)->default_value(0), "gain for the transmit RF chain")
-        ("rx-gain", po::value<double>(&rx_gain)->default_value(0), "gain for the receive RF chain")
+        ("tx-gain", po::value<double>(&tx_gain)->default_value(20), "gain for the transmit RF chain")
+        ("rx-gain", po::value<double>(&rx_gain)->default_value(20), "gain for the receive RF chain")
         ("tx-ant", po::value<std::string>(&tx_ant)->default_value("TX/RX"), "transmit antenna selection")
         ("rx-ant", po::value<std::string>(&rx_ant)->default_value("RX2"), "receive antenna selection")
         ("tx-subdev", po::value<std::string>(&tx_subdev), "transmit subdevice specification")
