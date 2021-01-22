@@ -621,13 +621,14 @@ module x300_core #(
    // holds 2 bits per GPIO pin, which selects which source to use for GPIO
    // control. Currently, only daughter board 0 and daughter board 1 are
    // supported.
+   /*
    for (i=0; i<FP_GPIO_WIDTH; i=i+1) begin : gen_fp_gpio_mux
       always @(posedge radio_clk) begin
-         fp_gpio_out[i] <= fp_gpio_r_out[fp_gpio_src[2*i +: 2] == 0 ? 0 : 1][i];
-         fp_gpio_ddr[i] <= fp_gpio_r_ddr[fp_gpio_src[2*i +: 2] == 0 ? 0 : 1][i];
+         fp_gpio_out[i] <= FP_EN ? gpio_out_dk[i] : fp_gpio_r_out[fp_gpio_src[2*i +: 2] == 0 ? 0 : 1][i];
+         fp_gpio_ddr[i] <= FP_EN ? gpio_ddr_dk[i] : fp_gpio_r_ddr[fp_gpio_src[2*i +: 2] == 0 ? 0 : 1][i];
       end
    end
-
+*/
    // Front-panel GPIO inputs are routed to all daughter boards
    for (i=0; i<NUM_DBOARDS; i=i+1) begin : gen_fp_gpio_inputs
       assign fp_gpio_r_in[i] = fp_gpio_in;
@@ -635,6 +636,31 @@ module x300_core #(
 
 
 // dk wires for modules
+
+   wire [31:0] gpio_out_dk = gpio_reg_dk;
+   reg  [31:0] gpio_reg_dk;
+   reg  [31:0] fp_count;
+   reg  FP_EN  = 1'b1;
+   wire [31:0] gpio_ddr_dk = 32'h00000003;
+   wire [31:0] toggle_dk   = 32'h00000003;
+
+   always @(posedge radio_clk) begin
+      if(radio_rst)begin
+         gpio_reg_dk <= toggle_dk;
+         fp_count    <= 1; 
+      end
+      else begin
+         if(fp_count == 400000) begin
+            gpio_reg_dk <= gpio_reg_dk ^ toggle_dk;
+            fp_count <= 1;
+         end
+         else begin
+            fp_count <= fp_count + 1;
+         end
+      end  
+      fp_gpio_out <= gpio_reg_dk;
+      fp_gpio_ddr <= toggle_dk;
+   end
 
    wire [31:0] tx_data_dk;
    reg  TX_EN = 1'b1;
