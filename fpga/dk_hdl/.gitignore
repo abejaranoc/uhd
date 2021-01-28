@@ -6,3 +6,4 @@ build-ip
 xsim.dir
 work/
 xvlog.pb
+.str
