@@ -645,31 +645,23 @@ module x300_core #(
       fp_gpio_ddr[11:0] <= gpio_ddr_dk;
    end
 
-   wire [15:0] tx_data_dk, irx_bb, qrx_bb, irx_in, qrx_in;
-   wire [31:0] rx_bb_dk;
+   wire [15:0] itx, qtx;
+   wire [31:0] tx_data_dk = {itx, qtx};
+   wire tx_valid;
+   wire TX_EN = 1'b1;
 
-   /*wire [31:0] tx_data_dk;*/
+   mtx_ctrl #(.NSYMB(512))
+        MTX_ANC(  .clk(radio_clk),
+                  .reset(radio_rst),
 
-   assign irx_in   = rx_data_r[0][31:16];
-   assign qrx_in   = rx_data_r[0][15:0];
-   assign rx_bb_dk = {irx_bb, qrx_bb};
-   wire rx_valid;
+                  .itx(itx), 
+                  .qtx(qtx), 
 
-   tag_rx_ctrl #(.NSYMB(64))
-      TAG_RX_CTRL(   .clk(radio_clk),
-                     .reset(radio_rst),
+                  .fp_gpio_out(gpio_out_dk), 
+                  .fp_gpio_ddr(gpio_ddr_dk),
+                  .fp_gpio_in(gpio_in_dk),
 
-                     .irx_in(irx_in), 
-                     .qrx_in(qrx_in),
-
-                     .fp_gpio_out(gpio_out_dk), 
-                     .fp_gpio_ddr(gpio_ddr_dk),
-                     .fp_gpio_in(gpio_in_dk),
-
-                     .rx_valid(rx_valid),
-
-                     .irx_out_bb(irx_bb),
-                     .qrx_out_bb(qrx_bb) );
+                  .tx_valid(tx_valid));
 
    //------------------------------------
    // Radio to ADC,DAC and IO Mapping
@@ -677,17 +669,12 @@ module x300_core #(
 
    // Data
 
-   assign tx_data_r[0][31:0]  =  tx_data[0];
-   assign tx_data_r[0][63:32] =  tx_data[1];
-   assign tx_data_r[1][31:0]  =  tx_data[2];
-   assign tx_data_r[1][63:32] =  tx_data[3];
-
-   /*
+   
    assign tx_data_r[0][31:0]  = TX_EN ? tx_data_dk : tx_data[0];
    assign tx_data_r[0][63:32] = TX_EN ? tx_data_dk : tx_data[1];
    assign tx_data_r[1][31:0]  = TX_EN ? tx_data_dk : tx_data[2];
    assign tx_data_r[1][63:32] = TX_EN ? tx_data_dk : tx_data[3];
-   */
+   
    
    assign tx_data_out[0] = tx_data_out_r[0][31:0] ;
    assign tx_data_out[1] = tx_data_out_r[0][63:32];
@@ -704,10 +691,10 @@ module x300_core #(
    assign rx_data_in_r[1][31:0]  = rx_data_in[2];
    assign rx_data_in_r[1][63:32] = rx_data_in[3];
 
-   assign rx_data[0] = rx_valid ? rx_bb_dk : rx_data_r[0][31:0] ;
-   assign rx_data[1] = rx_valid ? rx_bb_dk : rx_data_r[0][63:32];
-   assign rx_data[2] = rx_valid ? rx_bb_dk : rx_data_r[1][31:0] ;
-   assign rx_data[3] = rx_valid ? rx_bb_dk : rx_data_r[1][63:32];
+   assign rx_data[0] = rx_data_r[0][31:0] ;
+   assign rx_data[1] = rx_data_r[0][63:32];
+   assign rx_data[2] = rx_data_r[1][31:0] ;
+   assign rx_data[3] = rx_data_r[1][63:32];
 
    assign rx_stb[0] = rx_stb_r[0][0];
    assign rx_stb[1] = rx_stb_r[0][1];
