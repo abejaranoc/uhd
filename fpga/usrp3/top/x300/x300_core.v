@@ -637,62 +637,58 @@ module x300_core #(
 
 // dk wires for modules
 
-   wire [31:0] gpio_out_dk = gpio_reg_dk;
-   reg  [31:0] gpio_reg_dk;
-   reg  [31:0] fp_count;
-   reg  FP_EN  = 1'b1;
-   wire [31:0] gpio_ddr_dk = 32'h00000003;
-   wire [31:0] toggle_dk   = 32'h00000003;
+   wire [11:0] gpio_out_dk, gpio_ddr_dk, gpio_in_dk;
+   assign gpio_in_dk = fp_gpio_in[11:0];
 
    always @(posedge radio_clk) begin
-      if(radio_rst)begin
-         gpio_reg_dk <= toggle_dk;
-         fp_count    <= 1; 
-      end
-      else begin
-         if(fp_count == 400000) begin
-            gpio_reg_dk <= gpio_reg_dk ^ toggle_dk;
-            fp_count <= 1;
-         end
-         else begin
-            fp_count <= fp_count + 1;
-         end
-      end  
-      fp_gpio_out <= gpio_reg_dk;
-      fp_gpio_ddr <= toggle_dk;
+      fp_gpio_out[11:0] <= gpio_out_dk;
+      fp_gpio_ddr[11:0] <= gpio_ddr_dk;
    end
 
-   wire [31:0] tx_data_dk;
-   reg  TX_EN = 1'b1;
-   reg  srst  = 1'b0;
+   wire [15:0] tx_data_dk, irx_bb, qrx_bb, irx_in, qrx_in;
+   wire [31:0] rx_bb_dk;
 
+   /*wire [31:0] tx_data_dk;*/
 
-   mtx_sig #(.SIN_COS_WIDTH(16),
-             .PHASE_WIDTH(24), 
-             .NSYMB_WIDTH(16), 
-             .NSYMB(64))
-        MTX_ANC(  .clk(radio_clk),
-                  .reset(radio_rst),
-                  .srst(srst),
+   assign irx_in   = rx_data_r[0][31:16];
+   assign qrx_in   = rx_data_r[0][15:0];
+   assign rx_bb_dk = {irx_bb, qrx_bb};
+   wire rx_valid;
 
-                  .phase_tlast(1'b0),
-                  .phase_tvalid(1'b1),
+   tag_rx_ctrl #(.NSYMB(64))
+      TAG_RX_CTRL(   .clk(radio_clk),
+                     .reset(radio_rst),
 
-                  .out_tready(1'b1),
+                     .irx_in(irx_in), 
+                     .qrx_in(qrx_in),
 
-                  .sin(tx_data_dk[15:0]), 
-                  .cos(tx_data_dk[31:16]));
+                     .fp_gpio_out(gpio_out_dk), 
+                     .fp_gpio_ddr(gpio_ddr_dk),
+                     .fp_gpio_in(gpio_in_dk),
+
+                     .rx_valid(rx_valid),
+
+                     .irx_out_bb(irx_bb),
+                     .qrx_out_bb(qrx_bb) );
 
    //------------------------------------
    // Radio to ADC,DAC and IO Mapping
    //------------------------------------
 
    // Data
+
+   assign tx_data_r[0][31:0]  =  tx_data[0];
+   assign tx_data_r[0][63:32] =  tx_data[1];
+   assign tx_data_r[1][31:0]  =  tx_data[2];
+   assign tx_data_r[1][63:32] =  tx_data[3];
+
+   /*
    assign tx_data_r[0][31:0]  = TX_EN ? tx_data_dk : tx_data[0];
    assign tx_data_r[0][63:32] = TX_EN ? tx_data_dk : tx_data[1];
    assign tx_data_r[1][31:0]  = TX_EN ? tx_data_dk : tx_data[2];
    assign tx_data_r[1][63:32] = TX_EN ? tx_data_dk : tx_data[3];
-
+   */
+   
    assign tx_data_out[0] = tx_data_out_r[0][31:0] ;
    assign tx_data_out[1] = tx_data_out_r[0][63:32];
    assign tx_data_out[2] = tx_data_out_r[1][31:0] ;
@@ -708,10 +704,10 @@ module x300_core #(
    assign rx_data_in_r[1][31:0]  = rx_data_in[2];
    assign rx_data_in_r[1][63:32] = rx_data_in[3];
 
-   assign rx_data[0] = rx_data_r[0][31:0] ;
-   assign rx_data[1] = rx_data_r[0][63:32];
-   assign rx_data[2] = rx_data_r[1][31:0] ;
-   assign rx_data[3] = rx_data_r[1][63:32];
+   assign rx_data[0] = rx_valid ? rx_bb_dk : rx_data_r[0][31:0] ;
+   assign rx_data[1] = rx_valid ? rx_bb_dk : rx_data_r[0][63:32];
+   assign rx_data[2] = rx_valid ? rx_bb_dk : rx_data_r[1][31:0] ;
+   assign rx_data[3] = rx_valid ? rx_bb_dk : rx_data_r[1][63:32];
 
    assign rx_stb[0] = rx_stb_r[0][0];
    assign rx_stb[1] = rx_stb_r[0][1];

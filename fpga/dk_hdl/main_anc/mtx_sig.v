@@ -2,12 +2,13 @@ module mtx_sig #(
   parameter SIN_COS_WIDTH = 16,
   parameter PHASE_WIDTH   = 24 ,
   parameter NSYMB_WIDTH   = 16,
-  parameter [NSYMB_WIDTH-1:0] NSYMB        = 64, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 20480,
-  parameter [PHASE_WIDTH-1:0] DPH_INC      = 1024,
-  parameter [PHASE_WIDTH-1:0] START_PH_INC = 1024,
-  parameter [PHASE_WIDTH-1:0] START_PH     = 24'hC00000,
-  parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h400000
+  parameter TX_SYNC_BITS  = 2,
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 40960,
+  parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = 8192,
+  parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
+  parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(
   input   clk,
   input   reset,
@@ -25,6 +26,8 @@ module mtx_sig #(
   output [SIN_COS_WIDTH-1:0]  sin,
   output [SIN_COS_WIDTH-1:0]  cos,
 
+  output sync_ready,
+
   /*debug*/
   output [PHASE_WIDTH-1:0] ph,
   output [PHASE_WIDTH-1:0] ph_start,
@@ -36,6 +39,9 @@ reg  [PHASE_WIDTH-1:0]  ncount;
 reg  [NSYMB_WIDTH-1:0]  symb_count;
 reg  [PHASE_WIDTH-1:0]  phase_inc, start_phase, phase;
 wire [PHASE_WIDTH-1:0]  phase_tdata = phase;
+
+reg  [TX_SYNC_BITS-1:0] tx_symb_per_synch;
+assign sync_ready = &tx_symb_per_synch;
 
 assign ph       = phase;
 assign ph_start = start_phase;
@@ -62,10 +68,12 @@ always @(posedge clk) begin
       symb_count <= NSYMB;
       phase_inc <= START_PH_INC;
       start_phase <= START_PH;
+      tx_symb_per_synch <= {(TX_SYNC_BITS){1'b1}};
     end 
     else if (ncount == NSIG) begin 
       ncount <= 1;
       if (symb_count == NSYMB) begin
+        tx_symb_per_synch <= tx_symb_per_synch + 1;
         symb_count <= 1;
         phase  <= START_PH;
         phase_inc <= START_PH_INC;

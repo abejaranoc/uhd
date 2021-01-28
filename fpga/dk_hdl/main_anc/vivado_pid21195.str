@@ -1,0 +1,175 @@
+/*
+
+Xilinx Vivado v2019.1 (64-bit) [Major: 2019, Minor: 1]
+SW Build: 2552052 on Fri May 24 14:47:09 MDT 2019
+IP Build: 2548770 on Fri May 24 18:01:18 MDT 2019
+
+Process ID (PID): 21195
+License: Customer
+
+Current time: 	Tue Jan 26 10:55:16 EST 2021
+Time zone: 	Eastern Standard Time (America/New_York)
+
+OS: Ubuntu
+OS Version: 5.8.0-38-generic
+OS Architecture: amd64
+Available processors (cores): 8
+
+Display: :1
+Screen size: 1920x1080
+Screen resolution (DPI): 100
+Available screens: 1
+Available disk space: 341 GB
+Default font: family=Dialog,name=Dialog,style=plain,size=12
+
+Java version: 	9.0.4 64-bit
+Java home: 	/opt/Xilinx/Vivado/2019.1/tps/lnx64/jre9.0.4
+Java executable location: 	/opt/Xilinx/Vivado/2019.1/tps/lnx64/jre9.0.4/bin/java
+Java initial memory (-Xms): 	128 MB
+Java maximum memory (-Xmx):	 3 GB
+
+
+User name: 	user
+User home directory: /home/user
+User working directory: /home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc
+User country: 	US
+User language: 	en
+User locale: 	en_US
+
+RDI_BASEROOT: /opt/Xilinx/Vivado
+HDI_APPROOT: /opt/Xilinx/Vivado/2019.1
+RDI_DATADIR: /opt/Xilinx/Vivado/2019.1/data
+RDI_BINDIR: /opt/Xilinx/Vivado/2019.1/bin
+
+Vivado preferences file location: /home/user/.Xilinx/Vivado/2019.1/vivado.xml
+Vivado preferences directory: /home/user/.Xilinx/Vivado/2019.1/
+Vivado layouts directory: /home/user/.Xilinx/Vivado/2019.1/layouts
+PlanAhead jar file location: 	/opt/Xilinx/Vivado/2019.1/lib/classes/planAhead.jar
+Vivado log file location: 	/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/xsim.log
+Vivado journal file location: 	
+Engine tmp dir: 	./.Xil/Vivado-21195-hsklab-02
+
+Xilinx Environment Variables
+----------------------------
+VIVADO_PATH: /opt/Xilinx/Vivado/2019.1
+XILINX: /opt/Xilinx/Vivado/2019.1/ids_lite/ISE
+XILINX_DSP: /opt/Xilinx/Vivado/2019.1/ids_lite/ISE
+XILINX_PLANAHEAD: /opt/Xilinx/Vivado/2019.1
+XILINX_SDK: /opt/Xilinx/SDK/2019.1
+XILINX_VIVADO: /opt/Xilinx/Vivado/2019.1
+XILINX_VIVADO_HLS: /opt/Xilinx/Vivado/2019.1
+
+
+GUI allocated memory:	189 MB
+GUI max memory:		3,072 MB
+Engine allocated memory: 975 MB
+
+Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+
+*/
+
+// TclEventType: START_GUI
+// Tcl Message: start_gui 
+// TclEventType: START_PROGRESS_DIALOG
+// TclEventType: DEBUG_PROBE_SET_CHANGE
+// by (cl):  Sourcing Tcl script '/home/user/programs/usrp/uhd/fpga/usrp3/tools/scripts/viv_sim_project.tcl' : addNotify
+// Tcl Message: source /home/user/programs/usrp/uhd/fpga/usrp3/tools/scripts/viv_sim_project.tcl 
+// Tcl Message: BUILDER: Creating Vivado simulation project part xc7k410tffg900-2 
+// Tcl Message: # create_project -part $part_name -force $project_name/$project_name 
+// TclEventType: FILE_SET_NEW
+// TclEventType: RUN_ADD
+// TclEventType: RUN_CURRENT
+// TclEventType: PROJECT_DASHBOARD_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_NEW
+// [GUI Memory]: 113 MB (+115698kb) [00:00:09]
+// [Engine Memory]: 991 MB (+887859kb) [00:00:09]
+// WARNING: HEventQueue.dispatchEvent() is taking  2461 ms.
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// Tcl Message: INFO: [IP_Flow 19-234] Refreshing IP repositories INFO: [IP_Flow 19-1704] No user IP repositories specified INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/opt/Xilinx/Vivado/2019.1/data/ip'. 
+// HMemoryUtils.trashcanNow. Engine heap size: 1,001 MB. GUI used memory: 51 MB. Current time: 1/26/21, 10:55:19 AM EST
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: create_project: Time (s): cpu = 00:00:22 ; elapsed = 00:00:06 . Memory (MB): peak = 6492.969 ; gain = 176.688 ; free physical = 813 ; free virtual = 5543 
+// TclEventType: FILE_SET_CHANGE
+// [Engine Memory]: 1,049 MB (+8259kb) [00:00:19]
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// Tcl Message: # foreach sim_src $sim_srcs { #     puts "BUILDER: Adding Sim Src : $sim_src" #     add_files -fileset $sim_fileset -norecurse $sim_src # } 
+// Tcl Message: BUILDER: Adding Sim Src : /home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/build-ip/xc7k410tffg900-2/dds_sin_cos_lut_only/sim/dds_sin_cos_lut_only.vhd BUILDER: Adding Sim Src : /home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/build-ip/xc7k410tffg900-2/complex_multiplier_dds/sim/complex_multiplier_dds.vhd BUILDER: Adding Sim Src : /home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/mtx_sig_tb.v BUILDER: Adding Sim Src : /home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/mtx_sig.v BUILDER: Adding Sim Src : /opt/Xilinx/Vivado/2019.1/data/verilog/src/glbl.v 
+// Tcl Message: # foreach inc_src $inc_srcs { #     puts "BUILDER: Adding Inc Src : $inc_src" #     add_files -fileset $sim_fileset -norecurse $inc_src # } 
+// Tcl Message: # set_property top $sim_top [get_filesets $sim_fileset] # set_property default_lib xil_defaultlib [current_project] # update_compile_order -fileset sim_1 -quiet 
+// HMemoryUtils.trashcanNow. Engine heap size: 1,088 MB. GUI used memory: 54 MB. Current time: 1/26/21, 10:55:38 AM EST
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// TclEventType: LAUNCH_SIM
+// Tcl Message: INFO: [Vivado 12-5698] Checking validity of IPs in the design for the 'XSim' simulator... 
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// TclEventType: LOAD_FEATURE
+// TclEventType: PACKAGER_MESSAGE_RESET
+// TclEventType: PACKAGER_UNLOAD_CORE
+// TclEventType: PACKAGER_MESSAGE_RESET
+// TclEventType: PACKAGER_UNLOAD_CORE
+// Tcl Message: xvlog --incr --relax -prj mtx_sig_tb_vlog.prj INFO: [VRFC 10-2263] Analyzing Verilog file "/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/mtx_sig.v" into library xil_defaultlib INFO: [VRFC 10-311] analyzing module mtx_sig INFO: [VRFC 10-2263] Analyzing Verilog file "/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/mtx_sig_tb.v" into library xil_defaultlib INFO: [VRFC 10-311] analyzing module mtx_sig_tb INFO: [VRFC 10-2263] Analyzing Verilog file "/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/xsim_proj/xsim_proj.sim/sim_1/behav/xsim/glbl.v" into library xil_defaultlib INFO: [VRFC 10-311] analyzing module glbl xvhdl --incr --relax -prj mtx_sig_tb_vhdl.prj 
+// TclEventType: LAUNCH_SIM_LOG
+// Tcl Message: INFO: [VRFC 10-163] Analyzing VHDL file "/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/build-ip/xc7k410tffg900-2/dds_sin_cos_lut_only/sim/dds_sin_cos_lut_only.vhd" into library xil_defaultlib INFO: [VRFC 10-3107] analyzing entity 'dds_sin_cos_lut_only' 
+// Tcl Message: INFO: [USF-XSim-69] 'compile' step finished in '2' seconds INFO: [USF-XSim-3] XSim::Elaborate design INFO: [USF-XSim-61] Executing 'ELABORATE' step in '/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/xsim_proj/xsim_proj.sim/sim_1/behav/xsim' 
+// Tcl Message: Completed static elaboration 
+// Tcl Message: Built simulation snapshot mtx_sig_tb_behav 
+// Tcl Message:  ****** Webtalk v2019.1 (64-bit)   **** SW Build 2552052 on Fri May 24 14:47:09 MDT 2019   **** IP Build 2548770 on Fri May 24 18:01:18 MDT 2019     ** Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.  source /home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/xsim_proj/xsim_proj.sim/sim_1/behav/xsim/xsim.dir/mtx_sig_tb_behav/webtalk/xsim_webtalk.tcl -notrace 
+// TclEventType: LAUNCH_SIM
+// TclEventType: LOAD_FEATURE
+// Tcl Message: INFO: [Common 17-186] '/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/xsim_proj/xsim_proj.sim/sim_1/behav/xsim/xsim.dir/mtx_sig_tb_behav/webtalk/usage_statistics_ext_xsim.xml' has been successfully sent to Xilinx on Tue Jan 26 10:56:58 2021. For additional details about this file, please refer to the WebTalk help file at /opt/Xilinx/Vivado/2019.1/doc/webtalk_introduction.html. INFO: [Common 17-206] Exiting Webtalk at Tue Jan 26 10:56:58 2021... 
+// Tcl Message: run_program: Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 6609.875 ; gain = 0.000 ; free physical = 828 ; free virtual = 5562 
+// Tcl Message: INFO: [USF-XSim-69] 'elaborate' step finished in '12' seconds INFO: [USF-XSim-4] XSim::Simulate design INFO: [USF-XSim-61] Executing 'SIMULATE' step in '/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/xsim_proj/xsim_proj.sim/sim_1/behav/xsim' INFO: [USF-XSim-98] *** Running xsim 
+// Tcl Message:    with args "mtx_sig_tb_behav -key {Behavioral:sim_1:Functional:mtx_sig_tb} -tclbatch {mtx_sig_tb.tcl} -log {simulate.log}" 
+// Tcl Message: INFO: [USF-XSim-8] Loading simulator feature 
+// Tcl Message: Vivado Simulator 2019.1 
+// TclEventType: SIMULATION_CREATE_SIMULATION_OBJECT
+// TclEventType: SIMULATION_UPDATE_SIMULATION_STATE
+// TclEventType: SIMULATION_UPDATE_SCOPE_TREE
+// TclEventType: SIMULATION_UPDATE_STACKS
+// TclEventType: SIMULATION_UPDATE_OBJECT_TREE
+// TclEventType: SIMULATION_UPDATE_PROTOCOL_INSTANCE_TREE
+// TclEventType: SIMULATION_UPDATE_SCOPE_TREE
+// TclEventType: SIMULATION_UPDATE_STACKS
+// TclEventType: SIMULATION_UPDATE_OBJECT_TREE
+// TclEventType: SIMULATION_UPDATE_PROTOCOL_INSTANCE_TREE
+// Tcl Message: Time resolution is 1 ps 
+// TclEventType: SIMULATION_UPDATE_SCOPE_TREE
+// TclEventType: SIMULATION_UPDATE_STACKS
+// TclEventType: SIMULATION_UPDATE_OBJECT_TREE
+// TclEventType: SIMULATION_UPDATE_PROTOCOL_INSTANCE_TREE
+closeView(PAResourceOtoP.PAViews_PROJECT_SUMMARY, "Project Summary"); // v
+// TclEventType: WAVEFORM_UPDATE_TITLE
+// TclEventType: WAVEFORM_OPEN_WCFG
+// TclEventType: SIMULATION_UPDATE_SCOPE_TREE
+// TclEventType: SIMULATION_UPDATE_STACKS
+// TclEventType: SIMULATION_UPDATE_OBJECT_TREE
+// TclEventType: SIMULATION_UPDATE_PROTOCOL_INSTANCE_TREE
+// TclEventType: WAVEFORM_OPEN_WCFG
+// TclEventType: WAVEFORM_DELAYED_MODEL_EVENT
+// TclEventType: WAVEFORM_MODEL_EVENT
+// TclEventType: WAVEFORM_UPDATE_WAVEFORM
+// TclEventType: WAVEFORM_UPDATE_COMMANDS
+// Waveform: addNotify
+// TclEventType: WAVEFORM_MODEL_EVENT
+// Tcl Message: source mtx_sig_tb.tcl 
+// Tcl Message: ## current_wave_config 
+// TclEventType: WAVEFORM_MODEL_EVENT
+// TclEventType: WAVEFORM_UPDATE_WAVEFORM
+// TclEventType: WAVEFORM_MODEL_EVENT
+// TclEventType: WAVEFORM_UPDATE_WAVEFORM
+// TclEventType: WAVEFORM_MODEL_EVENT

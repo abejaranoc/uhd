@@ -37,7 +37,10 @@ include $(LIB_DIR)/axi/Makefile.srcs
 include $(LIB_DIR)/io_cap_gen/Makefile.srcs
 include $(LIB_DIR)/rfnoc/Makefile.srcs
 # DK Addition
+include $(BASE_DIR)/../../dk_hdl/fp_gpio/Makefile.srcs
+include $(BASE_DIR)/../../dk_hdl/tag_anc/Makefile.srcs
 include $(BASE_DIR)/../../dk_hdl/main_anc/Makefile.srcs
+include $(BASE_DIR)/../../dk_hdl/rx_anc/Makefile.srcs
 
 # For sake of convenience, we include the Makefile.srcs for DRAM FIFO, DDC, and
 # DUC, Replay, and of course the radio. Any other block needs to use the
@@ -104,7 +107,8 @@ endif
 DESIGN_SRCS = $(abspath $(TOP_SRCS)) $(FIFO_SRCS) \
 $(CONTROL_LIB_SRCS) $(SDR_LIB_SRCS) $(SERDES_SRCS) \
 $(SIMPLE_GEMAC_SRCS) $(TIMING_SRCS) $(COREGEN_DSP_SRCS) \
-$(UDP_SRCS) $(EXTRAM_SRCS) $(DK_MTX_ANC_SRCS) \
+$(UDP_SRCS) $(EXTRAM_SRCS)  \
+$(DK_MTX_ANC_SRCS) $(DK_TAG_ANC_SRCS) $(DK_RX_ANC_SRCS) $(DK_FP_GPIO_SRCS) \
 $(ZPU_CORE_SRCS) $(WISHBONE_SRCS) \
 $(SFP_SERDES_SRCS) $(IOPORT2_SRCS) \
 $(PACKET_PROC_SRCS) $(DSP_SRCS) $(DRAM_SRCS) \

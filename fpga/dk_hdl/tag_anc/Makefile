@@ -37,24 +37,25 @@ $(LIB_IP_DDS_SIN_COS_LUT_ONLY_SRCS) \
 $(COREGEN_DSP_SRCS) \
 $(RFNOC_BLOCK_DDC_SRCS) \
 $(DK_FP_GPIO_SRCS) \
-mtx_ctrl.v \
-mtx_sig.v \
+tag_rx.v   \
+tag_rx_ctrl.v \
 )
 
 #-------------------------------------------------
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = mtx_ctrl_tb 
-SIM_RUNTIME_US = 200000
+SIM_TOP = tag_rx_ctrl_tb 
+SIM_RUNTIME_US = 100000
 SIM_SRCS = \
-$(abspath mtx_ctrl_tb.v) \
+$(abspath tag_rx_ctrl_tb.v) \
+
 
 #SIM_SRCS = \
 $(abspath $(IP_BUILD_DIR)/dds_sin_cos_lut_only/sim/dds_sin_cos_lut_only.vhd) \
 $(abspath $(IP_BUILD_DIR)/complex_multiplier_dds/sim/complex_multiplier_dds.vhd) \
-$(abspath mtx_sig_tb.v) \
-$(abspath mtx_sig.v) \
+$(abspath tag_rx_tb.v) \
+$(abspath tag_rx.v) \
 $(VIVADO_PATH)/data/verilog/src/glbl.v \
 
 #-------------------------------------------------
