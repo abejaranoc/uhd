@@ -8,7 +8,7 @@ module tag_rx #(
   parameter RX_SYNC_BITS  = 4,
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 64, 
   parameter [PHASE_WIDTH-1:0] NSIG         = 326780,
-  parameter [PHASE_WIDTH-1:0] DPH_INC      = 131072, 
+  parameter [PHASE_WIDTH-1:0] DPH_INC      = -131072, 
   parameter [PHASE_WIDTH-1:0] START_PH_INC = 24'h000000,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000

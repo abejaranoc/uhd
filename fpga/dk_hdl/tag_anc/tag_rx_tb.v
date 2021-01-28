@@ -54,7 +54,7 @@ module tag_rx_tb();
     always #1 counter <= (counter == 4) ? 0 : counter + 1;
     initial begin
         counter = 0;
-        irx_in = 32767; qrx_in = -32768 ;
+        irx_in = 32767; qrx_in = -32768;
         reset = 1'b1;
         srst  = 1'b0;
         #100 reset = 1'b0; 

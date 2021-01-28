@@ -8,7 +8,7 @@ module tag_rx_ctrl #(
   
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 64, 
   parameter [PHASE_WIDTH-1:0] NSIG         = 326780,
-  parameter [PHASE_WIDTH-1:0] DPH_INC      = 131072, 
+  parameter [PHASE_WIDTH-1:0] DPH_INC      = -131072, 
   parameter [PHASE_WIDTH-1:0] START_PH_INC = 24'h000000,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
@@ -82,7 +82,7 @@ assign tx_trigger  = |(gpio_in & SYNC_IN_MASK);
 
 wire out_sel = ^sync_state ;
 assign irx_out_bb = out_sel ? irx_sync : irx_bb;
-assign qrx_out_bb = out_sel ? qrx_sync : -qrx_bb;
+assign qrx_out_bb = out_sel ? qrx_sync : qrx_bb;
 
 /*
 assign irx_out =  irx_bb;
@@ -109,7 +109,7 @@ tag_rx #(
     TAG_RXB(.clk(clk), .reset(reset), .srst(start_rx),
 
             /* RX IQ input */
-            .irx_in(irx_in), .qrx_in(-qrx_in),
+            .irx_in(irx_in), .qrx_in(qrx_in),
             .in_tvalid(1'b1), .in_tlast(1'b0), 
 
             /* phase valid*/

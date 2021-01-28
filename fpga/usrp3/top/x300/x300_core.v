@@ -645,7 +645,7 @@ module x300_core #(
       fp_gpio_ddr[11:0] <= gpio_ddr_dk;
    end
 
-   wire [15:0] tx_data_dk, irx_bb, qrx_bb, irx_in, qrx_in;
+   wire [15:0] irx_bb, qrx_bb, irx_in, qrx_in;
    wire [31:0] rx_bb_dk;
 
    /*wire [31:0] tx_data_dk;*/
@@ -681,13 +681,6 @@ module x300_core #(
    assign tx_data_r[0][63:32] =  tx_data[1];
    assign tx_data_r[1][31:0]  =  tx_data[2];
    assign tx_data_r[1][63:32] =  tx_data[3];
-
-   /*
-   assign tx_data_r[0][31:0]  = TX_EN ? tx_data_dk : tx_data[0];
-   assign tx_data_r[0][63:32] = TX_EN ? tx_data_dk : tx_data[1];
-   assign tx_data_r[1][31:0]  = TX_EN ? tx_data_dk : tx_data[2];
-   assign tx_data_r[1][63:32] = TX_EN ? tx_data_dk : tx_data[3];
-   */
    
    assign tx_data_out[0] = tx_data_out_r[0][31:0] ;
    assign tx_data_out[1] = tx_data_out_r[0][63:32];
