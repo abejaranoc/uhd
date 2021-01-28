@@ -2,7 +2,7 @@ module mtx_sig #(
   parameter SIN_COS_WIDTH = 16,
   parameter PHASE_WIDTH   = 24 ,
   parameter NSYMB_WIDTH   = 16,
-  parameter TX_SYNC_BITS  = 2,
+  parameter TX_SYNC_BITS  = 3,
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
   parameter [PHASE_WIDTH-1:0] NSIG         = 40960,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
