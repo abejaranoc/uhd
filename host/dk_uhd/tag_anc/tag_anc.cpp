@@ -218,7 +218,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // variables to be set by po
     std::string args, file, type, ant, subdev, ref, wirefmt;
     size_t channel, total_num_samps, spb;
-    double rate, freq, gain, bw, total_time, setup_time, lo_offset;
+    double rate, freq, gain, bw, total_time, setup_time, lo_offset, wait_time;
 
     // setup the program options
     po::options_description desc("Allowed options");
@@ -231,7 +231,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("nsamps", po::value<size_t>(&total_num_samps)->default_value(0), "total number of samples to receive")
         ("duration", po::value<double>(&total_time)->default_value(0), "total number of seconds to receive")
         ("spb", po::value<size_t>(&spb)->default_value(10000), "samples per buffer")
-        ("rate", po::value<double>(&rate)->default_value(10e6), "rate of incoming samples")
+        ("rate", po::value<double>(&rate)->default_value(12.5e6), "rate of incoming samples")
         ("freq", po::value<double>(&freq)->default_value(2.4e9), "RF center frequency in Hz")
         ("lo-offset", po::value<double>(&lo_offset)->default_value(0.0),
             "Offset for frontend LO in Hz (optional)")
@@ -239,10 +239,11 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("ant", po::value<std::string>(&ant)->default_value("TX/RX"), "antenna selection")
         ("subdev", po::value<std::string>(&subdev)->default_value("A:0"), "subdevice specification")
         ("channel", po::value<size_t>(&channel)->default_value(0), "which channel to use")
-        ("bw", po::value<double>(&bw)->default_value(100e6), "analog frontend filter bandwidth in Hz")
+        ("bw", po::value<double>(&bw)->default_value(160e6), "analog frontend filter bandwidth in Hz")
         ("ref", po::value<std::string>(&ref)->default_value("internal"), "reference source (internal, external, mimo)")
         ("wirefmt", po::value<std::string>(&wirefmt)->default_value("sc16"), "wire format (sc8, sc16 or s16)")
         ("setup", po::value<double>(&setup_time)->default_value(1.0), "seconds of setup time")
+        ("wait_time", po::value<double>(&wait_time)->default_value(90), "seconds of setup time")
         ("progress", "periodically display short-term bandwidth")
         ("stats", "show average bandwidth on exit")
         ("sizemap", "track packet size and display breakdown on exit")
@@ -347,6 +348,10 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         usrp->set_rx_antenna(ant, channel);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(int64_t(1000 * setup_time)));
+
+    std::cout << boost::format("Waiting: Connect GPIO in %f seconds...") % wait_time << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(int64_t(1000 * wait_time)));
+    std::cout << boost::format("Starting Reception Now...") << std::endl;
 
     // check Ref and LO Lock detect
     if (not vm.count("skip-lo")) {
