@@ -621,14 +621,14 @@ module x300_core #(
    // holds 2 bits per GPIO pin, which selects which source to use for GPIO
    // control. Currently, only daughter board 0 and daughter board 1 are
    // supported.
-   /*
+   
    for (i=0; i<FP_GPIO_WIDTH; i=i+1) begin : gen_fp_gpio_mux
       always @(posedge radio_clk) begin
-         fp_gpio_out[i] <= FP_EN ? gpio_out_dk[i] : fp_gpio_r_out[fp_gpio_src[2*i +: 2] == 0 ? 0 : 1][i];
-         fp_gpio_ddr[i] <= FP_EN ? gpio_ddr_dk[i] : fp_gpio_r_ddr[fp_gpio_src[2*i +: 2] == 0 ? 0 : 1][i];
+         fp_gpio_out[i] <=  fp_gpio_r_out[fp_gpio_src[2*i +: 2] == 0 ? 0 : 1][i];
+         fp_gpio_ddr[i] <=  fp_gpio_r_ddr[fp_gpio_src[2*i +: 2] == 0 ? 0 : 1][i];
       end
    end
-*/
+
    // Front-panel GPIO inputs are routed to all daughter boards
    for (i=0; i<NUM_DBOARDS; i=i+1) begin : gen_fp_gpio_inputs
       assign fp_gpio_r_in[i] = fp_gpio_in;
@@ -636,7 +636,7 @@ module x300_core #(
 
 
 // dk wires for modules
-
+  /*
    wire [11:0] gpio_out_dk, gpio_ddr_dk, gpio_in_dk;
    assign gpio_in_dk = fp_gpio_in[11:0];
 
@@ -644,32 +644,27 @@ module x300_core #(
       fp_gpio_out[11:0] <= gpio_out_dk;
       fp_gpio_ddr[11:0] <= gpio_ddr_dk;
    end
+   */
+   wire [15:0] irx_in, qrx_in, itx, qtx;
 
-   wire [15:0] irx_bb, qrx_bb, irx_in, qrx_in;
-   wire [31:0] rx_bb_dk;
-
-   /*wire [31:0] tx_data_dk;*/
+   wire [31:0] tx_data_dk = {itx, qtx};
+   wire TX_EN = 1'b1;
 
    assign irx_in   = rx_data_r[0][31:16];
    assign qrx_in   = rx_data_r[0][15:0];
-   assign rx_bb_dk = {irx_bb, qrx_bb};
-   wire rx_valid;
 
-   tag_rx_ctrl #(.NSYMB(64))
-      TAG_RX_CTRL(   .clk(radio_clk),
-                     .reset(radio_rst),
 
-                     .irx_in(irx_in), 
-                     .qrx_in(qrx_in),
+   rx_anc RX_ANC(.clk(clk), .reset(reset), .srst(srst),
 
-                     .fp_gpio_out(gpio_out_dk), 
-                     .fp_gpio_ddr(gpio_ddr_dk),
-                     .fp_gpio_in(gpio_in_dk),
+                  /* RX IQ input */
+                  .irx_in(irx_in), .qrx_in(qrx_in),
+                  .in_tvalid(1'b1), .in_tlast(1'b0), 
 
-                     .rx_valid(rx_valid),
+                  /* phase valid*/
+                  .phase_tvalid(1'b1), .phase_tlast(1'b0), 
 
-                     .irx_out_bb(irx_bb),
-                     .qrx_out_bb(qrx_bb) );
+                  /* IQ BB output */
+                  .out_tready(1'b1), .itx(itx), .qtx(qtx));
 
    //------------------------------------
    // Radio to ADC,DAC and IO Mapping
@@ -677,10 +672,10 @@ module x300_core #(
 
    // Data
 
-   assign tx_data_r[0][31:0]  =  tx_data[0];
-   assign tx_data_r[0][63:32] =  tx_data[1];
-   assign tx_data_r[1][31:0]  =  tx_data[2];
-   assign tx_data_r[1][63:32] =  tx_data[3];
+   assign tx_data_r[0][31:0]  =  TX_EN ? tx_data_dk : tx_data[0];
+   assign tx_data_r[0][63:32] =  TX_EN ? tx_data_dk : tx_data[1];
+   assign tx_data_r[1][31:0]  =  TX_EN ? tx_data_dk : tx_data[2];
+   assign tx_data_r[1][63:32] =  TX_EN ? tx_data_dk : tx_data[3];
    
    assign tx_data_out[0] = tx_data_out_r[0][31:0] ;
    assign tx_data_out[1] = tx_data_out_r[0][63:32];
@@ -697,10 +692,10 @@ module x300_core #(
    assign rx_data_in_r[1][31:0]  = rx_data_in[2];
    assign rx_data_in_r[1][63:32] = rx_data_in[3];
 
-   assign rx_data[0] = rx_valid ? rx_bb_dk : rx_data_r[0][31:0] ;
-   assign rx_data[1] = rx_valid ? rx_bb_dk : rx_data_r[0][63:32];
-   assign rx_data[2] = rx_valid ? rx_bb_dk : rx_data_r[1][31:0] ;
-   assign rx_data[3] = rx_valid ? rx_bb_dk : rx_data_r[1][63:32];
+   assign rx_data[0] = rx_data_r[0][31:0] ;
+   assign rx_data[1] = rx_data_r[0][63:32];
+   assign rx_data[2] = rx_data_r[1][31:0] ;
+   assign rx_data[3] = rx_data_r[1][63:32];
 
    assign rx_stb[0] = rx_stb_r[0][0];
    assign rx_stb[1] = rx_stb_r[0][1];
