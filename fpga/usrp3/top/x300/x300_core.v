@@ -654,7 +654,7 @@ module x300_core #(
    assign qrx_in   = rx_data_r[0][15:0];
 
 
-   rx_anc RX_ANC(.clk(clk), .reset(reset), .srst(1'b0),
+   rx_anc RX_ANC(.clk(radio_clk), .reset(radio_rst), .srst(1'b0),
 
                   /* RX IQ input */
                   .irx_in(irx_in), .qrx_in(qrx_in),
