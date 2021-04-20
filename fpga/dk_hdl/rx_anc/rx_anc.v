@@ -39,7 +39,7 @@ module rx_anc #(
   output [SIN_COS_WIDTH-1:0]  cos
 );
 
-reg  [PHASE_WIDTH-1:0]  ncount;
+//reg  [PHASE_WIDTH-1:0]  ncount;
 //reg  [NSYMB_WIDTH-1:0]  symb_count;
 reg  [PHASE_WIDTH-1:0]  phase_inc, phase;
 wire [PHASE_WIDTH-1:0]  phase_tdata = phase;
@@ -108,7 +108,7 @@ dds_freq_tune #(.OUTPUT_WIDTH(DDS_WIDTH))
 ************************************************************************/
 wire [DDS_WIDTH+SCALING_WIDTH-1:0] scaled_i_tdata, scaled_q_tdata;
 wire scaled_tlast, scaled_tvalid, scaled_tready;
-wire [SCALING_WIDTH-1:0] scaling_tdata = {4'h0, {(SCALING_WIDTH-4){1'b1}}};
+wire [SCALING_WIDTH-1:0] scaling_tdata = {3'h0, {(SCALING_WIDTH-3){1'b1}}};
 
 mult #(
     .WIDTH_A(DDS_WIDTH),
@@ -158,16 +158,18 @@ axi_round_and_clip_complex #(.WIDTH_IN(DDS_WIDTH+SCALING_WIDTH),
 always @(posedge clk) begin
     if (reset || srst) begin
       phase  <= START_PH;
-      ncount <= NSIG;
+      //ncount <= NSIG;
       phase_inc <= DPH_INC;
     end 
+    /*
     else if (ncount == NSIG) begin 
       ncount <= 1;
       phase  <= START_PH;
     end
+    */
     else begin
       phase  <= phase + phase_inc;
-      ncount <= ncount + 1;
+      //ncount <= ncount + 1;
     end
 end
 
