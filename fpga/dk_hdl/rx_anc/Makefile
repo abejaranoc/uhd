@@ -26,6 +26,7 @@ include $(BASE_DIR)/../lib/rfnoc/utils/Makefile.srcs
 include $(LIB_IP_DIR)/complex_multiplier_dds/Makefile.inc
 include $(LIB_IP_DIR)/dds_sin_cos_lut_only/Makefile.inc
 include $(BASE_DIR)/x300/coregen_dsp/Makefile.srcs
+include $(BASE_DIR)/../../dk_hdl/fp_gpio/Makefile.srcs
 
 
 DESIGN_SRCS += $(abspath \
@@ -35,20 +36,25 @@ $(LIB_IP_COMPLEX_MULTIPLIER_DDS_SRCS) \
 $(LIB_IP_DDS_SIN_COS_LUT_ONLY_SRCS) \
 $(COREGEN_DSP_SRCS) \
 $(RFNOC_BLOCK_DDC_SRCS) \
-freq_shift_dk.v \
+$(DK_FP_GPIO_SRCS) \
+rx_anc.v   \
 )
 
 #-------------------------------------------------
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = freq_shift_dk_tb glbl
+SIM_TOP = rx_anc_tb 
 SIM_RUNTIME_US = 10000
 SIM_SRCS = \
+$(abspath rx_anc_tb.v) \
+
+
+#SIM_SRCS = \
 $(abspath $(IP_BUILD_DIR)/dds_sin_cos_lut_only/sim/dds_sin_cos_lut_only.vhd) \
 $(abspath $(IP_BUILD_DIR)/complex_multiplier_dds/sim/complex_multiplier_dds.vhd) \
-$(abspath freq_shift_dk_tb.v) \
-$(abspath freq_shift_dk.v) \
+$(abspath tag_rx_tb.v) \
+$(abspath tag_rx.v) \
 $(VIVADO_PATH)/data/verilog/src/glbl.v \
 
 #-------------------------------------------------
