@@ -145,6 +145,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     size_t index = 0;
 
     for (size_t ch = 0; ch < channel_nums.size(); ch++) {
+        freq = (ch == 0) ? 2.4e9 : 1.5e9;
         std::cout << boost::format("Setting TX Freq: %f MHz...") % (freq / 1e6)
                   << std::endl;
         std::cout << boost::format("Setting TX LO Offset: %f MHz...") % (lo_offset / 1e6)
@@ -176,6 +177,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
                           << std::endl;
             }
         } else if (vm.count("gain")) {
+            //gain = (ch == 0) ? 24 : 30;
             std::cout << boost::format("Setting TX Gain: %f dB...") % gain << std::endl;
             usrp->set_tx_gain(gain, channel_nums[ch]);
             std::cout << boost::format("Actual TX Gain: %f dB...")
