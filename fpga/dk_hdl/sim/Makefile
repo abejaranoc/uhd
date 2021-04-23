@@ -50,7 +50,7 @@ $(DK_RX_ANC_SRCS) \
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
 SIM_TOP = tx_rx_tb 
-SIM_RUNTIME_US = 100000
+#SIM_RUNTIME_US = 100000
 SIM_SRCS = \
 $(abspath tx_rx_tb.v) \
 

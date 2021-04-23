@@ -48,7 +48,7 @@ module tag_rx #(
 reg  [RX_SYNC_BITS-1:0] rx_symb_per_synch;
 reg  [PHASE_WIDTH-1:0]  ncount;
 reg  [NSYMB_WIDTH-1:0]  symb_count;
-reg  [PHASE_WIDTH-1:0]  phase_inc, phase;
+reg  [PHASE_WIDTH-1:0]  phase_inc, phase, start_phase;
 wire [PHASE_WIDTH-1:0]  phase_tdata = phase;
 
 assign sync_ready = &rx_symb_per_synch;

@@ -68,7 +68,6 @@ assign rx_valid = valid_rx;
 assign rx_sync_en  = sync_en;
 assign rx_trig     = start_rx;
 assign rx_state    = sync_state;
-assign rx_out_mux  = out_sel;
 
 wire [DATA_WIDTH-1:0] irx_bb, qrx_bb;
 reg  [DATA_WIDTH-1:0] irx_sync, qrx_sync;
@@ -83,6 +82,8 @@ assign tx_trigger  = |(gpio_in & SYNC_IN_MASK);
 wire out_sel = ^sync_state ;
 assign irx_out_bb = out_sel ? irx_sync : irx_bb;
 assign qrx_out_bb = out_sel ? qrx_sync : qrx_bb;
+
+assign rx_out_mux  = out_sel;
 
 /*
 assign irx_out =  irx_bb;

@@ -6,14 +6,14 @@ module tx_rx_tb();
   localparam DDS_WIDTH   = 16;
   localparam REG_WIDTH   = 12;
   localparam SYNC_SIG_N = 32678;
-  localparam RX_NSYMB   = 64;
+  localparam RX_NSYMB   = 16;
   localparam TX_NSIG    = 2048;
   localparam RX_SYMBS_PER_HOP = 8;
   reg reset;
   wire clk;
   localparam [REG_WIDTH-1:0] MTX_SYNC_OUT_MASK = 12'h001;
-  wire [SIN_COS_WIDTH-1:0] rx_sin;
-  wire [SIN_COS_WIDTH-1:0] rx_cos;
+  wire [SIN_COS_WIDTH-1:0] rx_sin, tx_sin;
+  wire [SIN_COS_WIDTH-1:0] rx_cos, tx_cos;
   wire [PHASEWIDTH-1:0] rx_ph, tx_ph;
     
   wire [NSYMB_WIDTH-1:0] rx_symbN, tx_symbN;
@@ -34,7 +34,7 @@ module tx_rx_tb();
   mtx_ctrl #(.DATA_WIDTH(DATA_WIDTH),
              .PHASE_WIDTH(PHASEWIDTH), 
              .NSYMB_WIDTH(NSYMB_WIDTH), 
-             .NSIG(TX_NSIG),
+             /*.NSIG(TX_NSIG), */
              .NSYMB(RX_SYMBS_PER_HOP * RX_NSYMB))
         MTX_ANC(  .clk(clk),
                   .reset(reset),
@@ -57,7 +57,7 @@ module tx_rx_tb();
   tag_rx_ctrl #(.SIN_COS_WIDTH(SIN_COS_WIDTH),
             .PHASE_WIDTH(PHASEWIDTH), 
             .NSYMB_WIDTH(NSYMB_WIDTH),
-            .NSIG(TX_NSIG * RX_SYMBS_PER_HOP), 
+           /* .NSIG(TX_NSIG * RX_SYMBS_PER_HOP), */
             .NSYMB(RX_NSYMB))
    TAG_RX_CTRL(   .clk(clk),
                   .reset(reset),
@@ -88,13 +88,43 @@ module tx_rx_tb();
     reg [2:0] counter;
     assign clk = (counter < 3) ? 1'b1 : 1'b0;
 
+    reg stop_write;
+    reg [3:0] sync_count; 
     always #1 counter <= (counter == 4) ? 0 : counter + 1;
     initial begin
         counter = 0;
+        sync_count = 0;
         reset = 1'b1;
+        stop_write = 1'b0;
         #100 reset = 1'b0; 
-        repeat(2000000) @(posedge clk);
-        $finish();
+        repeat(3) begin
+            sync_count = sync_count + 1;
+            @(negedge rx_sync_en);
+            $display("[%0t]: Synchronization %d", $time, sync_count);  
+        end 
+        @(posedge clk);
+        stop_write = 1'b1;
+        //$finish();
+    end
+
+    wire [2*DATA_WIDTH-1:0] tag_iq_data;
+    wire signed [DATA_WIDTH-1:0] idat, qdat;
+    assign idat = irx_bb;
+    assign qdat = qrx_bb;
+    assign tag_iq_data = {irx_bb, qrx_bb};
+    integer file_id;
+    initial begin
+        file_id = $fopen("/home/user/Desktop/sim/out_data.txt", "wb");
+        $display("Opened file ..................");
+        @(negedge reset);
+        $display("start writing ................");
+        while (!stop_write) begin
+            @(negedge clk); 
+            $fwrite(file_id, "%d %d \n", idat, qdat);    
+        end
+        $fclose(file_id);
+        $display("File closed ..................");
+        $finish();    
     end
 
 endmodule
