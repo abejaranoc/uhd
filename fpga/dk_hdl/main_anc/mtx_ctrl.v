@@ -35,7 +35,7 @@ module mtx_ctrl #(
 
   localparam GPIO_REG_WIDTH    = 12;
   localparam GPIO_CLK_DIV_FAC  = 10;
-  localparam SYNC_SIG_N        = 8400;
+  localparam SYNC_SIG_N        = 8750;
   localparam [GPIO_REG_WIDTH-1:0] SYNC_OUT_MASK = 12'h001;
   localparam [GPIO_REG_WIDTH-1:0] TX_OUT_MASK   = 12'h010;
   localparam [GPIO_REG_WIDTH-1:0] GPIO_OUT_MASK = SYNC_OUT_MASK | TX_OUT_MASK;

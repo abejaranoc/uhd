@@ -6,10 +6,10 @@ module tag_rx_ctrl #(
   parameter NSYMB_WIDTH    = 16,
   parameter SCALING_WIDTH  = 18,
   
-  parameter [NSYMB_WIDTH-1:0] NSYMB        = 64, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 327680,
-  parameter [PHASE_WIDTH-1:0] DPH_INC      = -131072, 
-  parameter [PHASE_WIDTH-1:0] START_PH_INC = 24'h000000,
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 40960,
+  parameter [PHASE_WIDTH-1:0] DPH_INC      = -16384, 
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = -4096,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(
@@ -50,7 +50,7 @@ module tag_rx_ctrl #(
 
   localparam GPIO_REG_WIDTH    = 12;
   localparam GPIO_CLK_DIV_FAC  = 10;
-  localparam SYNC_SIG_N        = 8000;
+  localparam SYNC_SIG_N        = 8192;
   localparam [GPIO_REG_WIDTH-1:0] SYNC_OUT_MASK = 12'h001;
   localparam [GPIO_REG_WIDTH-1:0] RX_OUT_MASK   = 12'h010;
   localparam [GPIO_REG_WIDTH-1:0] GPIO_OUT_MASK = SYNC_OUT_MASK | RX_OUT_MASK;

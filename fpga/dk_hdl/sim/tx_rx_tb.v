@@ -58,7 +58,7 @@ module tx_rx_tb();
             .PHASE_WIDTH(PHASEWIDTH), 
             .NSYMB_WIDTH(NSYMB_WIDTH),
            /* .NSIG(TX_NSIG * RX_SYMBS_PER_HOP), */
-            .NSYMB(RX_NSYMB))
+            .NSYMB(RX_SYMBS_PER_HOP * RX_NSYMB))
    TAG_RX_CTRL(   .clk(clk),
                   .reset(reset),
 
