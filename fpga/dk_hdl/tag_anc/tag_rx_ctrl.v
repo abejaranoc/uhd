@@ -6,10 +6,10 @@ module tag_rx_ctrl #(
   parameter NSYMB_WIDTH    = 16,
   parameter SCALING_WIDTH  = 18,
   
-  parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 40960,
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 256, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 5120,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = -16384, 
-  parameter [PHASE_WIDTH-1:0] START_PH_INC = -4096,
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = 0,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(
@@ -39,6 +39,7 @@ module tag_rx_ctrl #(
   output [NSYMB_WIDTH-1:0] symbN,
   output [SIN_COS_WIDTH-1:0] cos, 
   output [SIN_COS_WIDTH-1:0] sin, 
+  output [PHASE_WIDTH-1:0]  sigN,
 
  
   output rx_sync_en, 
@@ -123,7 +124,7 @@ tag_rx #(
             .sync_ready(rx_sync_ready),
 
             /*debug*/
-            .ph(ph), .symbN(symbN), .sin(sin), .cos(cos));
+            .ph(ph), .symbN(symbN), .sigN(sigN), .sin(sin), .cos(cos));
 
 always @(posedge clk) begin
   if (reset) begin

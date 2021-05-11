@@ -3,11 +3,11 @@ module mtx_ctrl #(
   parameter PHASE_WIDTH   = 24,
   parameter NSYMB_WIDTH   = 16,
 
-  parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 40960,
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 256, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 5120,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
   parameter [PHASE_WIDTH-1:0] START_PH_INC = 8192,
-  parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
+  parameter [PHASE_WIDTH-1:0] START_PH     = 24'h800000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(
   input   clk,
@@ -35,7 +35,7 @@ module mtx_ctrl #(
 
   localparam GPIO_REG_WIDTH    = 12;
   localparam GPIO_CLK_DIV_FAC  = 10;
-  localparam SYNC_SIG_N        = 8750;
+  localparam SYNC_SIG_N        = 8224;
   localparam [GPIO_REG_WIDTH-1:0] SYNC_OUT_MASK = 12'h001;
   localparam [GPIO_REG_WIDTH-1:0] TX_OUT_MASK   = 12'h010;
   localparam [GPIO_REG_WIDTH-1:0] GPIO_OUT_MASK = SYNC_OUT_MASK | TX_OUT_MASK;

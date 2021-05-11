@@ -2,12 +2,12 @@ module mtx_sig #(
   parameter SIN_COS_WIDTH = 16,
   parameter PHASE_WIDTH   = 24 ,
   parameter NSYMB_WIDTH   = 16,
-  parameter TX_SYNC_BITS  = 3,
-  parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 40960,
+  parameter TX_SYNC_BITS  = 2,
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 256, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 5120,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
   parameter [PHASE_WIDTH-1:0] START_PH_INC = 8192,
-  parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
+  parameter [PHASE_WIDTH-1:0] START_PH     = 24'h800000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(
   input   clk,

@@ -6,7 +6,7 @@ module tx_rx_tb();
   localparam DDS_WIDTH   = 16;
   localparam REG_WIDTH   = 12;
   localparam SYNC_SIG_N = 32678;
-  localparam RX_NSYMB   = 16;
+  localparam RX_NSYMB   = 8;
   localparam TX_NSIG    = 2048;
   localparam RX_SYMBS_PER_HOP = 8;
   reg reset;
@@ -17,6 +17,7 @@ module tx_rx_tb();
   wire [PHASEWIDTH-1:0] rx_ph, tx_ph;
     
   wire [NSYMB_WIDTH-1:0] rx_symbN, tx_symbN;
+  wire [PHASEWIDTH-1:0] rx_sigN, tx_sigN;
   wire [DATA_WIDTH-1:0] irx_bb, qrx_bb;// itx, qtx;
   wire  [DATA_WIDTH-1:0] irx_in, qrx_in;
 
@@ -49,6 +50,7 @@ module tx_rx_tb();
                   .tx_trig(tx_trig),
                   .tx_valid(tx_valid),
                   .symbN(tx_symbN),
+                  .sigN(tx_sigN),
                   .ph(tx_ph),
                   
                   .sin(tx_sin), 
@@ -82,6 +84,7 @@ module tx_rx_tb();
 
                   .ph(rx_ph),
                   .symbN(rx_symbN),
+                  .sigN(rx_sigN),
                   .sin(rx_sin), 
                   .cos(rx_cos));
 
@@ -97,7 +100,7 @@ module tx_rx_tb();
         reset = 1'b1;
         stop_write = 1'b0;
         #100 reset = 1'b0; 
-        repeat(3) begin
+        repeat(2) begin
             sync_count = sync_count + 1;
             @(negedge rx_sync_en);
             $display("[%0t]: Synchronization %d", $time, sync_count);  
