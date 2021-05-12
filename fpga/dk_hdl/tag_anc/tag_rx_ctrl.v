@@ -7,7 +7,7 @@ module tag_rx_ctrl #(
   parameter SCALING_WIDTH  = 18,
   
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 256, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 5120,
+  parameter [PHASE_WIDTH-1:0] NSIG         = 4096,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = -16384, 
   parameter [PHASE_WIDTH-1:0] START_PH_INC = 0,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,

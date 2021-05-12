@@ -5,8 +5,8 @@ module rx_anc #(
   parameter PHASE_WIDTH   = 24,
   parameter NSYMB_WIDTH   = 16,
   parameter SCALING_WIDTH = 18,
-  parameter [PHASE_WIDTH-1:0] NSIG     = 40960,
-  parameter [PHASE_WIDTH-1:0] DPH_INC  = 2048, 
+  parameter [PHASE_WIDTH-1:0] NSIG     = 4096,
+  parameter [PHASE_WIDTH-1:0] DPH_INC  = 8192, 
   parameter [PHASE_WIDTH-1:0] START_PH = 24'h000000
 
 )(
@@ -35,15 +35,18 @@ module rx_anc #(
 
   /*debug*/
   output [PHASE_WIDTH-1:0] ph,
+  output [PHASE_WIDTH-1:0] sigN,
   output [SIN_COS_WIDTH-1:0]  sin,
   output [SIN_COS_WIDTH-1:0]  cos
 );
 
-//reg  [PHASE_WIDTH-1:0]  ncount;
+wire [PHASE_WIDTH-1:0] sigN ;
+reg  [PHASE_WIDTH-1:0]  ncount;
 //reg  [NSYMB_WIDTH-1:0]  symb_count;
 reg  [PHASE_WIDTH-1:0]  phase_inc, phase;
 wire [PHASE_WIDTH-1:0]  phase_tdata = phase;
 
+assign sigN = ncount;
 assign ph  = phase;
 wire [DDS_WIDTH-1:0]   fshift_in_q_tdata, fshift_in_i_tdata;
 wire [2*DDS_WIDTH-1:0] fshift_in_tdata = {fshift_in_q_tdata, fshift_in_i_tdata};
@@ -158,18 +161,18 @@ axi_round_and_clip_complex #(.WIDTH_IN(DDS_WIDTH+SCALING_WIDTH),
 always @(posedge clk) begin
     if (reset || srst) begin
       phase  <= START_PH;
-      //ncount <= NSIG;
+      ncount <= NSIG;
       phase_inc <= DPH_INC;
     end 
-    /*
+    
     else if (ncount == NSIG) begin 
       ncount <= 1;
       phase  <= START_PH;
     end
-    */
+    
     else begin
       phase  <= phase + phase_inc;
-      //ncount <= ncount + 1;
+      ncount <= ncount + 1;
     end
 end
 

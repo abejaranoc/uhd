@@ -4,10 +4,10 @@ module mtx_sig #(
   parameter NSYMB_WIDTH   = 16,
   parameter TX_SYNC_BITS  = 2,
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 256, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 5120,
+  parameter [PHASE_WIDTH-1:0] NSIG         = 4096,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
   parameter [PHASE_WIDTH-1:0] START_PH_INC = 8192,
-  parameter [PHASE_WIDTH-1:0] START_PH     = 24'h800000,
+  parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(
   input   clk,
