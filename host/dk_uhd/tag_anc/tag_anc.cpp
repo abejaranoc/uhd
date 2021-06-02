@@ -13,6 +13,8 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <chrono>
 #include <complex>
 #include <csignal>
@@ -28,6 +30,26 @@ void sig_int_handler(int)
     stop_signal_called = true;
 }
 
+/***********************************************************************
+ * Utilities
+ **********************************************************************/
+//! Change to filename, e.g. from usrp_samples.dat to usrp_samples.00.dat,
+//  but only if multiple names are to be generated.
+std::string generate_out_filename(
+    const std::string& base_fn, size_t n_names, size_t this_name)
+{
+    /*
+    if (n_names == 1) {
+        return base_fn;
+    }
+    */
+    boost::filesystem::path base_fn_fp(base_fn);
+    base_fn_fp.replace_extension(boost::filesystem::path(
+        str(boost::format("%05d%s%05d%s") % this_name % "_" % n_names % base_fn_fp.extension().string())));
+        //str(boost::format("%02d%s") % this_name % base_fn_fp.extension().string())));
+    return base_fn_fp.string();
+}
+
 template <typename samp_type>
 void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     const std::string& cpu_format,
@@ -41,8 +63,15 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     bool stats                  = false,
     bool null                   = false,
     bool enable_size_map        = false,
-    bool continue_on_bad_packet = false)
+    bool continue_on_bad_packet = false,
+    
+    size_t loc_id               = 0,
+    size_t files_per_loc        = 10)
 {
+    
+    size_t file_num = 0;
+    const std::string this_filename = generate_out_filename(file, file_num, loc_id);
+    unsigned long long num_loc_samps = 0;
     unsigned long long num_total_samps = 0;
     // create a receive streamer
     uhd::stream_args_t stream_args(cpu_format, wire_format);
@@ -55,13 +84,17 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     std::vector<samp_type> buff(samps_per_buff);
     std::ofstream outfile;
     if (not null)
-        outfile.open(file.c_str(), std::ofstream::binary);
+        outfile.open(this_filename.c_str(), std::ofstream::binary);
     bool overflow_message = true;
 
     // setup streaming
+    /*
     uhd::stream_cmd_t stream_cmd((num_requested_samples == 0)
                                      ? uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS
                                      : uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
+    */
+    double timeout = 0.5f;
+    uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
     stream_cmd.num_samps  = size_t(num_requested_samples);
     stream_cmd.stream_now = true;
     stream_cmd.time_spec  = uhd::time_spec_t();
@@ -76,16 +109,20 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     auto last_update                     = start_time;
     unsigned long long last_update_samps = 0;
 
+    
     // Run this loop until either time expired (if a duration was given), until
     // the requested number of samples were collected (if such a number was
     // given), or until Ctrl-C was pressed.
-    while (not stop_signal_called
+    while (not stop_signal_called){
+        /*
            and (num_requested_samples != num_total_samps or num_requested_samples == 0)
            and (time_requested == 0.0 or std::chrono::steady_clock::now() <= stop_time)) {
+        */
         const auto now = std::chrono::steady_clock::now();
 
         size_t num_rx_samps =
-            rx_stream->recv(&buff.front(), buff.size(), md, 3.0, enable_size_map);
+            rx_stream->recv(&buff.front(), buff.size(), md, timeout, enable_size_map);
+        timeout = 0.2f;
 
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
             std::cout << boost::format("Timeout while streaming") << std::endl;
@@ -122,9 +159,21 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
         }
 
         num_total_samps += num_rx_samps;
-
+        
         if (outfile.is_open()) {
             outfile.write((const char*)&buff.front(), num_rx_samps * sizeof(samp_type));
+        }
+
+        num_loc_samps   += num_rx_samps;
+        if (num_loc_samps >= num_requested_samples ){
+            num_loc_samps = 0;
+            outfile.close();
+            file_num +=1;
+            if (file_num >= files_per_loc){
+                break;
+            }
+            const std::string this_filename = generate_out_filename(file, file_num, loc_id);
+            outfile.open(this_filename.c_str(), std::ofstream::binary);
         }
 
         if (bw_summary) {
@@ -231,7 +280,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("nsamps", po::value<size_t>(&total_num_samps)->default_value(0), "total number of samples to receive")
         ("duration", po::value<double>(&total_time)->default_value(0), "total number of seconds to receive")
         ("spb", po::value<size_t>(&spb)->default_value(10000), "samples per buffer")
-        ("rate", po::value<double>(&rate)->default_value(12.5e6), "rate of incoming samples")
+        ("rate", po::value<double>(&rate)->default_value(6.25e6), "rate of incoming samples")
         ("freq", po::value<double>(&freq)->default_value(2.4e9), "RF center frequency in Hz")
         ("lo-offset", po::value<double>(&lo_offset)->default_value(0.0),
             "Offset for frontend LO in Hz (optional)")
@@ -286,6 +335,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // Lock mboard clocks
     if (vm.count("ref")) {
         usrp->set_clock_source(ref);
+        std::cout << "Clock Source: " << usrp->get_clock_source(0) << std::endl;
     }
 
     // always select the subdevice first, the channel mapping affects the other settings
@@ -383,7 +433,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         std::signal(SIGINT, &sig_int_handler);
         std::cout << "Press Ctrl + C to stop streaming..." << std::endl;
     }
-
+/*  
 #define recv_to_file_args(format) \
     (usrp,                        \
         format,                   \
@@ -398,26 +448,52 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         null,                     \
         enable_size_map,          \
         continue_on_bad_packet)
+*/ 
+    size_t loc_id = 0;
+    size_t files_per_loc = 5;
+    std::cout << "starting location ID: ";
+    std::cin >> loc_id;
+    #define recv_to_file_args(format, id_loc, num_per_loc) \
+    (usrp,                        \
+        format,                   \
+        wirefmt,                  \
+        channel,                  \
+        file,                     \
+        spb,                      \
+        total_num_samps,          \
+        total_time,               \
+        bw_summary,               \
+        stats,                    \
+        null,                     \
+        enable_size_map,          \
+        continue_on_bad_packet,   \
+        id_loc,            \
+        num_per_loc)
     // recv to file
+    do{
+    
     if (wirefmt == "s16") {
         if (type == "double")
-            recv_to_file<double> recv_to_file_args("f64");
+            recv_to_file<double> recv_to_file_args("f64", loc_id, files_per_loc);
         else if (type == "float")
-            recv_to_file<float> recv_to_file_args("f32");
+            recv_to_file<float> recv_to_file_args("f32", loc_id, files_per_loc);
         else if (type == "short")
-            recv_to_file<short> recv_to_file_args("s16");
+            recv_to_file<short> recv_to_file_args("s16", loc_id, files_per_loc);
         else
             throw std::runtime_error("Unknown type " + type);
     } else {
         if (type == "double")
-            recv_to_file<std::complex<double>> recv_to_file_args("fc64");
+            recv_to_file<std::complex<double>> recv_to_file_args("fc64", loc_id, files_per_loc);
         else if (type == "float")
-            recv_to_file<std::complex<float>> recv_to_file_args("fc32");
+            recv_to_file<std::complex<float>> recv_to_file_args("fc32", loc_id, files_per_loc);
         else if (type == "short")
-            recv_to_file<std::complex<short>> recv_to_file_args("sc16");
+            recv_to_file<std::complex<short>> recv_to_file_args("sc16", loc_id, files_per_loc);
         else
             throw std::runtime_error("Unknown type " + type);
     }
+        /* code */
+    std::cout << "Next Location ID: ";
+    } while (std::cin >> loc_id);
 
     // finished
     std::cout << std::endl << "Done!" << std::endl << std::endl;
