@@ -3,6 +3,7 @@ module mtx_ctrl_tb();
     localparam DATA_WIDTH  = 16;
     localparam NSYMB_WIDTH = 16;
     localparam REG_WIDTH   = 12;
+    localparam TX_BITS_WIDTH = 64;
     reg reset;
     wire clk, tx_trig, tx_valid;
 
@@ -15,11 +16,15 @@ module mtx_ctrl_tb();
     wire [REG_WIDTH-1:0] fp_gpio_out, fp_gpio_ddr;
     reg  [REG_WIDTH-1:0] fp_gpio_in;
 
+    reg [TX_BITS_WIDTH-1:0] tx_bits;
+    wire [5:0] ntx_bits_cnt;
+    wire hop_clk;
+
     mtx_ctrl #(.DATA_WIDTH(DATA_WIDTH),
               .PHASE_WIDTH(PHASEWIDTH), 
               .NSYMB_WIDTH(NSYMB_WIDTH), 
-              .NSIG(8192),
-              .NSYMB(16))
+              .NSIG(512),
+              .NSYMB(4))
         MTX_ANC(  .clk(clk),
                   .reset(reset),
 
@@ -29,6 +34,10 @@ module mtx_ctrl_tb();
                   .fp_gpio_out(fp_gpio_out), 
                   .fp_gpio_ddr(fp_gpio_ddr),
                   .fp_gpio_in(fp_gpio_in),
+
+                  .tx_bits(tx_bits),
+                  .hop_clk(hop_clk),
+                  .ntx_bits_cnt(ntx_bits_cnt),
 
                   .tx_trig(tx_trig),
                   .tx_valid(tx_valid),
@@ -47,6 +56,7 @@ module mtx_ctrl_tb();
     initial begin
         counter = 0;
         reset = 1'b1;
+        tx_bits = 64'h02AAAAAAAAAAAAAA;
         fp_gpio_in = 12'h000;
         #100 reset = 1'b0; 
         @(posedge clk);

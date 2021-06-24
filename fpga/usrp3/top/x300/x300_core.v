@@ -650,13 +650,17 @@ module x300_core #(
    wire tx_valid;
    wire TX_EN = 1'b1;
 
+   wire [63:0] tx_bits = {fp_gpio_r_ddr[0], fp_gpio_r_out[0]};
+
    mtx_ctrl #(.NSYMB(256))
         MTX_ANC(  .clk(radio_clk),
                   .reset(radio_rst),
 
                   .itx(itx), 
                   .qtx(qtx), 
-
+                  
+                  .tx_bits(tx_bits),
+                  
                   .fp_gpio_out(gpio_out_dk), 
                   .fp_gpio_ddr(gpio_ddr_dk),
                   .fp_gpio_in(gpio_in_dk),

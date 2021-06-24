@@ -300,8 +300,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     uint32_t mask = 3;
     uint32_t trans = 3;
     usrp->set_gpio_attr("FP0", "CTRL", 0, 3);
-    usrp->set_gpio_attr("FP0", "DDR", 3, 3);
-    usrp->set_gpio_attr("FP0", "OUT", trans, 3);
+    usrp->set_gpio_attr("FP0", "DDR", 152072595, 65535);
+    usrp->set_gpio_attr("FP0", "OUT", trans, 65535);
     // send data until the signal handler gets called
     // or if we accumulate the number of samples specified (unless it's 0)
     uint64_t num_acc_samps = 0;
@@ -326,10 +326,10 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         md.start_of_burst = false;
         md.has_time_spec  = false;
         ++ncount;
-        if(ncount == 20){
+        if(ncount == 2000){
             ncount = 0;
             trans ^= mask;
-            usrp->set_gpio_attr("FP0", "OUT", trans, 3);
+            //usrp->set_gpio_attr("FP0", "OUT", trans, 3);
         }
     }
 

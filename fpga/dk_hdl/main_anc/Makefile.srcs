@@ -6,4 +6,5 @@
 DK_MTX_ANC_SRCS = $(abspath $(addprefix $(BASE_DIR)/../../dk_hdl/main_anc/, \
 mtx_sig.v \
 mtx_ctrl.v \
+hop_ctrl.v \
 ))

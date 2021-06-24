@@ -39,6 +39,7 @@ $(RFNOC_BLOCK_DDC_SRCS) \
 $(DK_FP_GPIO_SRCS) \
 mtx_ctrl.v \
 mtx_sig.v \
+hop_ctrl.v\
 )
 
 #-------------------------------------------------
