@@ -6,7 +6,6 @@ module hop_ctrl #(
 )(
   input   clk,
   input   reset,
-  input   srst,
 
   /* */
   output scan_id,
@@ -32,7 +31,7 @@ module hop_ctrl #(
   assign scan_chk = scan_cnt;
   
 
-  assign scan_id        = hop_ctrl_valid; // && nbits_tx <= NTX_BITS; 
+  assign scan_id        = hop_ctrl_valid && nbits_tx <= NTX_BITS; 
   assign scan_phi       = (scan_cnt == 2'b00  && nbits_tx < NTX_BITS) ? 1'b1 : 1'b0;
   assign scan_phi_bar   = (scan_cnt == 2'b10  && nbits_tx < NTX_BITS) ? 1'b1 : 1'b0;
   assign scan_data_in   = input_data[nbits_tx];
@@ -41,12 +40,7 @@ module hop_ctrl #(
   always @(posedge clk) begin
       if(reset) begin
         nbits_tx <= {(BIT_CNT_WIDTH){1'b1}};
-        input_data <= { {(TX_BITS_WIDTH - 64){1'b0}}, 64'hAAAAAAAAAAAAAAAA };
-        hop_ctrl_valid <= 1'b1;
-      end 
-      else if(srst) begin
-        nbits_tx <= {(BIT_CNT_WIDTH){1'b1}};
-        input_data <= |data_in[3:0] ? data_in : { {(TX_BITS_WIDTH - 64){1'b0}}, 64'hAAAAAAAAAAAAAAAA };
+        input_data <= |data_in[3:0] ? data_in : { {(TX_BITS_WIDTH - 80){1'b0}}, 80'h2AAAAAAAAAAAAAAAAAAA };
         hop_ctrl_valid <= 1'b1;
       end 
       else if (hop_ctrl_valid && scan_cnt == 2'b11) begin

@@ -28,6 +28,7 @@ module mtx_ctrl #(
   input  [TX_BITS_WIDTH-1:0] tx_bits,
   output hop_clk,
   output [BIT_CNT_WIDTH-1:0] ntx_bits_cnt,
+  output hop_rst,
 
   output tx_valid,
   /*debug*/
@@ -81,6 +82,7 @@ module mtx_ctrl #(
   reg hop_reset;
   wire scan_clk;
   assign hop_clk = scan_clk;
+  assign hop_rst = hop_reset;
   wire scan_id, scan_phi, scan_phi_bar, scan_data_in, scan_load_chip;
 
   wire [GPIO_REG_WIDTH-1:0] SCAN_ID, SCAN_PHI, SCAN_PHI_BAR;
@@ -105,8 +107,7 @@ module mtx_ctrl #(
              .TX_BITS_WIDTH(TX_BITS_WIDTH),
              .BIT_CNT_WIDTH(BIT_CNT_WIDTH))
       HOP_CTRL(
-        .clk(scan_clk), .reset(reset),
-        .srst(hop_reset),
+        .clk(scan_clk), .reset(reset | hop_reset),
 
         .scan_id(scan_id),
         .scan_phi(scan_phi),

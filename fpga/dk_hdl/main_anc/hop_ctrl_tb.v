@@ -16,7 +16,7 @@ module hop_ctrl_tb();
     assign clk = (counter < 3) ? 1'b1 : 1'b0;
 
     hop_ctrl DUT(
-        .clk(clk), .reset(reset), .srst(srst),
+        .clk(clk), .reset(reset), 
 
         .scan_id(scan_id),
         .scan_phi(scan_phi),
@@ -40,9 +40,13 @@ module hop_ctrl_tb();
         #100 reset = 1'b0; 
         @(posedge clk);
         repeat(1000) @(posedge clk);
-        srst = 1'b1; 
+        reset = 1'b1; 
         data_in = 0;
-        #100 srst = 1'b0; 
+        #100 reset = 1'b0; 
+        repeat(1000) @(posedge clk);
+        reset = 1'b1; 
+        data_in = { {(TX_BITS_WIDTH - 80){1'b0}}, 80'h0AAAAAAAAAAAAAAAAAAA};
+        #100 reset = 1'b0; 
         repeat(1000) @(posedge clk);
         $finish();
     end

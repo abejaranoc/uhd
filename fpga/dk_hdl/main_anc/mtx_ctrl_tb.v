@@ -19,7 +19,7 @@ module mtx_ctrl_tb();
 
     reg [TX_BITS_WIDTH-1:0] tx_bits;
     wire [BIT_CNT_WIDTH-1:0] ntx_bits_cnt;
-    wire hop_clk;
+    wire hop_clk, hop_rst;
 
     mtx_ctrl #(.DATA_WIDTH(DATA_WIDTH),
               .PHASE_WIDTH(PHASEWIDTH), 
@@ -31,6 +31,7 @@ module mtx_ctrl_tb();
 
                   .itx(itx), 
                   .qtx(qtx), 
+                  .hop_rst(hop_rst),
 
                   .fp_gpio_out(fp_gpio_out), 
                   .fp_gpio_ddr(fp_gpio_ddr),
@@ -61,9 +62,9 @@ module mtx_ctrl_tb();
         fp_gpio_in = 12'h000;
         #100 reset = 1'b0; 
         @(posedge clk);
-        repeat(1000000) @(posedge clk);
+        repeat(500000) @(posedge clk);
         tx_bits = 0;
-        repeat(1000000) @(posedge clk);
+        repeat(500000) @(posedge clk);
         $finish();
     end
 
