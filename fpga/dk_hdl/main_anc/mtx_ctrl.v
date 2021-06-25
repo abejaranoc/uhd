@@ -1,12 +1,13 @@
 module mtx_ctrl #(
-  parameter DATA_WIDTH    = 16,
-  parameter PHASE_WIDTH   = 24,
-  parameter NSYMB_WIDTH   = 16,
-  parameter GPIO_REG_WIDTH    = 12,
-  parameter TX_BITS_WIDTH = 64,
+  parameter DATA_WIDTH     = 16,
+  parameter PHASE_WIDTH    = 24,
+  parameter NSYMB_WIDTH    = 16,
+  parameter GPIO_REG_WIDTH = 12,
+  parameter TX_BITS_WIDTH  = 128,
+  parameter BIT_CNT_WIDTH  = 7,
 
-  parameter [NSYMB_WIDTH-1:0] NSYMB        = 256, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 4096,
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 16384,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
   parameter [PHASE_WIDTH-1:0] START_PH_INC = 8192,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
@@ -26,7 +27,7 @@ module mtx_ctrl #(
 
   input  [TX_BITS_WIDTH-1:0] tx_bits,
   output hop_clk,
-  output [5:0] ntx_bits_cnt,
+  output [BIT_CNT_WIDTH-1:0] ntx_bits_cnt,
 
   output tx_valid,
   /*debug*/
@@ -74,8 +75,8 @@ module mtx_ctrl #(
 
   localparam SCAN_CLK_DIV_FAC  = 20;
   localparam SCAN_WIDTH        = 2;
-  localparam NTX_BITS          = 58;
-  localparam BIT_CNT_WIDTH     = 6;
+  localparam NTX_BITS          = 78;
+  //localparam BIT_CNT_WIDTH     = 7;
 
   reg hop_reset;
   wire scan_clk;
@@ -104,7 +105,8 @@ module mtx_ctrl #(
              .TX_BITS_WIDTH(TX_BITS_WIDTH),
              .BIT_CNT_WIDTH(BIT_CNT_WIDTH))
       HOP_CTRL(
-        .clk(scan_clk), .reset(reset | hop_reset),
+        .clk(scan_clk), .reset(reset),
+        .srst(hop_reset),
 
         .scan_id(scan_id),
         .scan_phi(scan_phi),

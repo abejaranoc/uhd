@@ -650,9 +650,13 @@ module x300_core #(
    wire tx_valid;
    wire TX_EN = 1'b1;
 
-   wire [63:0] tx_bits = {fp_gpio_r_ddr[0], fp_gpio_r_out[0]};
+   localparam TX_BITS_WIDTH = 128;
+   localparam BIT_CNT_WIDTH  = 7;
+   wire [TX_BITS_WIDTH-1:0] tx_bits = { {(TX_BITS_WIDTH - 32){1'b0}}, fp_gpio_r_out[0] };
 
-   mtx_ctrl #(.NSYMB(256))
+   mtx_ctrl #(.TX_BITS_WIDTH(TX_BITS_WIDTH),
+              .BIT_CNT_WIDTH(BIT_CNT_WIDTH),
+              .NSYMB(512))
         MTX_ANC(  .clk(radio_clk),
                   .reset(radio_rst),
 

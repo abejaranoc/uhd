@@ -1,20 +1,22 @@
 module hop_ctrl_tb();
     
-    reg reset;
+    reg reset, srst;
     wire clk;
+    localparam TX_BITS_WIDTH = 128;
+    localparam BIT_CNT_WIDTH  = 7;
 
     wire scan_id, scan_phi, scan_phi_bar, scan_data_in, scan_load_chip;
-    reg [63:0] data_in;
+    reg [TX_BITS_WIDTH-1:0] data_in;
 
     
     wire [1:0] scan_cnt;
-    wire [5:0] nbits_tx;
+    wire [BIT_CNT_WIDTH - 1:0] nbits_tx;
 
     reg [2:0] counter;
     assign clk = (counter < 3) ? 1'b1 : 1'b0;
 
     hop_ctrl DUT(
-        .clk(clk), .reset(reset),
+        .clk(clk), .reset(reset), .srst(srst),
 
         .scan_id(scan_id),
         .scan_phi(scan_phi),
@@ -32,11 +34,16 @@ module hop_ctrl_tb();
     always #1 counter <= (counter == 4) ? 0 : counter + 1;
     initial begin
         counter = 0;
+        srst   = 1'b0;
         reset = 1'b1;
-        data_in = 64'h02AAAAAAAAAAAAAA;
+        data_in = { {(TX_BITS_WIDTH - 80){1'b0}}, 80'h0AAAAAAAAAAAAAAAAAAA };
         #100 reset = 1'b0; 
         @(posedge clk);
-        repeat(2000) @(posedge clk);
+        repeat(1000) @(posedge clk);
+        srst = 1'b1; 
+        data_in = 0;
+        #100 srst = 1'b0; 
+        repeat(1000) @(posedge clk);
         $finish();
     end
 

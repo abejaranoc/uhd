@@ -3,7 +3,8 @@ module mtx_ctrl_tb();
     localparam DATA_WIDTH  = 16;
     localparam NSYMB_WIDTH = 16;
     localparam REG_WIDTH   = 12;
-    localparam TX_BITS_WIDTH = 64;
+    localparam TX_BITS_WIDTH = 128;
+    localparam BIT_CNT_WIDTH  = 7;
     reg reset;
     wire clk, tx_trig, tx_valid;
 
@@ -17,7 +18,7 @@ module mtx_ctrl_tb();
     reg  [REG_WIDTH-1:0] fp_gpio_in;
 
     reg [TX_BITS_WIDTH-1:0] tx_bits;
-    wire [5:0] ntx_bits_cnt;
+    wire [BIT_CNT_WIDTH-1:0] ntx_bits_cnt;
     wire hop_clk;
 
     mtx_ctrl #(.DATA_WIDTH(DATA_WIDTH),
@@ -56,11 +57,13 @@ module mtx_ctrl_tb();
     initial begin
         counter = 0;
         reset = 1'b1;
-        tx_bits = 64'h02AAAAAAAAAAAAAA;
+        tx_bits = { {(TX_BITS_WIDTH - 80){1'b0}}, 80'h0AAAAAAAAAAAAAAAAAAA };
         fp_gpio_in = 12'h000;
         #100 reset = 1'b0; 
         @(posedge clk);
-        repeat(2000000) @(posedge clk);
+        repeat(1000000) @(posedge clk);
+        tx_bits = 0;
+        repeat(1000000) @(posedge clk);
         $finish();
     end
 

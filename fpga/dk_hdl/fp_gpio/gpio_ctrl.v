@@ -1,9 +1,9 @@
 module gpio_ctrl #(
   parameter GPIO_REG_WIDTH    = 12,
   parameter CLK_DIV_FAC       = 10,
-  parameter [GPIO_REG_WIDTH-1:0] OUT_MASK = 12'h011,
-  parameter [GPIO_REG_WIDTH-1:0] IN_MASK  = 12'h044,
-  parameter [GPIO_REG_WIDTH-1:0] IO_DDR   = 12'h011
+  parameter [GPIO_REG_WIDTH-1:0] OUT_MASK = 12'hD55,
+  parameter [GPIO_REG_WIDTH-1:0] IN_MASK  = 12'h022,
+  parameter [GPIO_REG_WIDTH-1:0] IO_DDR   = 12'hD55
 )(
   input   clk,
   input   reset,
