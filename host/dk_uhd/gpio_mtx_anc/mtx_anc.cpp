@@ -45,6 +45,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     double rate, freq, gain, power, wave_freq, bw, lo_offset;
     float ampl;
 
+    uint32_t ddr_reg, out_reg;
+
     // setup the program options
     po::options_description desc("Allowed options");
     // clang-format off
@@ -52,8 +54,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("help", "help message")
         ("args", po::value<std::string>(&args)->default_value("addr=192.168.10.2"), "single uhd device address args")
         ("spb", po::value<size_t>(&spb)->default_value(0), "samples per buffer, 0 for default")
-        ("nsamps", po::value<uint64_t>(&total_num_samps)->default_value(0), "total number of samples to transmit")
-        ("rate", po::value<double>(&rate)->default_value(10e6), "rate of outgoing samples")
+        ("nsamps", po::value<uint64_t>(&total_num_samps)->default_value(2000000), "total number of samples to transmit")
+        ("rate", po::value<double>(&rate)->default_value(1e6), "rate of outgoing samples")
         ("freq", po::value<double>(&freq)->default_value(2.4e9), "RF center frequency in Hz")
         ("lo-offset", po::value<double>(&lo_offset)->default_value(0.0),
             "Offset for frontend LO in Hz (optional)")
@@ -70,6 +72,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("otw", po::value<std::string>(&otw)->default_value("sc16"), "specify the over-the-wire sample mode")
         ("channels", po::value<std::string>(&channel_list)->default_value("0"), "which channels to use (specify \"0\", \"1\", \"0,1\", etc)")
         ("int-n", "tune USRP with integer-N tuning")
+        ("ddr", po::value<uint32_t>(&ddr_reg)->default_value(0xAAAAAAAA), "GPIO DDR reg value")
+        ("out", po::value<uint32_t>(&out_reg)->default_value(0xAAAAAAAA), "GPIO OUT reg value")
     ;
     // clang-format on
     po::variables_map vm;
@@ -288,54 +292,57 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     std::signal(SIGINT, &sig_int_handler);
     std::cout << "Press Ctrl + C to stop streaming..." << std::endl;
 
-    // Set up metadata. We start streaming a bit in the future
-    // to allow MIMO operation:
-    uhd::tx_metadata_t md;
-    md.start_of_burst = true;
-    md.end_of_burst   = false;
-    md.has_time_spec  = true;
-    md.time_spec      = usrp->get_time_now() + uhd::time_spec_t(0.1);
 
-    size_t ncount = 0;
-    uint32_t mask = 3;
-    uint32_t trans = 3;
-    usrp->set_gpio_attr("FP0", "CTRL", 0, 3);
-    usrp->set_gpio_attr("FP0", "DDR", 152072595, 65535);
-    usrp->set_gpio_attr("FP0", "OUT", trans, 65535);
-    // send data until the signal handler gets called
-    // or if we accumulate the number of samples specified (unless it's 0)
-    uint64_t num_acc_samps = 0;
-    while (true) {
-        // Break on the end of duration or CTRL-C
-        if (stop_signal_called) {
-            break;
+    std::cout << "Input the DDR and OUT reg values: " ;
+    std::cin >> std::hex >> ddr_reg >> out_reg ;
+
+    do{
+            
+        // Set up metadata. We start streaming a bit in the future
+        // to allow MIMO operation:
+        uhd::tx_metadata_t md;
+        md.start_of_burst = true;
+        md.end_of_burst   = false;
+        md.has_time_spec  = true;
+        md.time_spec      = usrp->get_time_now() + uhd::time_spec_t(0.1);
+
+
+        uint32_t mask = 0xFFFFFFFF;
+        usrp->set_gpio_attr("FP0", "CTRL", 0, mask);
+        usrp->set_gpio_attr("FP0", "DDR", ddr_reg, mask);
+        usrp->set_gpio_attr("FP0", "OUT", out_reg, mask);
+        // send data until the signal handler gets called
+        // or if we accumulate the number of samples specified (unless it's 0)
+        uint64_t num_acc_samps = 0;
+        while (true) {
+            // Break on the end of duration or CTRL-C
+            if (stop_signal_called) {
+                break;
+            }
+            // Break when we've received nsamps
+            if (total_num_samps > 0 and num_acc_samps >= total_num_samps) {
+                break;
+            }
+
+            // send the entire contents of the buffer
+            num_acc_samps += tx_stream->send(buffs, buff.size(), md);
+
+            // fill the buffer with the waveform
+            for (size_t n = 0; n < buff.size(); n++) {
+                buff[n] = wave_table(index += step);
+            }
+
+            md.start_of_burst = false;
+            md.has_time_spec  = false;
         }
-        // Break when we've received nsamps
-        if (total_num_samps > 0 and num_acc_samps >= total_num_samps) {
-            break;
-        }
 
-        // send the entire contents of the buffer
-        num_acc_samps += tx_stream->send(buffs, buff.size(), md);
+        // send a mini EOB packet
+        md.end_of_burst = true;
+        tx_stream->send("", 0, md);
 
-        // fill the buffer with the waveform
-        for (size_t n = 0; n < buff.size(); n++) {
-            buff[n] = wave_table(index += step);
-        }
+        std::cout << "Input the DDR and OUT reg in hex values: " ;
 
-        md.start_of_burst = false;
-        md.has_time_spec  = false;
-        ++ncount;
-        if(ncount == 2000){
-            ncount = 0;
-            trans ^= mask;
-            //usrp->set_gpio_attr("FP0", "OUT", trans, 3);
-        }
-    }
-
-    // send a mini EOB packet
-    md.end_of_burst = true;
-    tx_stream->send("", 0, md);
+    } while( std::cin >> std::hex >> ddr_reg >> out_reg );
 
     // finished
     std::cout << std::endl << "Done!" << std::endl << std::endl;
