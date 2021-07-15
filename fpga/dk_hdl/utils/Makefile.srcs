@@ -1,0 +1,9 @@
+
+
+##################################################
+# DK Sources
+##################################################
+DK_UTILS_SRCS = $(abspath $(addprefix $(BASE_DIR)/../../dk_hdl/utils/, \
+fir_filter_iq.v \
+cmul_16.v \
+))
