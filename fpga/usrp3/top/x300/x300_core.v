@@ -654,7 +654,7 @@ module x300_core #(
    localparam BIT_CNT_WIDTH  = 7;
    wire [TX_BITS_WIDTH-1:0] tx_bits = { {(TX_BITS_WIDTH - 32){1'b0}}, fp_gpio_r_out[0] };
 
-   wire [2*DATA_WIDTH-1:0] rx_sync_data;
+   wire [31:0] rx_sync_data;
    wire rx_sync;
    mtx_ctrl2 #(.TX_BITS_WIDTH(TX_BITS_WIDTH),
               .BIT_CNT_WIDTH(BIT_CNT_WIDTH),
