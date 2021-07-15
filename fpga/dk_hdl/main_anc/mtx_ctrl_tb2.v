@@ -1,4 +1,4 @@
-module mtx_ctrl_tb();
+module mtx_ctrl_tb2();
     localparam PHASEWIDTH  = 24;
     localparam DATA_WIDTH  = 16;
     localparam NSYMB_WIDTH = 16;
@@ -21,11 +21,15 @@ module mtx_ctrl_tb();
     wire [BIT_CNT_WIDTH-1:0] ntx_bits_cnt;
     wire hop_clk, hop_rst;
 
-    mtx_ctrl #(.DATA_WIDTH(DATA_WIDTH),
+    wire [2*DATA_WIDTH-1:0] rx_sync_data;
+    wire rx_sync;
+
+    mtx_ctrl2 #(.DATA_WIDTH(DATA_WIDTH),
               .PHASE_WIDTH(PHASEWIDTH), 
               .NSYMB_WIDTH(NSYMB_WIDTH), 
               .NSIG(16384),
-              .NSYMB(4))
+              .FREQ_SHIFT(8192),
+              .NSYMB(8))
         MTX_ANC(  .clk(clk),
                   .reset(reset),
 
@@ -40,6 +44,9 @@ module mtx_ctrl_tb();
                   .tx_bits(tx_bits),
                   .hop_clk(hop_clk),
                   .ntx_bits_cnt(ntx_bits_cnt),
+
+                  .rx_sync(rx_sync),
+                  .rx_sync_data(rx_sync_data),
 
                   .tx_trig(tx_trig),
                   .tx_valid(tx_valid),
@@ -62,9 +69,9 @@ module mtx_ctrl_tb();
         fp_gpio_in = 12'h000;
         #100 reset = 1'b0; 
         @(posedge clk);
-        repeat(50000) @(posedge clk);
+        repeat(100000) @(posedge clk);
         tx_bits = 0;
-        repeat(50000) @(posedge clk);
+        repeat(100000) @(posedge clk);
         $finish();
     end
 

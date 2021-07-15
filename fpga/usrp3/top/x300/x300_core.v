@@ -654,15 +654,20 @@ module x300_core #(
    localparam BIT_CNT_WIDTH  = 7;
    wire [TX_BITS_WIDTH-1:0] tx_bits = { {(TX_BITS_WIDTH - 32){1'b0}}, fp_gpio_r_out[0] };
 
-   mtx_ctrl #(.TX_BITS_WIDTH(TX_BITS_WIDTH),
+   wire [2*DATA_WIDTH-1:0] rx_sync_data;
+   wire rx_sync;
+   mtx_ctrl2 #(.TX_BITS_WIDTH(TX_BITS_WIDTH),
               .BIT_CNT_WIDTH(BIT_CNT_WIDTH),
-              .NSYMB(512))
+              .NSYMB(8))
         MTX_ANC(  .clk(radio_clk),
                   .reset(radio_rst),
 
                   .itx(itx), 
                   .qtx(qtx), 
                   
+                  .rx_sync(rx_sync),
+                  .rx_sync_data(rx_sync_data),
+
                   .tx_bits(tx_bits),
                   
                   .fp_gpio_out(gpio_out_dk), 
@@ -698,11 +703,12 @@ module x300_core #(
    assign rx_data_in_r[0][63:32] = rx_data_in[1];
    assign rx_data_in_r[1][31:0]  = rx_data_in[2];
    assign rx_data_in_r[1][63:32] = rx_data_in[3];
+   
 
-   assign rx_data[0] = rx_data_r[0][31:0] ;
-   assign rx_data[1] = rx_data_r[0][63:32];
-   assign rx_data[2] = rx_data_r[1][31:0] ;
-   assign rx_data[3] = rx_data_r[1][63:32];
+   assign rx_data[0] = rx_sync ? rx_sync_data : rx_data_r[0][31:0] ;
+   assign rx_data[1] = rx_sync ? rx_sync_data : rx_data_r[0][63:32];
+   assign rx_data[2] = rx_sync ? rx_sync_data : rx_data_r[1][31:0] ;
+   assign rx_data[3] = rx_sync ? rx_sync_data : rx_data_r[1][63:32];
 
    assign rx_stb[0] = rx_stb_r[0][0];
    assign rx_stb[1] = rx_stb_r[0][1];

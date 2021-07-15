@@ -39,17 +39,19 @@ $(RFNOC_BLOCK_DDC_SRCS) \
 $(DK_FP_GPIO_SRCS) \
 mtx_ctrl.v \
 mtx_sig.v \
-hop_ctrl.v\
+mtx_ctrl2.v \
+mtx_sig2.v \
+hop_ctrl.v \
 )
 
 #-------------------------------------------------
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = hop_ctrl_tb 
+SIM_TOP = mtx_ctrl_tb2 
 SIM_RUNTIME_US = 200000
 SIM_SRCS = \
-$(abspath hop_ctrl_tb.v) \
+$(abspath mtx_ctrl_tb2.v) \
 
 #SIM_SRCS = \
 $(abspath $(IP_BUILD_DIR)/dds_sin_cos_lut_only/sim/dds_sin_cos_lut_only.vhd) \
