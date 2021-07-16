@@ -69,9 +69,9 @@ module mtx_ctrl_tb2();
         fp_gpio_in = 12'h000;
         #100 reset = 1'b0; 
         @(posedge clk);
-        repeat(100000) @(posedge clk);
+        repeat(1000000) @(posedge clk);
         tx_bits = 0;
-        repeat(100000) @(posedge clk);
+        //repeat(100000) @(posedge clk);
         $finish();
     end
 
