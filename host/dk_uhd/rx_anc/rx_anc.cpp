@@ -210,6 +210,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     double rx_rate, rx_freq, rx_gain, rx_bw;
     double settling;
 
+    uint32_t ddr_reg, out_reg;
+
     // setup the program options
     po::options_description desc("Allowed options");
     // clang-format off
@@ -218,22 +220,22 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("tx-args", po::value<std::string>(&tx_args)->default_value("addr=192.168.10.2"), "uhd transmit device address args")
         ("rx-args", po::value<std::string>(&rx_args)->default_value("addr=192.168.10.2"), "uhd receive device address args")
         ("file", po::value<std::string>(&file)->default_value("usrp_samples.dat"), "name of the file to write binary samples to")
-        ("save_file", po::value<size_t>(&save_file)->default_value(0), "save file option")
+        ("save_file", po::value<size_t>(&save_file)->default_value(1), "save file option")
         ("type", po::value<std::string>(&type)->default_value("short"), "sample type in file: double, float, or short")
-        ("nsamps", po::value<size_t>(&total_num_samps)->default_value(0), "total number of samples to receive")
+        ("nsamps", po::value<size_t>(&total_num_samps)->default_value(2000000), "total number of samples to receive")
         ("settling", po::value<double>(&settling)->default_value(double(0.2)), "settling time (seconds) before receiving")
         ("spb", po::value<size_t>(&spb)->default_value(10000), "samples per buffer, 0 for default")
         ("tx-rate", po::value<double>(&tx_rate)->default_value(12.5e6), "rate of transmit outgoing samples")
         ("rx-rate", po::value<double>(&rx_rate)->default_value(12.5e6), "rate of receive incoming samples")
         ("tx-freq", po::value<double>(&tx_freq)->default_value(2.4e9), "transmit RF center frequency in Hz")
-        ("rx-freq", po::value<double>(&rx_freq)->default_value(2.4e9), "receive RF center frequency in Hz")
+        ("rx-freq", po::value<double>(&rx_freq)->default_value(0), "receive RF center frequency in Hz")
         ("ampl", po::value<float>(&ampl)->default_value(float(0.3)), "amplitude of the waveform [0 to 0.7]")
         ("tx-gain", po::value<double>(&tx_gain)->default_value(0), "gain for the transmit RF chain")
         ("rx-gain", po::value<double>(&rx_gain)->default_value(0), "gain for the receive RF chain")
         ("tx-ant", po::value<std::string>(&tx_ant)->default_value("TX/RX"), "transmit antenna selection")
-        ("rx-ant", po::value<std::string>(&rx_ant)->default_value("RX2"), "receive antenna selection")
+        ("rx-ant", po::value<std::string>(&rx_ant)->default_value("BA"), "receive antenna selection")
         ("tx-subdev", po::value<std::string>(&tx_subdev)->default_value("A:0"), "transmit subdevice specification")
-        ("rx-subdev", po::value<std::string>(&rx_subdev)->default_value("A:0"), "receive subdevice specification")
+        ("rx-subdev", po::value<std::string>(&rx_subdev)->default_value("B:0"), "receive subdevice specification")
         ("tx-bw", po::value<double>(&tx_bw)->default_value(160e6), "analog transmit filter bandwidth in Hz")
         ("rx-bw", po::value<double>(&rx_bw)->default_value(160e6), "analog receive filter bandwidth in Hz")
         ("wave-type", po::value<std::string>(&wave_type)->default_value("SINE"), "waveform type (CONST, SQUARE, RAMP, SINE)")
@@ -244,6 +246,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("rx-channels", po::value<std::string>(&rx_channels)->default_value("0"), "which RX channel(s) to use (specify \"0\", \"1\", \"0,1\", etc)")
         ("tx-int-n", "tune USRP TX with integer-N tuning")
         ("rx-int-n", "tune USRP RX with integer-N tuning")
+        ("code", po::value<uint32_t>(&out_reg)->default_value(0xAAAAAAAA), "frequency code")
     ;
     // clang-format on
     po::variables_map vm;
@@ -529,6 +532,16 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         std::signal(SIGINT, &sig_int_handler);
         std::cout << "Press Ctrl + C to stop streaming..." << std::endl;
     }
+
+    /*
+    std::cout << "Input the frequency code value in hex: " ;
+    std::cin >> std::hex >> out_reg ;
+    ddr_reg = out_reg;
+    uint32_t mask = 0xFFFFFFFF;
+    tx_usrp->set_gpio_attr("FP0", "CTRL", 0, mask);
+    tx_usrp->set_gpio_attr("FP0", "DDR", ddr_reg, mask);
+    tx_usrp->set_gpio_attr("FP0", "OUT", out_reg, mask);
+    */
 
     // reset usrp time to prepare for transmit/receive
     std::cout << boost::format("Setting device timestamp to 0...") << std::endl;
