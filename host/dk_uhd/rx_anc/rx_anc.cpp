@@ -533,15 +533,16 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         std::cout << "Press Ctrl + C to stop streaming..." << std::endl;
     }
 
-    /*
+    
     std::cout << "Input the frequency code value in hex: " ;
     std::cin >> std::hex >> out_reg ;
+
     ddr_reg = out_reg;
     uint32_t mask = 0xFFFFFFFF;
     tx_usrp->set_gpio_attr("FP0", "CTRL", 0, mask);
     tx_usrp->set_gpio_attr("FP0", "DDR", ddr_reg, mask);
     tx_usrp->set_gpio_attr("FP0", "OUT", out_reg, mask);
-    */
+    
 
     // reset usrp time to prepare for transmit/receive
     std::cout << boost::format("Setting device timestamp to 0...") << std::endl;
