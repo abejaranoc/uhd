@@ -90,7 +90,7 @@ end
 
 integer file_id;
 initial begin
-  file_id = $fopen("/home/user/Desktop/sim/out_cis_decim.txt", "wb");
+  file_id = $fopen("/home/user/Desktop/sim/out_cic_decim.txt", "wb");
   $display("Opened file ..................");
   @(negedge reset);
   $display("start writing ................");

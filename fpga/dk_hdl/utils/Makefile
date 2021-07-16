@@ -47,10 +47,10 @@ cmul_16.v   \
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = cic_decimate_tb 
+SIM_TOP = cmul_16_tb 
 SIM_RUNTIME_US = 100000
 SIM_SRCS = \
-$(abspath cic_decimate_tb.v) \
+$(abspath cmul_16_tb.v) \
 
 
 #SIM_SRCS = \

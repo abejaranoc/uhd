@@ -4,7 +4,7 @@ module cmul_16_tb ();
 
 localparam DATA_WIDTH  = 16;
 
-localparam NDATA       = 65536;
+localparam NDATA       = 16384;
 
 
 
@@ -23,7 +23,7 @@ assign ain_idata = ain_data[2*DATA_WIDTH-1:DATA_WIDTH];
 assign ain_qdata = ain_data[DATA_WIDTH-1:0];
 assign bin_idata = bin_data[2*DATA_WIDTH-1:DATA_WIDTH];
 assign bin_qdata = bin_data[DATA_WIDTH-1:0];
-reg [15:0] ncount;
+reg [13:0] ncount;
 
 reg [2:0] counter;
 assign clk = (counter < 3) ? 1'b1 : 1'b0;
@@ -65,7 +65,7 @@ initial begin
   reset = 1'b1;
   stop_write = 1'b0;
   #10 reset = 1'b0; 
-  repeat(200000) @(posedge clk);
+  repeat(20000) @(posedge clk);
   @(posedge clk);
   stop_write = 1'b1;
   //$finish();
