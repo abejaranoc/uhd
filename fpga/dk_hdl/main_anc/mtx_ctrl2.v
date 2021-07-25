@@ -7,7 +7,7 @@ module mtx_ctrl2 #(
   parameter BIT_CNT_WIDTH  = 7,
 
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 8, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 8192,
+  parameter [PHASE_WIDTH-1:0] NSIG         = 81920,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
   parameter [PHASE_WIDTH-1:0] START_PH_INC = 4096,
   parameter [PHASE_WIDTH-1:0] FREQ_SHIFT   = 8192,

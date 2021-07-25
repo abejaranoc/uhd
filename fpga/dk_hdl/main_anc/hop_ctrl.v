@@ -40,7 +40,7 @@ module hop_ctrl #(
   always @(posedge clk) begin
       if(reset) begin
         nbits_tx <= {(BIT_CNT_WIDTH){1'b1}};
-        input_data <= |data_in[3:0] ? data_in : { {(TX_BITS_WIDTH - 80){1'b0}}, 80'h2AAAAAAAAAAAAAAAAAAA };
+        input_data <= |data_in[3:0] ? data_in : { {(TX_BITS_WIDTH - 32){1'b0}}, 32'h15428193 };
         hop_ctrl_valid <= 1'b1;
       end 
       else if (hop_ctrl_valid && scan_cnt == 2'b11) begin

@@ -704,11 +704,16 @@ module x300_core #(
    assign rx_data_in_r[1][31:0]  = rx_data_in[2];
    assign rx_data_in_r[1][63:32] = rx_data_in[3];
    
-
+   /*
    assign rx_data[0] = rx_sync ? rx_sync_data : rx_data_r[0][31:0] ;
    assign rx_data[1] = rx_sync ? rx_sync_data : rx_data_r[0][63:32];
    assign rx_data[2] = rx_sync ? rx_sync_data : rx_data_r[1][31:0] ;
    assign rx_data[3] = rx_sync ? rx_sync_data : rx_data_r[1][63:32];
+   */
+   assign rx_data[0] = rx_data_r[0][31:0] ;
+   assign rx_data[1] = rx_data_r[0][63:32];
+   assign rx_data[2] = rx_data_r[1][31:0] ;
+   assign rx_data[3] = rx_data_r[1][63:32];
 
    assign rx_stb[0] = rx_stb_r[0][0];
    assign rx_stb[1] = rx_stb_r[0][1];
