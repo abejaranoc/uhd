@@ -72,8 +72,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("otw", po::value<std::string>(&otw)->default_value("sc16"), "specify the over-the-wire sample mode")
         ("channels", po::value<std::string>(&channel_list)->default_value("0"), "which channels to use (specify \"0\", \"1\", \"0,1\", etc)")
         ("int-n", "tune USRP with integer-N tuning")
-        ("ddr", po::value<uint32_t>(&ddr_reg)->default_value(0xAAAAAAAA), "GPIO DDR reg value")
-        ("out", po::value<uint32_t>(&out_reg)->default_value(0xAAAAAAAA), "GPIO OUT reg value")
+        ("code", po::value<uint32_t>(&out_reg)->default_value(0), "GPIO OUT reg value")
     ;
     // clang-format on
     po::variables_map vm;
@@ -292,9 +291,11 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     std::signal(SIGINT, &sig_int_handler);
     std::cout << "Press Ctrl + C to stop streaming..." << std::endl;
 
-
+    /*
     std::cout << "Input the DDR and OUT reg values: " ;
-    std::cin >> std::hex >> ddr_reg >> out_reg ;
+    std::cin >> std::hex >> out_reg ;
+    ddr_reg = out
+    */
 
     do{
             
@@ -309,7 +310,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
         uint32_t mask = 0xFFFFFFFF;
         usrp->set_gpio_attr("FP0", "CTRL", 0, mask);
-        usrp->set_gpio_attr("FP0", "DDR", ddr_reg, mask);
+        usrp->set_gpio_attr("FP0", "DDR", out_reg, mask);
         usrp->set_gpio_attr("FP0", "OUT", out_reg, mask);
         // send data until the signal handler gets called
         // or if we accumulate the number of samples specified (unless it's 0)
@@ -342,7 +343,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
         std::cout << "Input the DDR and OUT reg in hex values: " ;
 
-    } while( std::cin >> std::hex >> ddr_reg >> out_reg );
+    } while( std::cin >> std::hex >> out_reg );
 
     // finished
     std::cout << std::endl << "Done!" << std::endl << std::endl;
