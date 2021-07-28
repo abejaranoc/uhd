@@ -21,9 +21,6 @@ module mtx_ctrl_tb2();
     wire [BIT_CNT_WIDTH-1:0] ntx_bits_cnt;
     wire hop_clk, hop_rst;
 
-    wire [2*DATA_WIDTH-1:0] rx_sync_data;
-    wire rx_sync;
-
     mtx_ctrl2 #(.DATA_WIDTH(DATA_WIDTH),
               .PHASE_WIDTH(PHASEWIDTH), 
               .NSYMB_WIDTH(NSYMB_WIDTH), 
@@ -45,8 +42,6 @@ module mtx_ctrl_tb2();
                   .hop_clk(hop_clk),
                   .ntx_bits_cnt(ntx_bits_cnt),
 
-                  .rx_sync(rx_sync),
-                  .rx_sync_data(rx_sync_data),
 
                   .tx_trig(tx_trig),
                   .tx_valid(tx_valid),

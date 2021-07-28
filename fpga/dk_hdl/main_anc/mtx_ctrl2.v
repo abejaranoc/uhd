@@ -32,8 +32,6 @@ module mtx_ctrl2 #(
   output hop_rst,
 
   output tx_valid,
-  output [2*DATA_WIDTH-1:0] rx_sync_data,
-  output rx_sync,
 
   /*debug*/
   output [DATA_WIDTH-1:0]  cos,
@@ -72,10 +70,7 @@ module mtx_ctrl2 #(
   assign itx = out_sel ? 0 : cos_tx;
   assign qtx = out_sel ? 0 : sin_tx;
   assign tx_valid = ~out_sel;
-
-  assign rx_sync = ^sync_state;
-  reg [DATA_WIDTH-1 :0] data_rx_sync;
-  assign rx_sync_data = {data_rx_sync, {(DATA_WIDTH){1'b0}} } ;
+ 
 
   //assign sync_io_out[0] = ^sync_state ? SYNC_OUT_MASK : {(GPIO_REG_WIDTH){1'b0}};
   //assign sync_io_out[0] = ^sync_state ? 1'b1 : 1'b0;
@@ -166,7 +161,6 @@ module mtx_ctrl2 #(
         sync_state <= 2'b00;
         ncnt   <= 0;
         hop_reset <= 1'b1;
-        data_rx_sync <= 0;
       end 
       else if (sync_ready && ~sync_en) begin 
         sync_en <= 1'b1;
@@ -174,24 +168,20 @@ module mtx_ctrl2 #(
         ncnt <= SYNC_SIG_N;
         sync_state <= 2'b00;
         hop_reset <= 1'b1;
-        data_rx_sync <= 0;
       end
       else if (sync_en && (ncnt == SYNC_SIG_N)) begin
         ncnt <= 1;
         case (sync_state)
         2'b00: begin
           sync_state <= 2'b01;
-          data_rx_sync <= 16384;
         end 
         2'b01: begin
           sync_state <= 2'b10;
           hop_reset  <= 1'b0;
-          data_rx_sync <= -16384;
         end
         2'b10: begin
           sync_state <= 2'b11;
           start_tx <= 1'b0;
-          data_rx_sync <= 0;
         end
         2'b11: begin
           sync_en <= 1'b0; 
