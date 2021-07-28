@@ -41,16 +41,17 @@ $(RFNOC_BLOCK_DDC_SRCS) \
 $(DK_FP_GPIO_SRCS) \
 fir_filter_iq.v   \
 cmul_16.v   \
+freq_shift_iq.v \
 )
 
 #-------------------------------------------------
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = fir_filter_iq_tb 
+SIM_TOP = cmul_16_tb 
 SIM_RUNTIME_US = 100000
 SIM_SRCS = \
-$(abspath fir_filter_iq_tb.v) \
+$(abspath cmul_16_tb.v) \
 
 
 #SIM_SRCS = \

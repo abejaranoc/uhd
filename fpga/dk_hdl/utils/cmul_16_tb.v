@@ -1,10 +1,11 @@
 module cmul_16_tb ();
 
-//`include "coeffs.vh"
 
-localparam DATA_WIDTH  = 16;
 
-localparam NDATA       = 16384;
+localparam DATA_WIDTH    = 16;
+localparam SCALING_WIDTH = 18;
+localparam NDATA         = 16384;
+localparam NWIDTH = 14;
 
 
 
@@ -17,13 +18,15 @@ reg [2*DATA_WIDTH-1:0] input_memory [0:NDATA-1];
 reg [2*DATA_WIDTH-1:0] input_memory2 [0:NDATA-1];
 wire [2*DATA_WIDTH-1:0] prod_data;
 wire [DATA_WIDTH-1:0] out_idata, out_qdata;
+
+wire [SCALING_WIDTH-1:0] scale_val = {10'h0, {(SCALING_WIDTH-10){1'b1}}};
 assign out_idata = prod_data[2*DATA_WIDTH-1:DATA_WIDTH];
 assign out_qdata = prod_data[DATA_WIDTH-1:0];
 assign ain_idata = ain_data[2*DATA_WIDTH-1:DATA_WIDTH];
 assign ain_qdata = ain_data[DATA_WIDTH-1:0];
 assign bin_idata = bin_data[2*DATA_WIDTH-1:DATA_WIDTH];
 assign bin_qdata = bin_data[DATA_WIDTH-1:0];
-reg [13:0] ncount;
+reg [NWIDTH-1:0] ncount;
 
 reg [2:0] counter;
 assign clk = (counter < 3) ? 1'b1 : 1'b0;
@@ -47,8 +50,16 @@ end
 cmul_16 CMUL_DUT(
       .clk(clk),
       .reset(reset),
+
+      .in_tlast(1'b0),
+      .in_tvalid(1'b1),
+
       .adata(ain_data),
       .bdata(bin_data),
+
+      .scale_val(scale_val),
+
+      .out_tready(1'b1),
       .pdata(prod_data));
 
 reg stop_write;

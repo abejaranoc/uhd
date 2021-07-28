@@ -4,6 +4,6 @@
 # DK Sources
 ##################################################
 DK_RX_ANC_SRCS = $(abspath $(addprefix $(BASE_DIR)/../../dk_hdl/rx_anc/, \
-freq_shift_dk.v \
 rx_anc.v \
+rx_anc_ctrl.v \
 ))

@@ -1,8 +1,8 @@
-module freq_shift_dk #(
-  parameter DATA_WIDTH = 16,
-  parameter DDS_WIDTH  = 24,
+module freq_shift_iq #(
+  parameter DATA_WIDTH    = 16,
+  parameter DDS_WIDTH     = 24,
   parameter SIN_COS_WIDTH = 16,
-  parameter PHASE_WIDTH = 24, 
+  parameter PHASE_WIDTH   = 24, 
   parameter SCALING_WIDTH = 18
 )(
   input   clk,
@@ -15,9 +15,10 @@ module freq_shift_dk #(
   input in_tlast, 
   output in_tready,
 
+  input [SCALING_WIDTH-1:0] scaling_tdata,
   
-  /* phase increment */
-  input [PHASE_WIDTH-1:0]  phase_inc,
+  /* phase increment */  
+  input [PHASE_WIDTH-1:0]  phase_tdata,
   input phase_tvalid,
   input phase_tlast, 
   output phase_tready,
@@ -34,14 +35,6 @@ module freq_shift_dk #(
   output [SIN_COS_WIDTH-1:0]  cos
 );
 
-
-reg  [PHASE_WIDTH-1:0] phase;
-wire [PHASE_WIDTH-1:0] phase_tdata = phase;
-/*
-wire phase_tvalid = 1'b1;
-wire phase_tready;
-wire phase_tlast = 1'b0;
-*/
 
 wire [DDS_WIDTH-1:0] fshift_in_q_tdata, fshift_in_i_tdata;
 wire [2*DDS_WIDTH-1:0] fshift_in_tdata = {fshift_in_q_tdata, fshift_in_i_tdata};
@@ -108,9 +101,8 @@ dds_freq_tune #(.OUTPUT_WIDTH(DDS_WIDTH))
   /************************************************************************
   * Perform scaling on the IQ output
   ************************************************************************/
-    wire [DDS_WIDTH+SCALING_WIDTH-1:0] scaled_i_tdata, scaled_q_tdata;
-    wire scaled_tlast, scaled_tvalid, scaled_tready;
-    wire [SCALING_WIDTH-1:0] scaling_tdata = 1 << 15;
+  wire [DDS_WIDTH+SCALING_WIDTH-1:0] scaled_i_tdata, scaled_q_tdata;
+  wire scaled_tlast, scaled_tvalid, scaled_tready;
 
   mult #(
    .WIDTH_A(DDS_WIDTH),
@@ -157,15 +149,5 @@ dds_freq_tune #(.OUTPUT_WIDTH(DDS_WIDTH))
           .o_tdata(out_tdata), .o_tlast(out_tlast), 
           .o_tvalid(out_tvalid), .o_tready(out_tready));
 
-
-always @(posedge clk) begin
-    if (reset) begin
-      phase <= 0;
-
-    end 
-    else  begin 
-      phase <= phase + phase_inc;
-    end
-end
 
 endmodule
