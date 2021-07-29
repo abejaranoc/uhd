@@ -280,19 +280,19 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("nsamps", po::value<size_t>(&total_num_samps)->default_value(0), "total number of samples to receive")
         ("duration", po::value<double>(&total_time)->default_value(0), "total number of seconds to receive")
         ("spb", po::value<size_t>(&spb)->default_value(10000), "samples per buffer")
-        ("rate", po::value<double>(&rate)->default_value(6.25e6), "rate of incoming samples")
-        ("freq", po::value<double>(&freq)->default_value(2.4e9), "RF center frequency in Hz")
+        ("rate", po::value<double>(&rate)->default_value(12.5e6), "rate of incoming samples")
+        ("freq", po::value<double>(&freq)->default_value(0), "RF center frequency in Hz")
         ("lo-offset", po::value<double>(&lo_offset)->default_value(0.0),
             "Offset for frontend LO in Hz (optional)")
         ("gain", po::value<double>(&gain)->default_value(0), "gain for the RF chain")
-        ("ant", po::value<std::string>(&ant)->default_value("TX/RX"), "antenna selection")
-        ("subdev", po::value<std::string>(&subdev)->default_value("A:0"), "subdevice specification")
+        ("ant", po::value<std::string>(&ant)->default_value("BA"), "antenna selection")
+        ("subdev", po::value<std::string>(&subdev)->default_value("B:0"), "subdevice specification")
         ("channel", po::value<size_t>(&channel)->default_value(0), "which channel to use")
         ("bw", po::value<double>(&bw)->default_value(160e6), "analog frontend filter bandwidth in Hz")
         ("ref", po::value<std::string>(&ref)->default_value("internal"), "reference source (internal, external, mimo)")
         ("wirefmt", po::value<std::string>(&wirefmt)->default_value("sc16"), "wire format (sc8, sc16 or s16)")
         ("setup", po::value<double>(&setup_time)->default_value(1.0), "seconds of setup time")
-        ("wait-time", po::value<double>(&wait_time)->default_value(30), "seconds of setup time")
+        ("wait-time", po::value<double>(&wait_time)->default_value(20), "seconds of setup time")
         ("progress", "periodically display short-term bandwidth")
         ("stats", "show average bandwidth on exit")
         ("sizemap", "track packet size and display breakdown on exit")
@@ -450,7 +450,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         continue_on_bad_packet)
 */ 
     size_t loc_id = 0;
-    size_t files_per_loc = 5;
+    size_t files_per_loc = 1;
     std::cout << "starting location ID: ";
     std::cin >> loc_id;
     #define recv_to_file_args(format, id_loc, num_per_loc) \
