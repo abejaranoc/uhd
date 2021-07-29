@@ -66,6 +66,9 @@ localparam RELOADABLE_COEFFS = 1;
 localparam [(NUM_COEFFS/2)*COEFF_WIDTH-1:0] COEFFS_VEC = 
 1024'h0013001300140014001500160018001A001C001E002100230026002A002D003100350039003D00420046004B00500055005B00600066006B00710077007D00820088008E0094009A00A000A500AB00B100B600BC00C100C600CB00D000D500D900DD00E100E500E900EC00EF00F200F500F700F900FB00FD00FE00FF00FF00FF;
 
+wire out_tlast, out_tready, out_tvalid;
+assign out_tready = 1'b1;
+
 fir_filter_iq #(.DATA_WIDTH(DATA_WIDTH),
                 .COEFF_WIDTH(COEFF_WIDTH),
                 .NUM_COEFFS(NUM_COEFFS),
@@ -81,7 +84,10 @@ fir_filter_iq #(.DATA_WIDTH(DATA_WIDTH),
       .coeff_in(coeff_in),
       .reload_tvalid(reload_tvalid),
       .reload_tlast(reload_tlast),
-      .out_tready(1'b1),
+      .out_tready(out_tready),
+      .out_tlast(out_tlast),
+      .out_tvalid(out_tvalid),
+      
       .out_i(out_idata),
       .out_q(out_qdata) );
 

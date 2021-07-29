@@ -1,19 +1,18 @@
 module freq_shift_iq_tb();
-
-    localparam PHASEWIDTH = 24;
-    localparam DATAWIDTH = 16;
+    localparam PHASE_WIDTH = 24;
+    localparam DATA_WIDTH = 16;
     localparam SIN_COS_WIDTH = 16;
     localparam SCALING_WIDTH = 18;
     localparam [PHASE_WIDTH-1:0] PH_INC = 8192;
 
-    localparam NDATA       = 2048;
-    localparam NWIDTH      = 11;
+    localparam NDATA       = 32768;
+    localparam NWIDTH      = 15;
 
     reg  reset;
     wire clk ;
 
     wire [SIN_COS_WIDTH-1:0] sin, cos;
-    wire [SCALING_WIDTH-1:0] scaling_tdata = {8'h0, {(SCALING_WIDTH-8){1'b1}}};
+    wire [SCALING_WIDTH-1:0] scaling_tdata = {{2{1'b0}}, {(SCALING_WIDTH-2){1'b1}}};
 
     reg [PHASE_WIDTH-1:0] phase; 
     wire [PHASE_WIDTH-1:0] phase_tdata;
@@ -44,9 +43,9 @@ module freq_shift_iq_tb();
         end 
     end
 
-    freq_shift_iq #(.DATA_WIDTH(DATAWIDTH),
+    freq_shift_iq #(.DATA_WIDTH(DATA_WIDTH),
                     .SIN_COS_WIDTH(SIN_COS_WIDTH),
-                    .PHASE_WIDTH(PHASEWIDTH), 
+                    .PHASE_WIDTH(PHASE_WIDTH), 
                     .SCALING_WIDTH(SCALING_WIDTH))
                  DUT(   .clk(clk),
                         .reset(reset),
@@ -88,17 +87,17 @@ module freq_shift_iq_tb();
     end
 integer file_id;
 initial begin
-  file_id = $fopen("/home/user/Desktop/sim/fshift_mix.txt", "wb");
-  $display("Opened file ..................");
-  @(negedge reset);
-  $display("start writing ................");
-  while (!stop_write) begin
-    @(negedge clk); 
-    $fwrite(file_id, "%d %d \n", out_idata, out_qdata);    
-  end
-  $fclose(file_id);
-  $display("File closed ..................");
-  $finish();    
+    file_id = $fopen("/home/user/Desktop/sim/fshift_mix.txt", "wb");
+    $display("Opened file ..................");
+    @(negedge reset);
+    $display("start writing ................");
+    while (!stop_write) begin
+        @(negedge clk); 
+        $fwrite(file_id, "%d %d \n", out_idata, out_qdata);    
+    end
+    $fclose(file_id);
+    $display("File closed ..................");
+    $finish();    
 end
 
 endmodule

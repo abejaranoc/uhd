@@ -4,6 +4,7 @@ module fir_filter_iq #(
   parameter NUM_COEFFS    = 1024,
   parameter [NUM_COEFFS*COEFF_WIDTH-1:0] COEFFS_VEC =
       {{1'b0,{(COEFF_WIDTH-1){1'b1}}},{(COEFF_WIDTH*(NUM_COEFFS-1)){1'b0}}}, 
+  parameter SYMMETRIC_COEFFS = 1,
   parameter RELOADABLE_COEFFS = 1
       
 )(
@@ -33,8 +34,8 @@ module fir_filter_iq #(
 axi_fir_filter #(.IN_WIDTH(DATA_WIDTH), .COEFF_WIDTH(COEFF_WIDTH), 
                  .OUT_WIDTH(DATA_WIDTH), .NUM_COEFFS(NUM_COEFFS), 
                  .COEFFS_VEC(COEFFS_VEC), .RELOADABLE_COEFFS(RELOADABLE_COEFFS), 
-                 .BLANK_OUTPUT(0), .SYMMETRIC_COEFFS(1), .SKIP_ZERO_COEFFS(0), 
-                 .USE_EMBEDDED_REGS_COEFFS(1)
+                 .BLANK_OUTPUT(0), .SYMMETRIC_COEFFS(SYMMETRIC_COEFFS), 
+                 .SKIP_ZERO_COEFFS(0), .USE_EMBEDDED_REGS_COEFFS(1)
 ) fir_real(
   .clk(clk), .reset(reset), .clear(reset),
   .s_axis_data_tdata(in_i), .s_axis_data_tlast(in_tlast), 
@@ -47,8 +48,8 @@ axi_fir_filter #(.IN_WIDTH(DATA_WIDTH), .COEFF_WIDTH(COEFF_WIDTH),
 axi_fir_filter #(.IN_WIDTH(DATA_WIDTH), .COEFF_WIDTH(COEFF_WIDTH), 
                  .OUT_WIDTH(DATA_WIDTH), .NUM_COEFFS(NUM_COEFFS), 
                  .COEFFS_VEC(COEFFS_VEC), .RELOADABLE_COEFFS(RELOADABLE_COEFFS), 
-                 .BLANK_OUTPUT(0), .SYMMETRIC_COEFFS(1), .SKIP_ZERO_COEFFS(0), 
-                 .USE_EMBEDDED_REGS_COEFFS(1)
+                 .BLANK_OUTPUT(0), .SYMMETRIC_COEFFS(SYMMETRIC_COEFFS), 
+                 .SKIP_ZERO_COEFFS(0), .USE_EMBEDDED_REGS_COEFFS(1)
 ) fir_imag(
   .clk(clk), .reset(reset), .clear(reset),
   .s_axis_data_tdata(in_q), .s_axis_data_tlast(in_tlast), 

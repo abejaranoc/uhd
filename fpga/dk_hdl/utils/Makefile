@@ -48,10 +48,10 @@ freq_shift_iq.v \
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = cmul_16_tb 
+SIM_TOP = fir_filter_iq_tb 
 SIM_RUNTIME_US = 100000
 SIM_SRCS = \
-$(abspath cmul_16_tb.v) \
+$(abspath fir_filter_iq_tb.v) \
 
 
 #SIM_SRCS = \
