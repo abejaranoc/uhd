@@ -291,13 +291,13 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     std::signal(SIGINT, &sig_int_handler);
     std::cout << "Press Ctrl + C to stop streaming..." << std::endl;
 
-    /*
-    std::cout << "Input the DDR and OUT reg values: " ;
+    
+    std::cout << "Input the hop IF code: " ;
     std::cin >> std::hex >> out_reg ;
-    ddr_reg = out
-    */
+    ddr_reg = out_reg;
+    
 
-    do{
+    //do{
             
         // Set up metadata. We start streaming a bit in the future
         // to allow MIMO operation:
@@ -341,9 +341,9 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         md.end_of_burst = true;
         tx_stream->send("", 0, md);
 
-        std::cout << "Input the DDR and OUT reg in hex values: " ;
+        //std::cout << "Input the DDR and OUT reg in hex values: " ;
 
-    } while( std::cin >> std::hex >> out_reg );
+    //} while( std::cin >> std::hex >> out_reg );
 
     // finished
     std::cout << std::endl << "Done!" << std::endl << std::endl;
