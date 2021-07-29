@@ -92,14 +92,15 @@ module freq_shift_and_lpf_iq #(
   localparam N = 4;
 
   wire dcic_strobe_out, dcic_last_out;
-  wire [DATA_WIDTH-1:0] dec_itdata, dec_qtdata;
+  wire [DATA_WIDTH-1:0] dcic_itdata, dcic_qtdata;
+  wire rate_stb = 1'b0;
 
   cic_decimate_iq #(.DATA_WIDTH(DATA_WIDTH),
                     .N(N), .MAX_RATE(DCIC_MAX_RATE))
     DCIC(
           .clk(clk),
           .reset(reset),
-          .rate_stb(1'b0),
+          .rate_stb(rate_stb),
 
           .rate(DRATE),
           .strobe_in(fshift_out_tvalid),
@@ -111,8 +112,8 @@ module freq_shift_and_lpf_iq #(
           .in_itdata(fshift_out_itdata),
           .in_qtdata(fshift_out_qtdata),
 
-          .out_itdata(dec_itdata),
-          .out_qtdata(dec_qtdata));
+          .out_itdata(dcic_itdata),
+          .out_qtdata(dcic_qtdata));
 
   
   wire [DATA_WIDTH-1:0] lpf_out_itdata, lpf_out_qtdata;
@@ -130,8 +131,8 @@ module freq_shift_and_lpf_iq #(
 
           .in_tvalid(dcic_strobe_out),
           .in_tlast(dcic_last_out),
-          .in_i(dec_itdata),
-          .in_q(dec_qtdata),
+          .in_i(dcic_itdata),
+          .in_q(dcic_qtdata),
 
           .coeff_in(coeff_in),
           .reload_tvalid(reload_tvalid),
@@ -141,8 +142,8 @@ module freq_shift_and_lpf_iq #(
           .out_tlast(lpf_out_tlast),
           .out_tvalid(lpf_out_tvalid),
 
-          .out_i(lpf_itdata),
-          .out_q(lpf_qtdata) );
+          .out_i(lpf_out_itdata),
+          .out_q(lpf_out_qtdata) );
 
   wire icic_strobe_out;
   assign out_tvalid = icic_strobe_out;
@@ -152,7 +153,7 @@ module freq_shift_and_lpf_iq #(
     ICIC(
           .clk(clk),
           .reset(reset),
-          .rate_stb(1'b0),
+          .rate_stb(rate_stb),
 
           .rate(IRATE),
           .strobe_in(lpf_out_tvalid),

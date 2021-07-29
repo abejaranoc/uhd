@@ -13,14 +13,14 @@ module cic_interpolate_iq #(
   input [DATA_WIDTH-1:0] in_itdata,
   input [DATA_WIDTH-1:0] in_qtdata,
 
-  output [DATA_WIDTH-1:0] out_itdata
+  output [DATA_WIDTH-1:0] out_itdata,
   output [DATA_WIDTH-1:0] out_qtdata
 );
 
   wire istrobe_out, qstrobe_out;
   assign strobe_out = istrobe_out & qstrobe_out;
   cic_interpolate #(.WIDTH(DATA_WIDTH),
-                    .N(N), MAX_RATE(MAX_RATE))
+                    .N(N), .MAX_RATE(MAX_RATE))
     iICIC(
           .clk(clk),
           .reset(reset),
@@ -34,7 +34,7 @@ module cic_interpolate_iq #(
           .signal_out(out_itdata));
 
   cic_interpolate #(.WIDTH(DATA_WIDTH),
-                    .N(N), MAX_RATE(MAX_RATE))
+                    .N(N), .MAX_RATE(MAX_RATE))
     qICIC(
           .clk(clk),
           .reset(reset),

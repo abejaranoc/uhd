@@ -3,7 +3,6 @@ module cic_dec_int_tb ();
 //`include "coeffs.vh"
 
 localparam DATA_WIDTH  = 16;
-
 localparam NDATA       = 16384;
 
 

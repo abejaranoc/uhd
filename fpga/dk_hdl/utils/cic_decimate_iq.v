@@ -15,7 +15,7 @@ module cic_decimate_iq #(
   input [DATA_WIDTH-1:0] in_itdata,
   input [DATA_WIDTH-1:0] in_qtdata,
 
-  output [DATA_WIDTH-1:0] out_itdata
+  output [DATA_WIDTH-1:0] out_itdata,
   output [DATA_WIDTH-1:0] out_qtdata
 );
 
@@ -23,7 +23,7 @@ module cic_decimate_iq #(
   assign last_out = ilast_out & qlast_out;
   assign strobe_out = istrobe_out & qstrobe_out;
   cic_decimate #( .WIDTH(DATA_WIDTH),
-                  .N(N), MAX_RATE(MAX_RATE))
+                  .N(N), .MAX_RATE(MAX_RATE))
     iDCIC(
           .clk(clk),
           .reset(reset),
@@ -39,7 +39,7 @@ module cic_decimate_iq #(
           .signal_out(out_itdata));
 
   cic_decimate #( .WIDTH(DATA_WIDTH),
-                  .N(N), MAX_RATE(MAX_RATE))
+                  .N(N), .MAX_RATE(MAX_RATE))
     qDCIC(
           .clk(clk),
           .reset(reset),
