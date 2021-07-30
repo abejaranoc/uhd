@@ -3,7 +3,7 @@ module freq_shift_and_lpf_iq_tb();
     localparam DATA_WIDTH = 16;
     localparam SIN_COS_WIDTH = 16;
     localparam SCALING_WIDTH = 18;
-    localparam [PHASE_WIDTH-1:0] PH_INC = -1024;
+    localparam [PHASE_WIDTH-1:0] PH_INC = 1024;
 
     localparam COEFF_WIDTH = 16;
     localparam NUM_COEFFS  = 128;
@@ -55,7 +55,7 @@ module freq_shift_and_lpf_iq_tb();
         else begin
             ncount <= ncount + 1;
             input_data <= input_memory[ncount];
-            phase <= phase + PH_INC;
+            phase <= phase - PH_INC;
             if (ccount < NUM_COEFFS/2) begin
                 ccount <= ccount + 1;
                 coeff_in <= coeffs_memory[ccount];
