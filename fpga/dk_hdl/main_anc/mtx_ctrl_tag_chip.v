@@ -213,7 +213,7 @@ module mtx_ctrl_tag_chip #(
         end
         HOP_TX: begin
           if (hop_done) begin
-            if(hop_n < NUM_HOPS) begin
+            if(hop_n < (NUM_HOPS - 1)) begin
               hop_n <= hop_n + 1;
               state <= HOP_SYNCH;
               synch_count <= SYNC_SIG_N;
