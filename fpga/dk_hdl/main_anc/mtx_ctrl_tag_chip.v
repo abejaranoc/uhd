@@ -113,6 +113,14 @@ module mtx_ctrl_tag_chip #(
   assign hop_reset = (synch_count == SYNC_SIG_N) ? 1'b1 : 1'b0;
   assign start_tx  = ^state ? 1'b1 : 1'b0;
 
+  localparam MEM_WIDTH = 32;
+  reg [MEM_WIDTH-1:0] if_hop_codes [0:NUM_HOPS];
+  wire [TX_BITS_WIDTH-1:0] hop_code;
+  assign hop_code = { {(TX_BITS_WIDTH - MEM_WIDTH){1'b0}}, if_hop_codes[hop_n] };
+
+  initial begin
+    $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/if_codes.mem", if_hop_codes);
+  end
   
   clk_div_dk #(.N(SCAN_CLK_DIV_FAC))
       CLK_DIV_DK (.clk(clk),
@@ -133,7 +141,7 @@ module mtx_ctrl_tag_chip #(
         .scan_data_in(scan_data_in),
         .scan_load_chip(scan_load_chip),
         .nbits_cnt(ntx_bits_cnt),
-        .data_in(tx_bits));
+        .data_in(hop_code));
 
   gpio_ctrl #(
     .GPIO_REG_WIDTH(GPIO_REG_WIDTH), .CLK_DIV_FAC(GPIO_CLK_DIV_FAC),             
@@ -147,7 +155,7 @@ module mtx_ctrl_tag_chip #(
                 .gpio_in(gpio_in));
 
   mtx_sig_tag_chip #(
-            .SIN_COS_WIDTH(DATA_WIDTH),.PHASE_WIDTH(PHASE_WIDTH), 
+            .SIN_COS_WIDTH(DATA_WIDTH), .PHASE_WIDTH(PHASE_WIDTH), 
             .NSYMB_WIDTH(NSYMB_WIDTH), .NSIG(NSIG), .NSYMB(NSYMB),
             .DPH_INC(DPH_INC), .FREQ_SHIFT(FREQ_SHIFT), .START_PH_INC(START_PH_INC), 
             .START_PH(START_PH), .NPH_SHIFT(NPH_SHIFT))

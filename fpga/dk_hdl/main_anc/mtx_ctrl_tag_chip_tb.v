@@ -65,7 +65,7 @@ module mtx_ctrl_tag_chip_tb();
         fp_gpio_in = 12'h000;
         #100 reset = 1'b0; 
         @(posedge clk);
-        repeat(1000000) @(posedge clk);
+        repeat(10000000) @(posedge clk);
         tx_bits = 0;
         //repeat(100000) @(posedge clk);
         $finish();

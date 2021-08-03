@@ -654,9 +654,10 @@ module x300_core #(
    localparam BIT_CNT_WIDTH  = 7;
    wire [TX_BITS_WIDTH-1:0] tx_bits = { {(TX_BITS_WIDTH - 32){1'b0}}, fp_gpio_r_out[0] };
 
-   mtx_ctrl2 #(.TX_BITS_WIDTH(TX_BITS_WIDTH),
+   mtx_ctrl_tag_chip #(
+              .TX_BITS_WIDTH(TX_BITS_WIDTH),
               .BIT_CNT_WIDTH(BIT_CNT_WIDTH),
-              .NSYMB(8))
+              .NSYMB(9))
         MTX_ANC(  .clk(radio_clk),
                   .reset(radio_rst),
 
