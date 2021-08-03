@@ -1,4 +1,4 @@
-module mtx_ctrl_tb2();
+module mtx_ctrl_tag_chip_tb();
     localparam PHASEWIDTH  = 24;
     localparam DATA_WIDTH  = 16;
     localparam NSYMB_WIDTH = 16;
@@ -21,12 +21,13 @@ module mtx_ctrl_tb2();
     wire [BIT_CNT_WIDTH-1:0] ntx_bits_cnt;
     wire hop_clk, hop_rst;
 
-    mtx_ctrl2 #(.DATA_WIDTH(DATA_WIDTH),
+    mtx_ctrl_tag_chip #(
+              .DATA_WIDTH(DATA_WIDTH),
               .PHASE_WIDTH(PHASEWIDTH), 
               .NSYMB_WIDTH(NSYMB_WIDTH), 
-              .NSIG(16384),
-              .FREQ_SHIFT(8192),
-              .NSYMB(8))
+              .NSIG(8192),
+              .FREQ_SHIFT(4096),
+              .NSYMB(9))
         MTX_ANC(  .clk(clk),
                   .reset(reset),
 
@@ -64,7 +65,7 @@ module mtx_ctrl_tb2();
         fp_gpio_in = 12'h000;
         #100 reset = 1'b0; 
         @(posedge clk);
-        repeat(1000000) @(posedge clk);
+        repeat(10000000) @(posedge clk);
         tx_bits = 0;
         //repeat(100000) @(posedge clk);
         $finish();
