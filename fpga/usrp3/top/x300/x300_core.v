@@ -655,8 +655,8 @@ module x300_core #(
    assign rx_bb_dk = {irx_bb, qrx_bb};
    wire rx_valid;
 
-   tag_rx_ctrl_tag_chip #(.NSYMB(256))
-      TAG_RX_CTRL(   .clk(radio_clk),
+   tag_rx_ctrl_tag_chip TAG_RX_CTRL(   
+                     .clk(radio_clk),
                      .reset(radio_rst),
 
                      .irx_in(irx_in), 
@@ -669,7 +669,7 @@ module x300_core #(
                      .rx_valid(rx_valid),
 
                      .irx_out(irx_bb),
-                     .qrx_out(qrx_bb) );
+                     .qrx_out(qrx_bb));
 
    //------------------------------------
    // Radio to ADC,DAC and IO Mapping
