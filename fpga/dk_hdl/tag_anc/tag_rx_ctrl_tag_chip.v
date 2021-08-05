@@ -44,7 +44,7 @@ module tag_rx_ctrl_tag_chip #(
   reg  [DATA_WIDTH-1:0]  sync_count;
   assign counter_sync = sync_count;
 
-  wire sync_ready, valid_rx, sync_trigger, scan_trigger;
+  wire sync_ready, sync_trigger, scan_trigger;
   assign sync_io_out = sync_ready ? SYNC_OUT_MASK : {(GPIO_REG_WIDTH){1'b0}};
   assign rx_io_out   = valid_rx   ? RX_OUT_MASK : {(GPIO_REG_WIDTH){1'b0}};
   assign gpio_out    = sync_io_out | rx_io_out;
@@ -52,6 +52,7 @@ module tag_rx_ctrl_tag_chip #(
   assign sync_trigger    = |(gpio_in & SYNC_IN_MASK);
 
   wire out_sel = ^state ;
+  assign sync_ready = out_sel;
   assign irx_sync = out_sel & state[0] ? -32000 : 32000 ;
   assign qrx_sync = 0;
   assign irx_out = out_sel ? irx_sync : irx_in;
@@ -62,9 +63,13 @@ module tag_rx_ctrl_tag_chip #(
   localparam HOP_RX    = 2'b11;
   localparam INIT      = 2'b00;
 
-  assign sync_ready = out_sel;
-  assign valid_rx   = ~out_sel;
-  assign rx_valid   = valid_rx;
+  localparam NUM_HOPS  = 64;
+  localparam IDLE_LIMIT = 16384;
+  reg  [DATA_WIDTH-1:0] idle_count;
+  
+  
+  reg valid_rx;
+  assign rx_valid   = valid_rx ;
   
   gpio_ctrl #(
     .GPIO_REG_WIDTH(GPIO_REG_WIDTH), .CLK_DIV_FAC(GPIO_CLK_DIV_FAC),             
@@ -81,13 +86,22 @@ module tag_rx_ctrl_tag_chip #(
     if (reset) begin
       sync_count <= SYNC_SIG_N - 1;
       state <= INIT;
+      valid_rx <= 1'b0;
+      idle_count <= 0;
     end
     else begin
       case (state)
         INIT : begin
           if (sync_trigger) begin
             sync_count <= SYNC_SIG_N - 1;
-            state <= LOC_SYNCH;
+            state    <= LOC_SYNCH;
+            valid_rx <= 1'b1;
+          end
+          else if (idle_count < IDLE_LIMIT)begin
+            idle_count <= idle_count + 1;
+          end
+          else begin
+            valid_rx <= 1'b0;
           end
         end
         LOC_SYNCH : begin
@@ -114,6 +128,7 @@ module tag_rx_ctrl_tag_chip #(
           end
           else begin
             state <= INIT;
+            idle_count <= 0;
           end
         end
         default: state <= INIT;

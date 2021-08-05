@@ -49,13 +49,14 @@ module tag_rx_ctrl_tag_chip_tb();
         reset = 1'b1;
         #100 reset = 1'b0; 
         @(posedge clk);fp_gpio_in = 12'h044; 
-        repeat(SYNC_SIG_N * 4) @(posedge clk);
+        repeat(SYNC_SIG_N * 5) @(posedge clk);
         @(posedge clk); fp_gpio_in = 12'h000; 
-        repeat(SYNC_SIG_N * 4) @(posedge clk);
+        repeat(SYNC_SIG_N * 5) @(posedge clk);
         @(posedge clk);fp_gpio_in = 12'h004; 
-        repeat(SYNC_SIG_N * 4) @(posedge clk);
+        repeat(SYNC_SIG_N * 5) @(posedge clk);
         @(posedge clk);fp_gpio_in = 12'h000; 
-        repeat(SYNC_SIG_N * 4) @(posedge clk);
+        repeat(SYNC_SIG_N * 5) @(posedge clk);
+        repeat(SYNC_SIG_N * 5) @(posedge clk);
         $finish();
     end
 
