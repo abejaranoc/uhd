@@ -64,7 +64,7 @@ module tag_rx_ctrl_tag_chip #(
   localparam INIT      = 2'b00;
 
   localparam NUM_HOPS  = 64;
-  localparam IDLE_LIMIT = 32768;
+  localparam IDLE_LIMIT = 16384;
   reg  [DATA_WIDTH-1:0] idle_count;
   
   
