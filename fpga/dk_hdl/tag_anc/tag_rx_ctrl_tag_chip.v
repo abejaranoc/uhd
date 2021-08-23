@@ -64,12 +64,12 @@ module tag_rx_ctrl_tag_chip #(
   localparam INIT      = 2'b00;
 
   localparam NUM_HOPS  = 64;
-  localparam IDLE_LIMIT = 16384;
+  localparam IDLE_LIMIT = 32768;
   reg  [DATA_WIDTH-1:0] idle_count;
   
   
   reg valid_rx;
-  assign rx_valid   = valid_rx ;
+  assign rx_valid   = valid_rx  & out_sel;
   
   gpio_ctrl #(
     .GPIO_REG_WIDTH(GPIO_REG_WIDTH), .CLK_DIV_FAC(GPIO_CLK_DIV_FAC),             

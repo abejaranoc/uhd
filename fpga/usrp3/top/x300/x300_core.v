@@ -650,8 +650,8 @@ module x300_core #(
 
    /*wire [31:0] tx_data_dk;*/
 
-   assign irx_in   = rx_data_r[0][31:16];
-   assign qrx_in   = rx_data_r[0][15:0];
+   assign irx_in   = rx_data_r[1][31:16];
+   assign qrx_in   = rx_data_r[1][15:0];
    assign rx_bb_dk = {irx_bb, qrx_bb};
    wire rx_valid;
 
