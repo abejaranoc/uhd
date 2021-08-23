@@ -4,10 +4,10 @@ module mtx_sig_tag_chip #(
   parameter NSYMB_WIDTH   = 16,
   parameter TX_SYNC_BITS  = 3,
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 9, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 8192,
+  parameter [PHASE_WIDTH-1:0] NSIG         = 32768,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
-  parameter [PHASE_WIDTH-1:0] START_PH_INC = 8192,
-  parameter [PHASE_WIDTH-1:0] FREQ_SHIFT   = 4096,
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = 12288,
+  parameter [PHASE_WIDTH-1:0] PILOT_PH_INC = 4096,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(
@@ -41,7 +41,7 @@ module mtx_sig_tag_chip #(
 
 reg  [PHASE_WIDTH-1:0]  ncount;
 reg  [NSYMB_WIDTH-1:0]  symb_count;
-reg  [PHASE_WIDTH-1:0]  phase_inc, start_phase, phase, phase_inc2, phase2;
+reg  [PHASE_WIDTH-1:0]  tx_freq_ph_inc, start_phase, phase, pilot_ph_inc, phase2;
 wire [PHASE_WIDTH-1:0]  phase_tdata = phase;
 
 wire [PHASE_WIDTH-1:0]  phase_tdata2 = phase2;
@@ -55,6 +55,7 @@ wire [SIN_COS_WIDTH-1:0]  sin_01, sin_02, cos_01, cos_02, itx, qtx;
 
 add2_and_clip sum_01(.in1(cos_01), .in2(cos_02), .sum(itx));
 add2_and_clip sum_02(.in1(sin_01), .in2(sin_02), .sum(qtx));
+
 
 assign ph       = phase;
 assign ph_start = start_phase;
@@ -93,8 +94,8 @@ always @(posedge clk) begin
       phase2 <= START_PH; 
       ncount <= 1;
       symb_count <= 1;
-      phase_inc  <= hop_phase_inc;
-      phase_inc2 <= hop_phase_inc + FREQ_SHIFT;
+      tx_freq_ph_inc  <= hop_phase_inc + START_PH_INC;
+      pilot_ph_inc <= hop_phase_inc + PILOT_PH_INC;
       start_phase <= START_PH;
       tx_symb_per_synch <= {(TX_SYNC_BITS){1'b1}};
       hop_done <= 1'b0;
@@ -106,21 +107,20 @@ always @(posedge clk) begin
         tx_symb_per_synch <= tx_symb_per_synch + 1;
         symb_count  <= 1;
         phase       <= START_PH;
-        phase_inc   <= hop_phase_inc;
-        phase_inc2  <= hop_phase_inc + FREQ_SHIFT;
+        tx_freq_ph_inc   <= hop_phase_inc + START_PH_INC;
+        pilot_ph_inc  <= hop_phase_inc + PILOT_PH_INC;
         start_phase <= START_PH - NPH_SHIFT;
         hop_done    <= 1'b1;
       end else begin
         phase       <= start_phase;
         symb_count  <= symb_count + 1;
-        phase_inc   <= phase_inc + DPH_INC;
-        phase_inc2  <= phase_inc2 + DPH_INC;
+        tx_freq_ph_inc   <= tx_freq_ph_inc + DPH_INC;
         start_phase <= start_phase - NPH_SHIFT;
       end   
     end
     else begin
-      phase  <= phase + phase_inc;
-      phase2 <= phase2 + phase_inc2;
+      phase  <= phase + tx_freq_ph_inc;
+      phase2 <= phase2 + pilot_ph_inc;
       ncount <= ncount + 1;
     end
 end

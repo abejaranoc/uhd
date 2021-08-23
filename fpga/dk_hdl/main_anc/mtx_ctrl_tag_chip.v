@@ -7,10 +7,10 @@ module mtx_ctrl_tag_chip #(
   parameter BIT_CNT_WIDTH  = 7,
 
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 9, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 8192,
+  parameter [PHASE_WIDTH-1:0] NSIG         = 32768,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
-  parameter [PHASE_WIDTH-1:0] START_PH_INC = 8192,
-  parameter [PHASE_WIDTH-1:0] FREQ_SHIFT   = 4096,
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = 12288,
+  parameter [PHASE_WIDTH-1:0] PILOT_PH_INC = 4096,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(
@@ -63,9 +63,9 @@ module mtx_ctrl_tag_chip #(
   wire out_sel;
 
   assign tx_trig = start_tx;
-  wire [DATA_WIDTH-1:0]  sin_tx, cos_tx;
-  assign sin = sin_tx;
-  assign cos = cos_tx;
+  wire [DATA_WIDTH-1:0]  mtx_qdata, mtx_idata;
+  assign sin = mtx_qdata;
+  assign cos = mtx_idata;
 
   assign tx_io_out   = out_sel ? {(GPIO_REG_WIDTH){1'b0}} : TX_OUT_MASK ;
   assign gpio_out    = sync_io_out | tx_io_out;
@@ -99,19 +99,20 @@ module mtx_ctrl_tag_chip #(
   localparam HOP_TX    = 2'b11;
   localparam INIT      = 2'b00;
   localparam NUM_HOPS  = 64;
-  localparam [PHASE_WIDTH-1:0] HOP_DPH_INC = 131072;
+  localparam [PHASE_WIDTH-1:0] HOP_DPH_INC      = 131072;
+  localparam [PHASE_WIDTH-1:0] HOP_START_PH_INC = 24'h000000;
 
   reg [PHASE_WIDTH-1:0] synch_count;
   reg [PHASE_WIDTH-1:0] hop_n;
   reg [PHASE_WIDTH-1:0] hop_phase_inc;
 
-  assign out_sel =  1'b0;
-  assign itx = out_sel ? 0 : cos_tx;
-  assign qtx = out_sel ? 0 : sin_tx;
+  assign out_sel = ^state; // (state == LOC_SYNCH) ? 1'b1 : 1'b0;
+  assign itx = out_sel ? 0 : mtx_idata;
+  assign qtx = out_sel ? 0 : mtx_qdata;
   assign tx_valid = ~out_sel;
 
   assign hop_reset = (synch_count == SYNC_SIG_N) ? 1'b1 : 1'b0;
-  assign start_tx  = ^state ? 1'b1 : 1'b0;
+  assign start_tx  = ^state ; 
 
   localparam MEM_WIDTH = 32;
   reg [MEM_WIDTH-1:0] if_hop_codes [0:NUM_HOPS];
@@ -157,7 +158,7 @@ module mtx_ctrl_tag_chip #(
   mtx_sig_tag_chip #(
             .SIN_COS_WIDTH(DATA_WIDTH), .PHASE_WIDTH(PHASE_WIDTH), 
             .NSYMB_WIDTH(NSYMB_WIDTH), .NSIG(NSIG), .NSYMB(NSYMB),
-            .DPH_INC(DPH_INC), .FREQ_SHIFT(FREQ_SHIFT), .START_PH_INC(START_PH_INC), 
+            .DPH_INC(DPH_INC), .PILOT_PH_INC(PILOT_PH_INC), .START_PH_INC(START_PH_INC), 
             .START_PH(START_PH), .NPH_SHIFT(NPH_SHIFT))
       MTX_SIG(.clk(clk),
               .reset(reset),
@@ -170,8 +171,8 @@ module mtx_ctrl_tag_chip #(
               .sync_ready(sync_ready),
               .hop_ready(hop_done),
               .out_tready(1'b1),
-              .qtx(sin_tx), 
-              .itx(cos_tx),
+              .qtx(mtx_qdata), 
+              .itx(mtx_idata),
 
               .symbN(symbN),
               .sigN(sigN),
@@ -184,16 +185,16 @@ module mtx_ctrl_tag_chip #(
     if (reset) begin
       state <= INIT;
       hop_n <= 0;
-      hop_phase_inc <= START_PH_INC;
+      hop_phase_inc <= HOP_START_PH_INC;
       synch_count   <= 2*SYNC_SIG_N;
     end
     else begin
       case (state)
         INIT: begin
           state <= LOC_SYNCH;
-          synch_count   <= 2*SYNC_SIG_N;
+          synch_count   <= 2*SYNC_SIG_N  - 1;
           hop_n <= 0;
-          hop_phase_inc <= START_PH_INC;
+          hop_phase_inc <= HOP_START_PH_INC;
         end 
         LOC_SYNCH: begin
           if (synch_count > SYNC_SIG_N) begin
@@ -204,7 +205,7 @@ module mtx_ctrl_tag_chip #(
           end
         end
         HOP_SYNCH: begin
-          if (synch_count > 0) begin
+          if (synch_count > 1) begin
             synch_count <= synch_count - 1;
           end
           else begin
