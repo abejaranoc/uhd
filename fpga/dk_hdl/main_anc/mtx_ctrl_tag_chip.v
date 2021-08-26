@@ -41,8 +41,8 @@ module mtx_ctrl_tag_chip #(
   output [PHASE_WIDTH-1:0] ph_start,
   output [PHASE_WIDTH-1:0] sigN,
   output [NSYMB_WIDTH-1:0] symbN,
-  output [NSYMB_WIDTH-1:0] nhop, 
-  output [NSYMB_WIDTH-1:0] hop_ph_inc
+  output [PHASE_WIDTH-1:0] nhop, 
+  output [PHASE_WIDTH-1:0] hop_ph_inc
   
 );
 
