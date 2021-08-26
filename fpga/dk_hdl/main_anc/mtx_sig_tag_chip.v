@@ -1,6 +1,6 @@
 module mtx_sig_tag_chip #(
   parameter SIN_COS_WIDTH = 16,
-  parameter PHASE_WIDTH   = 24 ,
+  parameter PHASE_WIDTH   = 24,
   parameter NSYMB_WIDTH   = 16,
   parameter TX_SYNC_BITS  = 3,
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 9, 

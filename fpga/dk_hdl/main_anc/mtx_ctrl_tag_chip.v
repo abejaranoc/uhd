@@ -40,7 +40,9 @@ module mtx_ctrl_tag_chip #(
   output [PHASE_WIDTH-1:0] ph,
   output [PHASE_WIDTH-1:0] ph_start,
   output [PHASE_WIDTH-1:0] sigN,
-  output [NSYMB_WIDTH-1:0] symbN
+  output [NSYMB_WIDTH-1:0] symbN,
+  output [NSYMB_WIDTH-1:0] nhop, 
+  output [NSYMB_WIDTH-1:0] hop_ph_inc
   
 );
 
@@ -100,11 +102,14 @@ module mtx_ctrl_tag_chip #(
   localparam INIT      = 2'b00;
   localparam NUM_HOPS  = 64;
   localparam [PHASE_WIDTH-1:0] HOP_DPH_INC      = 131072;
-  localparam [PHASE_WIDTH-1:0] HOP_START_PH_INC = 24'h000000;
+  localparam [PHASE_WIDTH-1:0] HOP_START_PH_INC = -24'd4194304;
 
   reg [PHASE_WIDTH-1:0] synch_count;
   reg [PHASE_WIDTH-1:0] hop_n;
   reg [PHASE_WIDTH-1:0] hop_phase_inc;
+
+  assign nhop = hop_n;
+  assign hop_ph_inc = hop_phase_inc;
 
   assign out_sel = ^state; // (state == LOC_SYNCH) ? 1'b1 : 1'b0;
   assign itx = out_sel ? 0 : mtx_idata;
