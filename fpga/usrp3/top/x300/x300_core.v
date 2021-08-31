@@ -647,7 +647,6 @@ module x300_core #(
 
    wire [15:0] itx, qtx;
    wire [31:0] tx_data_dk = {itx, qtx};
-   wire tx_valid;
    wire TX_EN = 1'b1;
 
    localparam TX_BITS_WIDTH = 128;
@@ -668,9 +667,7 @@ module x300_core #(
                   
                   .fp_gpio_out(gpio_out_dk), 
                   .fp_gpio_ddr(gpio_ddr_dk),
-                  .fp_gpio_in(gpio_in_dk),
-
-                  .tx_valid(tx_valid));
+                  .fp_gpio_in(gpio_in_dk));
 
    //------------------------------------
    // Radio to ADC,DAC and IO Mapping

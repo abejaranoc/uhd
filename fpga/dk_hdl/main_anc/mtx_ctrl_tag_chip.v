@@ -173,7 +173,6 @@ module mtx_ctrl_tag_chip #(
               .phase_tvalid(1'b1),
               .hop_phase_inc(hop_phase_inc),
 
-              .sync_ready(sync_ready),
               .hop_ready(hop_done),
               .out_tready(1'b1),
               .qtx(mtx_qdata), 

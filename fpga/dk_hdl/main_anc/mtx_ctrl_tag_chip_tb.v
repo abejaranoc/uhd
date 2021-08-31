@@ -6,7 +6,7 @@ module mtx_ctrl_tag_chip_tb();
     localparam TX_BITS_WIDTH = 128;
     localparam BIT_CNT_WIDTH  = 7;
     reg reset;
-    wire clk, tx_trig, tx_valid;
+    wire clk;
 
     wire [DATA_WIDTH-1:0] mtx_cos, mtx_sin, pilot_cos, pilot_sin;
     wire [DATA_WIDTH-1:0] itx, qtx;
@@ -16,6 +16,7 @@ module mtx_ctrl_tag_chip_tb();
     wire [NSYMB_WIDTH-1:0] scount;
     wire [REG_WIDTH-1:0] fp_gpio_out, fp_gpio_ddr;
     reg  [REG_WIDTH-1:0] fp_gpio_in;
+    wire [1:0] mtx_state;
 
     reg [TX_BITS_WIDTH-1:0] tx_bits;
     wire [BIT_CNT_WIDTH-1:0] ntx_bits_cnt;
@@ -25,7 +26,7 @@ module mtx_ctrl_tag_chip_tb();
               .DATA_WIDTH(DATA_WIDTH),
               .PHASE_WIDTH(PHASEWIDTH), 
               .NSYMB_WIDTH(NSYMB_WIDTH), 
-              .NSIG(8192),
+              /*.NSIG(8192), */
               .PILOT_PH_INC(4096),
               .NSYMB(9))
         MTX_ANC(  .clk(clk),
@@ -50,7 +51,7 @@ module mtx_ctrl_tag_chip_tb();
                   .pilot_ph(pilot_ph),
                   .hop_ph_inc(hop_ph_inc),
                   .nhop(nhop),
-                  
+                  .mtx_state(mtx_state),
                   .mtx_data({mtx_cos, mtx_sin}), 
                   .pilot_data({pilot_cos, pilot_sin}));
     
@@ -58,17 +59,37 @@ module mtx_ctrl_tag_chip_tb();
     assign clk = (counter < 3) ? 1'b1 : 1'b0;
 
     always #1 counter <= (counter == 4) ? 0 : counter + 1;
+    reg stop_write;
     initial begin
         counter = 0;
         reset = 1'b1;
+        stop_write = 1'b0;
         tx_bits = { {(TX_BITS_WIDTH - 80){1'b0}}, 80'h0AAAAAAAAAAAAAAAAAAA };
         fp_gpio_in = 12'h000;
         #100 reset = 1'b0; 
         @(posedge clk);
-        repeat(10000000) @(posedge clk);
+        repeat(25000000) @(posedge clk);
         tx_bits = 0;
-        //repeat(100000) @(posedge clk);
+        stop_write = 1'b1;
         $finish();
+    end
+
+    integer file_id;
+    wire signed [DATA_WIDTH-1:0] itx_signed, qtx_signed;
+    assign itx_signed = itx;
+    assign qtx_signed = qtx;
+    initial begin
+        file_id = $fopen("/home/user/Desktop/sim/mtx_data.txt", "wb");
+        $display("Opened file ..................");
+        @(negedge reset);
+        $display("start writing ................");
+        while (!stop_write) begin
+            @(negedge clk); 
+            $fwrite(file_id, "%d %d \n", itx_signed, qtx_signed);    
+        end
+        $fclose(file_id);
+        $display("File closed ..................");
+        $finish();    
     end
 
 
