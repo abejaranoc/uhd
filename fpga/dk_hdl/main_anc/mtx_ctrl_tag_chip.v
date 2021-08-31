@@ -41,7 +41,8 @@ module mtx_ctrl_tag_chip #(
   output [PHASE_WIDTH-1:0] sigN,
   output [NSYMB_WIDTH-1:0] symbN,
   output [PHASE_WIDTH-1:0] nhop, 
-  output [PHASE_WIDTH-1:0] hop_ph_inc
+  output [PHASE_WIDTH-1:0] hop_ph_inc,
+  output [PHASE_WIDTH-1:0] count_sync
   
 );
 
@@ -89,7 +90,7 @@ module mtx_ctrl_tag_chip #(
   assign  SCAN_PHI_BAR   = scan_phi_bar   ? 12'h040 : 12'h000;
   assign  SCAN_DATA_IN   = scan_data_in   ? 12'h010 : 12'h000;
   assign  SCAN_LOAD_CHIP = scan_load_chip ? 12'h004 : 12'h000;
-  assign  SYNCH_OUT      = sync_sel       ? 12'h001 : 12'h000;
+  assign  SYNCH_OUT      = ^state         ? 12'h001 : 12'h000;
 
   assign sync_io_out  = SCAN_ID | SCAN_PHI | SCAN_PHI_BAR | SCAN_DATA_IN | SCAN_LOAD_CHIP | SYNCH_OUT;
 
@@ -115,9 +116,11 @@ module mtx_ctrl_tag_chip #(
   assign itx = start_tx ? 0 : mtx_idata;
   assign qtx = start_tx ? 0 : mtx_qdata;
  
-
-  assign hop_reset = (synch_count == SYNC_SIG_N) ? 1'b1 : 1'b0;
+  reg hop_reset_reg;
+  assign hop_reset = hop_reset_reg;
+  //assign hop_reset = (synch_count == SYNC_SIG_N) ? 1'b1 : 1'b0;
   
+  assign count_sync = synch_count;
 
   localparam MEM_WIDTH = 32;
   reg [MEM_WIDTH-1:0] if_hop_codes [0:NUM_HOPS];
@@ -193,10 +196,12 @@ module mtx_ctrl_tag_chip #(
       hop_n <= 0;
       hop_phase_inc <= HOP_START_PH_INC;
       synch_count   <= 2*SYNC_SIG_N;
+      hop_reset_reg <= 1'b1;
     end
     else begin
       case (state)
         INIT: begin
+          hop_reset_reg <= 1'b0;
           state <= LOC_SYNCH;
           synch_count   <= 2*SYNC_SIG_N  - 1;
           hop_n <= 0;
@@ -208,9 +213,11 @@ module mtx_ctrl_tag_chip #(
           end
           else begin
             state <= HOP_SYNCH;
+            hop_reset_reg <= 1'b1;
           end
         end
         HOP_SYNCH: begin
+          hop_reset_reg <= 1'b0;
           if (synch_count > 1) begin
             synch_count <= synch_count - 1;
           end
@@ -223,8 +230,9 @@ module mtx_ctrl_tag_chip #(
             if(hop_n < (NUM_HOPS - 1)) begin
               hop_n <= hop_n + 1;
               state <= HOP_SYNCH;
-              synch_count <= SYNC_SIG_N;
+              synch_count <= SYNC_SIG_N - 1;
               hop_phase_inc <= hop_phase_inc + HOP_DPH_INC;
+              hop_reset_reg <= 1'b1;
             end
             else begin
               state <= INIT;

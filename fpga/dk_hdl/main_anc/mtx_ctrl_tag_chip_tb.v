@@ -11,7 +11,7 @@ module mtx_ctrl_tag_chip_tb();
     wire [DATA_WIDTH-1:0] mtx_cos, mtx_sin, pilot_cos, pilot_sin;
     wire [DATA_WIDTH-1:0] itx, qtx;
     wire [PHASEWIDTH-1:0] mtx_ph, pilot_ph;
-    wire [PHASEWIDTH-1:0] sig_count;
+    wire [PHASEWIDTH-1:0] sig_count, count_sync;
     wire [PHASEWIDTH-1:0] nhop, hop_ph_inc;
     wire [NSYMB_WIDTH-1:0] scount;
     wire [REG_WIDTH-1:0] fp_gpio_out, fp_gpio_ddr;
@@ -47,6 +47,7 @@ module mtx_ctrl_tag_chip_tb();
 
                   .symbN(scount),
                   .sigN(sig_count),
+                  .count_sync(count_sync),
                   .mtx_ph(mtx_ph),
                   .pilot_ph(pilot_ph),
                   .hop_ph_inc(hop_ph_inc),
