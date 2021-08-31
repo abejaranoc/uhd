@@ -8,11 +8,11 @@ module mtx_ctrl_tag_chip_tb();
     reg reset;
     wire clk, tx_trig, tx_valid;
 
-    wire [DATA_WIDTH-1:0] sin, cos;
+    wire [DATA_WIDTH-1:0] mtx_cos, mtx_sin, pilot_cos, pilot_sin;
     wire [DATA_WIDTH-1:0] itx, qtx;
-    wire [PHASEWIDTH-1:0] ph;
+    wire [PHASEWIDTH-1:0] mtx_ph, pilot_ph;
     wire [PHASEWIDTH-1:0] sig_count;
-    wire [PHASEWIDTH-1:0] st_ph, nhop, hop_ph_inc;
+    wire [PHASEWIDTH-1:0] nhop, hop_ph_inc;
     wire [NSYMB_WIDTH-1:0] scount;
     wire [REG_WIDTH-1:0] fp_gpio_out, fp_gpio_ddr;
     reg  [REG_WIDTH-1:0] fp_gpio_in;
@@ -44,17 +44,15 @@ module mtx_ctrl_tag_chip_tb();
                   .ntx_bits_cnt(ntx_bits_cnt),
 
 
-                  .tx_trig(tx_trig),
-                  .tx_valid(tx_valid),
                   .symbN(scount),
                   .sigN(sig_count),
-                  .ph(ph),
-                  .ph_start(st_ph),
+                  .mtx_ph(mtx_ph),
+                  .pilot_ph(pilot_ph),
                   .hop_ph_inc(hop_ph_inc),
                   .nhop(nhop),
                   
-                  .sin(sin), 
-                  .cos(cos));
+                  .mtx_data({mtx_cos, mtx_sin}), 
+                  .pilot_data({pilot_cos, pilot_sin}));
     
     reg [2:0] counter;
     assign clk = (counter < 3) ? 1'b1 : 1'b0;

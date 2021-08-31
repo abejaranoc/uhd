@@ -1,5 +1,6 @@
 module mtx_ctrl_tag_chip #(
   parameter DATA_WIDTH     = 16,
+  parameter SIN_COS_WIDTH  = 16,
   parameter PHASE_WIDTH    = 24,
   parameter NSYMB_WIDTH    = 16,
   parameter GPIO_REG_WIDTH = 12,
@@ -31,14 +32,12 @@ module mtx_ctrl_tag_chip #(
   output [BIT_CNT_WIDTH-1:0] ntx_bits_cnt,
   output hop_rst,
 
-  output tx_valid,
-
   /*debug*/
-  output [DATA_WIDTH-1:0]  cos,
-  output [DATA_WIDTH-1:0]  sin,
-  output tx_trig,
-  output [PHASE_WIDTH-1:0] ph,
-  output [PHASE_WIDTH-1:0] ph_start,
+  output [1:0] mtx_state,
+  output [2*SIN_COS_WIDTH-1:0] mtx_data,
+  output [2*SIN_COS_WIDTH-1:0] pilot_data,
+  output [PHASE_WIDTH-1:0] mtx_ph,
+  output [PHASE_WIDTH-1:0] pilot_ph,
   output [PHASE_WIDTH-1:0] sigN,
   output [NSYMB_WIDTH-1:0] symbN,
   output [PHASE_WIDTH-1:0] nhop, 
@@ -46,7 +45,6 @@ module mtx_ctrl_tag_chip #(
   
 );
 
-  //localparam GPIO_REG_WIDTH    = 12;
   localparam GPIO_CLK_DIV_FAC  = 10;
   localparam SYNC_SIG_N        = 16384;
   localparam [GPIO_REG_WIDTH-1:0] SYNC_OUT_MASK = 12'h555;
@@ -58,24 +56,24 @@ module mtx_ctrl_tag_chip #(
 
 
   wire [GPIO_REG_WIDTH-1:0] gpio_out, gpio_in, sync_io_out, tx_io_out;
-  //reg sync_en;
+
   wire start_tx;
   reg [1:0] state;
   wire sync_ready;
-  wire out_sel;
+  wire sync_sel, csel;
 
-  assign tx_trig = start_tx;
+  assign mtx_state = state;
+
+
   wire [DATA_WIDTH-1:0]  mtx_qdata, mtx_idata;
-  assign sin = mtx_qdata;
-  assign cos = mtx_idata;
 
-  assign tx_io_out   = out_sel ? {(GPIO_REG_WIDTH){1'b0}} : TX_OUT_MASK ;
+  assign tx_io_out   = sync_sel ? {(GPIO_REG_WIDTH){1'b0}} : TX_OUT_MASK ;
   assign gpio_out    = sync_io_out | tx_io_out;
 
   localparam SCAN_CLK_DIV_FAC  = 20;
   localparam SCAN_WIDTH        = 2;
   localparam NTX_BITS          = 78;
-  //localparam BIT_CNT_WIDTH   = 7;
+
 
   wire hop_reset;
   wire scan_clk;
@@ -91,7 +89,7 @@ module mtx_ctrl_tag_chip #(
   assign  SCAN_PHI_BAR   = scan_phi_bar   ? 12'h040 : 12'h000;
   assign  SCAN_DATA_IN   = scan_data_in   ? 12'h010 : 12'h000;
   assign  SCAN_LOAD_CHIP = scan_load_chip ? 12'h004 : 12'h000;
-  assign  SYNCH_OUT      = ^state         ? 12'h001 : 12'h000;
+  assign  SYNCH_OUT      = sync_sel       ? 12'h001 : 12'h000;
 
   assign sync_io_out  = SCAN_ID | SCAN_PHI | SCAN_PHI_BAR | SCAN_DATA_IN | SCAN_LOAD_CHIP | SYNCH_OUT;
 
@@ -111,13 +109,15 @@ module mtx_ctrl_tag_chip #(
   assign nhop = hop_n;
   assign hop_ph_inc = hop_phase_inc;
 
-  assign out_sel = ^state; // (state == LOC_SYNCH) ? 1'b1 : 1'b0;
-  assign itx = out_sel ? 0 : mtx_idata;
-  assign qtx = out_sel ? 0 : mtx_qdata;
-  assign tx_valid = ~out_sel;
+  assign csel = (synch_count <= (SYNC_SIG_N/4)) ? 1'b1 : 1'b0;
+  assign sync_sel = (state == HOP_SYNCH) ? 1'b1 : 1'b0;
+  assign start_tx  = csel && sync_sel ; 
+  assign itx = start_tx ? 0 : mtx_idata;
+  assign qtx = start_tx ? 0 : mtx_qdata;
+ 
 
   assign hop_reset = (synch_count == SYNC_SIG_N) ? 1'b1 : 1'b0;
-  assign start_tx  = ^state ; 
+  
 
   localparam MEM_WIDTH = 32;
   reg [MEM_WIDTH-1:0] if_hop_codes [0:NUM_HOPS];
@@ -161,7 +161,7 @@ module mtx_ctrl_tag_chip #(
                 .gpio_in(gpio_in));
 
   mtx_sig_tag_chip #(
-            .SIN_COS_WIDTH(DATA_WIDTH), .PHASE_WIDTH(PHASE_WIDTH), 
+            .DATA_WIDTH(DATA_WIDTH), .SIN_COS_WIDTH(DATA_WIDTH), .PHASE_WIDTH(PHASE_WIDTH), 
             .NSYMB_WIDTH(NSYMB_WIDTH), .NSIG(NSIG), .NSYMB(NSYMB),
             .DPH_INC(DPH_INC), .PILOT_PH_INC(PILOT_PH_INC), .START_PH_INC(START_PH_INC), 
             .START_PH(START_PH), .NPH_SHIFT(NPH_SHIFT))
@@ -181,8 +181,10 @@ module mtx_ctrl_tag_chip #(
 
               .symbN(symbN),
               .sigN(sigN),
-              .ph(ph),
-              .ph_start(ph_start));
+              .mtx_ph(mtx_ph),
+              .pilot_ph(pilot_ph),
+              .mtx_data(mtx_data),
+              .pilot_data(pilot_data));
 
 
 
