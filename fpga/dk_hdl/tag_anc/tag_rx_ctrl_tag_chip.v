@@ -52,11 +52,14 @@ module tag_rx_ctrl_tag_chip #(
   assign sync_trigger    = |(gpio_in & SYNC_IN_MASK);
 
   wire out_sel = ^state ;
+  reg val_sync;
+  wire sync_sel;
+  assign sync_sel = out_sel & val_sync;
   assign sync_ready = out_sel;
   assign irx_sync = out_sel & state[0] ? -32000 : 32000 ;
   assign qrx_sync = 0;
-  assign irx_out = out_sel ? irx_sync : irx_in;
-  assign qrx_out = out_sel ? qrx_sync : qrx_in;
+  assign irx_out = sync_sel ? irx_sync : irx_in;
+  assign qrx_out = sync_sel ? qrx_sync : qrx_in;
 
   localparam LOC_SYNCH = 2'b01;
   localparam HOP_SYNCH = 2'b10;
@@ -69,7 +72,7 @@ module tag_rx_ctrl_tag_chip #(
   
   
   reg valid_rx;
-  assign rx_valid   = valid_rx  & out_sel;
+  assign rx_valid   = valid_rx  & sync_sel;
   
   gpio_ctrl #(
     .GPIO_REG_WIDTH(GPIO_REG_WIDTH), .CLK_DIV_FAC(GPIO_CLK_DIV_FAC),             
@@ -88,10 +91,12 @@ module tag_rx_ctrl_tag_chip #(
       state <= INIT;
       valid_rx <= 1'b0;
       idle_count <= 0;
+      val_sync  <= 1'b0;
     end
     else begin
       case (state)
         INIT : begin
+          val_sync <= 1'b0;
           if (sync_trigger) begin
             sync_count <= SYNC_SIG_N - 1;
             state    <= LOC_SYNCH;
@@ -105,8 +110,12 @@ module tag_rx_ctrl_tag_chip #(
           end
         end
         LOC_SYNCH : begin
-          if (sync_count > 0) begin
+          if (sync_count >= SYNC_SIG_N/2) begin
             sync_count <= sync_count - 1;
+          end
+          else if (sync_count > 0) begin
+            sync_count <= sync_count - 1;
+            val_sync <= 1'b1;
           end
           else  begin 
             state <= HOP_SYNCH;
