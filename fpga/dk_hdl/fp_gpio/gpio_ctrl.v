@@ -31,7 +31,6 @@ module gpio_ctrl #(
       CLK_DIV_DK (.clk(clk),
                   .reset(reset),
                   .clk_div(clk_div));
-
   */
   assign gpio_in     = Q1 & D1 & IN_MASK;
   assign fp_gpio_ddr = IO_DDR;
