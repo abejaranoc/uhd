@@ -116,9 +116,9 @@ module mtx_ctrl_tag_chip #(
   assign itx = start_tx ? 0 : mtx_idata;
   assign qtx = start_tx ? 0 : mtx_qdata;
  
-  //reg hop_reset_reg;
-  //assign hop_reset = hop_reset_reg;
-  assign hop_reset = (synch_count == (SYNC_SIG_N-1)) ? 1'b1 : 1'b0;
+  reg hop_reset_reg;
+  assign hop_reset = hop_reset_reg;
+  //assign hop_reset = (synch_count == (SYNC_SIG_N-1)) ? 1'b1 : 1'b0;
   
   assign count_sync = synch_count;
 
@@ -196,28 +196,28 @@ module mtx_ctrl_tag_chip #(
       hop_n <= 0;
       hop_phase_inc <= HOP_START_PH_INC;
       synch_count   <= 2*SYNC_SIG_N;
-      //hop_reset_reg <= 1'b1;
+      hop_reset_reg <= 1'b1;
     end
     else begin
       case (state)
         INIT: begin
-          //hop_reset_reg <= 1'b0;
+          hop_reset_reg <= 1'b0;
           state <= LOC_SYNCH;
-          synch_count   <= 2*SYNC_SIG_N  - 2;
+          synch_count   <= 2*SYNC_SIG_N - 1;
           hop_n <= 0;
           hop_phase_inc <= HOP_START_PH_INC;
         end 
         LOC_SYNCH: begin
-          if (synch_count >= SYNC_SIG_N) begin
+          if (synch_count > SYNC_SIG_N) begin
             synch_count <= synch_count - 1;
           end
           else begin
             state <= HOP_SYNCH;
-            //hop_reset_reg <= 1'b1;
+            hop_reset_reg <= 1'b1;
           end
         end
         HOP_SYNCH: begin
-          //hop_reset_reg <= 1'b0;
+          hop_reset_reg <= 1'b0;
           if (synch_count > 1) begin
             synch_count <= synch_count - 1;
           end
@@ -230,9 +230,9 @@ module mtx_ctrl_tag_chip #(
             if(hop_n < (NUM_HOPS - 1)) begin
               hop_n <= hop_n + 1;
               state <= HOP_SYNCH;
-              synch_count <= SYNC_SIG_N - 1;
+              synch_count <= SYNC_SIG_N;
               hop_phase_inc <= hop_phase_inc + HOP_DPH_INC;
-              //hop_reset_reg <= 1'b1;
+              hop_reset_reg <= 1'b1;
             end
             else begin
               state <= INIT;

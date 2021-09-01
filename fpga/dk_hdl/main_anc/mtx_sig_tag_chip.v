@@ -51,7 +51,8 @@ wire [PHASE_WIDTH-1:0]  pilot_ph_tdata = pilot_phase;
 reg  [TX_SYNC_BITS-1:0] tx_symb_per_synch;
 reg   hop_done;
 
-assign hop_ready = hop_done;
+//assign hop_ready = hop_done;
+assign hop_ready = (symb_count == NSYMB) & (ncount == NSIG);
 
 wire [SIN_COS_WIDTH-1:0]  mtx_sin, pilot_sin, mtx_cos, pilot_cos, itx, qtx;
 
