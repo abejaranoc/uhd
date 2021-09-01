@@ -16,22 +16,22 @@ module gpio_ctrl #(
   output [GPIO_REG_WIDTH-1:0]  gpio_in
 );
 
-  wire clk_div;
+  //wire clk_div;
   wire [GPIO_REG_WIDTH-1:0] D1, Q1;
 
   regN_ff #(.REG_WIDTH(GPIO_REG_WIDTH))
-      R0(.clk(clk_div), .reset(reset), .ce(1'b1),
+      R0(.clk(clk), .reset(reset), .ce(1'b1),
          .D(fp_gpio_in), .Q(D1));
 
   regN_ff #(.REG_WIDTH(GPIO_REG_WIDTH))
-      R1(.clk(clk_div), .reset(reset), .ce(1'b1),
+      R1(.clk(clk), .reset(reset), .ce(1'b1),
          .D(D1), .Q(Q1));
-
+  /*
   clk_div_dk #(.N(CLK_DIV_FAC))
       CLK_DIV_DK (.clk(clk),
                   .reset(reset),
                   .clk_div(clk_div));
-
+  */
   assign gpio_in     = Q1 & D1 & IN_MASK;
   assign fp_gpio_ddr = IO_DDR;
   assign fp_gpio_out = gpio_out & OUT_MASK; 

@@ -8,7 +8,7 @@ module regN_ff #(
   output reg [REG_WIDTH-1:0] Q
  );
 
-  always @(posedge clk or posedge reset) begin
+  always @(posedge clk) begin
     if(reset) Q <= 0;
     else if (ce) Q <= D;  
   end
