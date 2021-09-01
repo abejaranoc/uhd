@@ -27,6 +27,7 @@ include $(LIB_IP_DIR)/complex_multiplier_dds/Makefile.inc
 include $(LIB_IP_DIR)/dds_sin_cos_lut_only/Makefile.inc
 include $(BASE_DIR)/x300/coregen_dsp/Makefile.srcs
 include $(BASE_DIR)/../../dk_hdl/fp_gpio/Makefile.srcs
+include $(BASE_DIR)/../../dk_hdl/rx_anc/Makefile.srcs
 
 
 DESIGN_SRCS += $(abspath \
@@ -37,7 +38,7 @@ $(LIB_IP_DDS_SIN_COS_LUT_ONLY_SRCS) \
 $(COREGEN_DSP_SRCS) \
 $(RFNOC_BLOCK_DDC_SRCS) \
 $(DK_FP_GPIO_SRCS) \
-rx_anc.v   \
+$(DK_RX_ANC_SRCS) \
 )
 
 #-------------------------------------------------

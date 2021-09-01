@@ -5,8 +5,8 @@ module rx_anc #(
   parameter PHASE_WIDTH   = 24,
   parameter NSYMB_WIDTH   = 16,
   parameter SCALING_WIDTH = 18,
-  parameter [PHASE_WIDTH-1:0] NSIG     = 4096,
-  parameter [PHASE_WIDTH-1:0] DPH_INC  = 8192, 
+  parameter [PHASE_WIDTH-1:0] NSIG     = 32768,
+  parameter [PHASE_WIDTH-1:0] DPH_INC  = 4096, 
   parameter [PHASE_WIDTH-1:0] START_PH = 24'h000000
 
 )(
@@ -111,7 +111,7 @@ dds_freq_tune #(.OUTPUT_WIDTH(DDS_WIDTH))
 ************************************************************************/
 wire [DDS_WIDTH+SCALING_WIDTH-1:0] scaled_i_tdata, scaled_q_tdata;
 wire scaled_tlast, scaled_tvalid, scaled_tready;
-wire [SCALING_WIDTH-1:0] scaling_tdata = {3'h0, {(SCALING_WIDTH-3){1'b1}}};
+wire [SCALING_WIDTH-1:0] scaling_tdata = {2'h0, {(SCALING_WIDTH-2){1'b1}}};
 
 mult #(
     .WIDTH_A(DDS_WIDTH),

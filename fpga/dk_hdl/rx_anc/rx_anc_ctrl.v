@@ -35,6 +35,9 @@ module rx_anc_ctrl #(
   /* IQ output */
   output [DATA_WIDTH-1:0]  itx,
   output [DATA_WIDTH-1:0]  qtx, 
+  input out_tready, 
+  output out_tvalid, 
+  output out_tlast,
 
   /*debug*/
   output [PHASE_WIDTH-1:0]   ph,
@@ -148,10 +151,10 @@ module rx_anc_ctrl #(
   assign phase_tvalid = in_tvalid;
   assign phase_tlast  = in_tlast;
 
-  wire pnfo_tlast, pnfo_tready, pnfo_tlast, pnfo_in_tready;
+  wire pnfo_tlast, pnfo_tready, pnfo_tvalid, pnfo_in_tready;
   wire [DATA_WIDTH-1:0] pnfo_itdata, pnfo_qtdata;
 
-  wire bb_tlast, bb_tready, bb_tlast, bb_in_tready;
+  wire bb_tlast, bb_tready, bb_tvalid, bb_in_tready;
   wire [DATA_WIDTH-1:0] bb_itdata, bb_qtdata;
   assign in_tready = pnfo_in_tready | bb_in_tready;
 
@@ -281,7 +284,7 @@ module rx_anc_ctrl #(
 
       .scale_val(scale_val),
 
-      .pdata(cm_tdata)
+      .pdata(cm_tdata),
       .out_tready(out_tready), .out_tvalid(out_tvalid),
       .out_tlast(out_tlast));
   
