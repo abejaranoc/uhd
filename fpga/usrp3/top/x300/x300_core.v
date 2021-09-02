@@ -655,7 +655,7 @@ module x300_core #(
    assign rx_bb_dk = {irx_bb, qrx_bb};
    wire rx_valid;
 
-   tag_rx_ctrl_tag_chip TAG_RX_CTRL(   
+   tag_rx_ctrl_tag_chip_nb TAG_RX_CTRL(   
                      .clk(radio_clk),
                      .reset(radio_rst),
 

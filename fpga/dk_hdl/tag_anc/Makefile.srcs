@@ -6,5 +6,9 @@
 DK_TAG_ANC_SRCS = $(abspath $(addprefix $(BASE_DIR)/../../dk_hdl/tag_anc/, \
 tag_rx.v \
 tag_rx_ctrl.v \
+hop_ctrl_ce.v \
+hop_ctrl.v \
+if_codes.mem \
 tag_rx_ctrl_tag_chip.v \
+tag_rx_ctrl_tag_chip_nb.v \
 ))
