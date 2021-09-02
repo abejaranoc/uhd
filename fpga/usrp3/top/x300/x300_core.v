@@ -649,22 +649,15 @@ module x300_core #(
    wire [31:0] tx_data_dk = {itx, qtx};
    wire TX_EN = 1'b1;
 
-   localparam TX_BITS_WIDTH = 128;
-   localparam BIT_CNT_WIDTH  = 7;
-   wire [TX_BITS_WIDTH-1:0] tx_bits = { {(TX_BITS_WIDTH - 32){1'b0}}, fp_gpio_r_out[0] };
 
-   mtx_ctrl_tag_chip #(
-              .TX_BITS_WIDTH(TX_BITS_WIDTH),
-              .BIT_CNT_WIDTH(BIT_CNT_WIDTH),
-              .NSYMB(9))
+   mtx_ctrl_tag_chip_nb #(
+         .NSYMB(9), .NUM_HOPS(64))
         MTX_ANC(  .clk(radio_clk),
                   .reset(radio_rst),
 
                   .itx(itx), 
                   .qtx(qtx), 
-                  
-                  .tx_bits(tx_bits),
-                  
+            
                   .fp_gpio_out(gpio_out_dk), 
                   .fp_gpio_ddr(gpio_ddr_dk),
                   .fp_gpio_in(gpio_in_dk));
