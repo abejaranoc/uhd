@@ -450,7 +450,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         continue_on_bad_packet)
 */ 
     size_t loc_id = 0;
-    size_t files_per_loc = 1;
+    size_t files_per_loc = 5;
     std::cout << "starting location ID: ";
     std::cin >> loc_id;
     #define recv_to_file_args(format, id_loc, num_per_loc) \
