@@ -8,7 +8,7 @@ module tag_rx_ctrl_tag_chip_nb_tb();
     reg reset;
     wire clk;
     
-    wire [DATA_WIDTH-1:0] sync_count;
+    wire [NSIG_WIDTH-1:0] sync_count;
     wire [DATA_WIDTH-1:0] irx_out, qrx_out; //, irx_out, qrx_out;
     reg  [DATA_WIDTH-1:0] irx_in, qrx_in;
     wire [BIT_CNT_WIDTH-1:0] ntx_bits_cnt;
