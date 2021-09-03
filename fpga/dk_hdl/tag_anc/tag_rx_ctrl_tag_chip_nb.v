@@ -4,7 +4,7 @@ module tag_rx_ctrl_tag_chip_nb #(
   parameter TX_BITS_WIDTH  = 128,
   parameter BIT_CNT_WIDTH  = 7,
   parameter NSIG_WIDTH     = 24, 
-  parameter NSYNC_WIDTH    = 16,
+  parameter NSYNC_WIDTH    = 24,
 
   parameter NUM_HOPS       = 64,
   parameter NSIG           = 294912, 
@@ -92,6 +92,7 @@ module tag_rx_ctrl_tag_chip_nb #(
   localparam SCAN_CLK_DIV_FAC  = 20;
   localparam SCAN_WIDTH        = 2;
   localparam NTX_BITS          = 78;
+  localparam HOP_RESET_VAL     = NSYNC_HOP - 5;
 
   reg hop_reset;
   wire scan_clk;
@@ -172,7 +173,7 @@ module tag_rx_ctrl_tag_chip_nb #(
           hop_reset <= 1'b0;
           val_sync  <= 1'b0;
           if (sync_trigger) begin
-            sync_count <= NSYNC_LOC - 1;
+            sync_count <= NSYNC_LOC - 2;
             state      <= LOC_SYNCH;
           end
         end
@@ -191,9 +192,12 @@ module tag_rx_ctrl_tag_chip_nb #(
           end
         end
         HOP_SYNCH : begin
-          hop_reset <= 1'b0;
-          if (sync_count > 0) begin
+          if (sync_count > HOP_RESET_VAL) begin
             sync_count <= sync_count - 1;
+          end
+          else if (sync_count > 0) begin
+            sync_count <= sync_count - 1;
+            hop_reset  <= 1'b0;
           end
           else begin
             state      <= HOP_RX;
@@ -208,10 +212,13 @@ module tag_rx_ctrl_tag_chip_nb #(
           else if (hop_n < (NUM_HOPS - 1)) begin
             hop_n <= hop_n + 1;
             state <= HOP_SYNCH;
+            nsig  <= NSIG - 1;
             hop_reset <= 1'b1;
           end
           else begin
             state <= INIT;
+            nsig  <= NSIG - 1;
+            hop_n <= 0;
           end
         end
         default: state <= INIT;
