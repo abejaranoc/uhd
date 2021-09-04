@@ -9,7 +9,7 @@ module mtx_ctrl_tag_chip_nb #(
   parameter [NHOP_WIDTH-1:0] NUM_HOPS      = 64,
   parameter [NHOP_WIDTH-1:0] NSYMB_PER_HOP = 8,
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 16384,
+  parameter [PHASE_WIDTH-1:0] NSIG         = 65536,
 
   parameter [PHASE_WIDTH-1:0] START_PH_INC = -24'd4194304,
   parameter [PHASE_WIDTH-1:0] MTX_DPH_INC  = 16384,
