@@ -192,12 +192,9 @@ module tag_rx_ctrl_tag_chip_nb #(
           end
         end
         HOP_SYNCH : begin
-          if (sync_count > HOP_RESET_VAL) begin
+          hop_reset <= 1'b0;
+          if (sync_count > 0) begin
             sync_count <= sync_count - 1;
-          end
-          else if (sync_count > 0) begin
-            sync_count <= sync_count - 1;
-            hop_reset  <= 1'b0;
           end
           else begin
             state      <= HOP_RX;
@@ -212,12 +209,10 @@ module tag_rx_ctrl_tag_chip_nb #(
           else if (hop_n < (NUM_HOPS - 1)) begin
             hop_n <= hop_n + 1;
             state <= HOP_SYNCH;
-            nsig  <= NSIG - 1;
             hop_reset <= 1'b1;
           end
           else begin
             state <= INIT;
-            nsig  <= NSIG - 1;
             hop_n <= 0;
           end
         end
