@@ -266,7 +266,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // variables to be set by po
     std::string args, file, type, ant, subdev, ref, wirefmt;
-    size_t channel, total_num_samps, spb;
+    size_t channel, total_num_samps, spb, num_files;
     double rate, freq, gain, bw, total_time, setup_time, lo_offset, wait_time;
 
     // setup the program options
@@ -276,6 +276,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("help", "help message")
         ("args", po::value<std::string>(&args)->default_value("addr=192.168.10.2"), "multi uhd device address args")
         ("file", po::value<std::string>(&file)->default_value("usrp_samples.dat"), "name of the file to write binary samples to")
+        ("num_files", po::value<size_t>(&num_files)->default_value(1), "num of repeated file to write binary samples to")
         ("type", po::value<std::string>(&type)->default_value("short"), "sample type: double, float, or short")
         ("nsamps", po::value<size_t>(&total_num_samps)->default_value(0), "total number of samples to receive")
         ("duration", po::value<double>(&total_time)->default_value(0), "total number of seconds to receive")
@@ -292,7 +293,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("ref", po::value<std::string>(&ref)->default_value("internal"), "reference source (internal, external, mimo)")
         ("wirefmt", po::value<std::string>(&wirefmt)->default_value("sc16"), "wire format (sc8, sc16 or s16)")
         ("setup", po::value<double>(&setup_time)->default_value(1.0), "seconds of setup time")
-        ("wait-time", po::value<double>(&wait_time)->default_value(20), "seconds of setup time")
+        ("wait-time", po::value<double>(&wait_time)->default_value(0), "seconds of setup time")
         ("progress", "periodically display short-term bandwidth")
         ("stats", "show average bandwidth on exit")
         ("sizemap", "track packet size and display breakdown on exit")
@@ -450,7 +451,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         continue_on_bad_packet)
 */ 
     size_t loc_id = 0;
-    size_t files_per_loc = 5;
+    size_t files_per_loc = num_files;
     std::cout << "starting location ID: ";
     std::cin >> loc_id;
     #define recv_to_file_args(format, id_loc, num_per_loc) \
