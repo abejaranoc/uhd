@@ -3,15 +3,14 @@ module mtx_sig_tag_chip_nb #(
   parameter SIN_COS_WIDTH = 16,
   parameter PHASE_WIDTH   = 24,
   parameter NSYMB_WIDTH   = 16,
-  parameter NHOP_WIDTH     = 8,
+  parameter NHOP_WIDTH    = 8,
 
+  parameter [NHOP_WIDTH-1:0] NUM_HOPS      = 64,
   parameter [NHOP_WIDTH-1:0] NSYMB_PER_HOP = 8,
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
   parameter [PHASE_WIDTH-1:0] NSIG         = 65536,
   
-
-  parameter [PHASE_WIDTH-1:0] START_PH_INC = 0,
-
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = -24'd4194304,
   parameter [PHASE_WIDTH-1:0] MTX_DPH_INC  = 16384,
   parameter [PHASE_WIDTH-1:0] MTX_PH_INC   = 12288,
   parameter [PHASE_WIDTH-1:0] PILOT_PH_INC = 4096,
@@ -124,9 +123,15 @@ always @(posedge clk) begin
         tx_freq_ph_inc  <= tx_freq_ph_inc + MTX_DPH_INC;
       end 
       if(pilot_symb_count == NSYMB_PER_HOP) begin
-        hop_n            <= hop_n + 1;
         pilot_symb_count <= 1;
-        pilot_ph_inc     <= pilot_ph_inc + HOP_DPH_INC;
+        if (hop_n == NUM_HOPS) begin
+          hop_n <=  1;
+          pilot_ph_inc     <= START_PH_INC + PILOT_PH_INC;
+        end
+        else begin
+          pilot_ph_inc     <= pilot_ph_inc + HOP_DPH_INC;
+          hop_n <= hop_n + 1;
+        end           
       end 
       else begin
         pilot_symb_count <= pilot_symb_count + 1;

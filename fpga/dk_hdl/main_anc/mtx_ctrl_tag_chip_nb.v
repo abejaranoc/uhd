@@ -11,7 +11,7 @@ module mtx_ctrl_tag_chip_nb #(
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
   parameter [PHASE_WIDTH-1:0] NSIG         = 16384,
 
-  parameter [PHASE_WIDTH-1:0] START_PH_INC = 0,
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = -24'd4194304,
   parameter [PHASE_WIDTH-1:0] MTX_DPH_INC  = 16384,
   parameter [PHASE_WIDTH-1:0] MTX_PH_INC   = 12288,
   parameter [PHASE_WIDTH-1:0] PILOT_PH_INC = 4096,
@@ -106,8 +106,8 @@ module mtx_ctrl_tag_chip_nb #(
 
   mtx_sig_tag_chip_nb #(
             .DATA_WIDTH(DATA_WIDTH), .SIN_COS_WIDTH(DATA_WIDTH), .PHASE_WIDTH(PHASE_WIDTH), 
-            .NSYMB_WIDTH(NSYMB_WIDTH), .NHOP_WIDTH(NHOP_WIDTH),
-            .NSIG(NSIG), .NSYMB(NSYMB), .NSYMB_PER_HOP(NSYMB_PER_HOP),
+            .NSYMB_WIDTH(NSYMB_WIDTH), .NHOP_WIDTH(NHOP_WIDTH), .NUM_HOPS(NUM_HOPS),
+            .NSIG(NSIG), .NSYMB(NSYMB), .NSYMB_PER_HOP(NSYMB_PER_HOP), 
             
             .MTX_DPH_INC(MTX_DPH_INC), .MTX_PH_INC(MTX_PH_INC), .PILOT_PH_INC(PILOT_PH_INC), 
             .START_PH_INC(START_PH_INC), .HOP_DPH_INC(HOP_DPH_INC),
