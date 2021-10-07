@@ -1,7 +1,5 @@
 module cmul_16_tb ();
 
-
-
 localparam DATA_WIDTH    = 16;
 localparam SCALING_WIDTH = 18;
 localparam NDATA         = 16384;
@@ -19,7 +17,7 @@ reg [2*DATA_WIDTH-1:0] input_memory2 [0:NDATA-1];
 wire [2*DATA_WIDTH-1:0] prod_data;
 wire [DATA_WIDTH-1:0] out_idata, out_qdata;
 
-wire [SCALING_WIDTH-1:0] scale_val = {10'h0, {(SCALING_WIDTH-10){1'b1}}};
+wire [SCALING_WIDTH-1:0] scale_val = {11'h0, {(SCALING_WIDTH-11){1'b1}}};
 assign out_idata = prod_data[2*DATA_WIDTH-1:DATA_WIDTH];
 assign out_qdata = prod_data[DATA_WIDTH-1:0];
 assign ain_idata = ain_data[2*DATA_WIDTH-1:DATA_WIDTH];
@@ -41,7 +39,7 @@ always @(posedge clk) begin
   end 
   else begin
     ncount <= ncount + 1;
-    ain_data <= input_memory[ncount];
+    ain_data <= input_memory2[ncount];
     bin_data <= input_memory2[ncount];
   end 
 end

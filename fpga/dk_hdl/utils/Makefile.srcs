@@ -5,9 +5,14 @@
 ##################################################
 DK_UTILS_SRCS = $(abspath $(addprefix $(BASE_DIR)/../../dk_hdl/utils/, \
 fir_filter_iq.v \
-cmul_16.v \ 
+cmul_16.v \
+cmul16.v \
 cic_decimate_iq.v \
 cic_interpolate_iq.v \
 freq_shift_iq.v \
-freq_shift_and_lpf_iq.v 
+freq_shift_and_lpf_iq.v \
+preamble_detect.v \
+peak_detect.v \
+cmoving_avg.v \
+conj_flop.v \
 ))
