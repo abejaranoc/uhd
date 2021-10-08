@@ -16,22 +16,26 @@ module gpio_ctrl #(
   output [GPIO_REG_WIDTH-1:0]  gpio_in
 );
 
-  wire clk_div;
   wire [GPIO_REG_WIDTH-1:0] D1, Q1;
-
   regN_ff #(.REG_WIDTH(GPIO_REG_WIDTH))
-      R0(.clk(clk_div), .reset(reset), .ce(1'b1),
+      R0(.clk(clk), .reset(reset), .ce(1'b1),
          .D(fp_gpio_in), .Q(D1));
 
   regN_ff #(.REG_WIDTH(GPIO_REG_WIDTH))
-      R1(.clk(clk_div), .reset(reset), .ce(1'b1),
+      R1(.clk(clk), .reset(reset), .ce(1'b1),
          .D(D1), .Q(Q1));
+  /*
+  wire o_tlast, o_tready, o_tvalid;
+  delay_fifo #(.MAX_LEN(CLK_DIV_FAC), .WIDTH(GPIO_REG_WIDTH))
+    R0( .clk(clk), .reset(reset), .clear(reset), .len(CLK_DIV_FAC),
+        .i_tdata(fp_gpio_in), .i_tlast(1'b0), .i_tvalid(1'b1), 
+        .o_tdata(D1), .o_tlast(o_tlast), .o_tvalid(o_tvalid), .o_tready(o_tready));
 
-  clk_div_dk #(.N(CLK_DIV_FAC))
-      CLK_DIV_DK (.clk(clk),
-                  .reset(reset),
-                  .clk_div(clk_div));
-
+  delay_fifo #(.MAX_LEN(CLK_DIV_FAC), .WIDTH(GPIO_REG_WIDTH))
+    R1( .clk(clk), .reset(reset), .clear(reset), .len(CLK_DIV_FAC),
+        .i_tdata(D1), .i_tlast(o_tlast), .i_tvalid(o_tvalid), .i_tready(o_tready),
+        .o_tdata(Q1), .o_tlast(), .o_tvalid(), .o_tready(1'b1));
+  */
   assign gpio_in     = Q1 & D1 & IN_MASK;
   assign fp_gpio_ddr = IO_DDR;
   assign fp_gpio_out = gpio_out & OUT_MASK; 

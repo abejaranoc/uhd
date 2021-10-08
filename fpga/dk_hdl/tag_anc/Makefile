@@ -49,10 +49,10 @@ $(DK_TAG_ANC_SRCS) \
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = tag_rx_ctrl_tb 
+SIM_TOP = tag_rx_ctrl_tag_chip_nb_tb 
 SIM_RUNTIME_US = 100000
 SIM_SRCS = \
-$(abspath tag_rx_ctrl_tb.v) \
+$(abspath tag_rx_ctrl_tag_chip_nb_tb.v) \
 
 
 #SIM_SRCS = \
