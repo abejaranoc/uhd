@@ -5,11 +5,11 @@ module tag_rx #(
   parameter PHASE_WIDTH   = 24,
   parameter NSYMB_WIDTH   = 16,
   parameter SCALING_WIDTH = 18,
-  parameter RX_SYNC_BITS  = 5,
-  parameter [NSYMB_WIDTH-1:0] NSYMB        = 256, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 4096,
+  parameter NLOC_PER_SYNC = 7,
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 32768,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = -16384, 
-  parameter [PHASE_WIDTH-1:0] START_PH_INC = 0,
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = 24'h000000,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(
@@ -45,13 +45,13 @@ module tag_rx #(
   output [SIN_COS_WIDTH-1:0]  cos
 );
 
-reg  [RX_SYNC_BITS-1:0] rx_symb_per_synch;
+reg  [$clog2(NLOC_PER_SYNC)-1:0] num_loc;
 reg  [PHASE_WIDTH-1:0]  ncount;
 reg  [NSYMB_WIDTH-1:0]  symb_count;
 reg  [PHASE_WIDTH-1:0]  phase_inc, phase, start_phase;
 wire [PHASE_WIDTH-1:0]  phase_tdata = phase;
 
-assign sync_ready = &rx_symb_per_synch;
+assign sync_ready = &num_loc;
 assign ph         = phase;
 assign sigN       = ncount;
 assign symbN      = symb_count;
@@ -167,10 +167,10 @@ axi_round_and_clip_complex #(.WIDTH_IN(DDS_WIDTH+SCALING_WIDTH),
 
 always @(posedge clk) begin
     if (reset || srst) begin
-      rx_symb_per_synch <= {(RX_SYNC_BITS){1'b1}};
+      num_loc <= 0;
       phase  <= START_PH;
-      ncount <= NSIG;
-      symb_count <= NSYMB;
+      ncount <= 1;
+      symb_count <= 1;
       phase_inc  <= START_PH_INC;
       start_phase <= START_PH;
     end 
@@ -181,7 +181,7 @@ always @(posedge clk) begin
         phase  <= START_PH;
         phase_inc  <= START_PH_INC;
         start_phase <= START_PH - NPH_SHIFT;
-        rx_symb_per_synch <= rx_symb_per_synch + 1;
+        num_loc <= num_loc + 1;
       end else begin
         phase  <= start_phase;
         symb_count  <= symb_count + 1;

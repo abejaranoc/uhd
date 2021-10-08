@@ -7,7 +7,7 @@ module  preamble_detect#(
   parameter [$clog2(MAX_LEN+1)-1:0] LEN = 2046,
   parameter [1:0] THRES_SEL = 2'b01,
   parameter NRX_TRIG        = 16, 
-  parameter [DATA_WIDTH-1:0] NOISE_POW = 64 
+  parameter [DATA_WIDTH-1:0] NOISE_POW = 100 
 )(
   input clk,
   input reset,
@@ -44,7 +44,7 @@ wire dec_tlast, dec_tvalid, dec_tready;
 
 wire pout_tready;
 wire dec_last_in, dec_stb_out, dec_stb_in, dec_last_out;
-assign dec_stb_in = in_tvalid; // & out_tready;
+assign dec_stb_in = in_tvalid; 
 assign dec_last_in = in_tlast;
 
 assign idec = iq_idec;

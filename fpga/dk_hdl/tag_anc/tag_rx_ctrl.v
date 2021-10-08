@@ -5,11 +5,14 @@ module tag_rx_ctrl #(
   parameter PHASE_WIDTH    = 24,
   parameter NSYMB_WIDTH    = 16,
   parameter SCALING_WIDTH  = 18,
-  
-  parameter [NSYMB_WIDTH-1:0] NSYMB        = 256, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 4096,
+  parameter GPIO_REG_WIDTH = 12,
+  parameter NSYNCP         = 16384,
+  parameter NSYNCN         = 16384,
+  parameter NLOC_PER_SYNC  = 7,
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 32768,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = -16384, 
-  parameter [PHASE_WIDTH-1:0] START_PH_INC = 0,
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = 24'h000000,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(
@@ -30,148 +33,152 @@ module tag_rx_ctrl #(
   /* IQ output */
   output [DATA_WIDTH-1:0]  irx_out_bb,
   output [DATA_WIDTH-1:0]  qrx_out_bb, 
-/*
-  output [DATA_WIDTH-1:0]  irx_out,
-  output [DATA_WIDTH-1:0]  qrx_out, 
-*/
+
   /*debug*/
   output [PHASE_WIDTH-1:0]   ph,
   output [NSYMB_WIDTH-1:0] symbN,
   output [SIN_COS_WIDTH-1:0] cos, 
   output [SIN_COS_WIDTH-1:0] sin, 
   output [PHASE_WIDTH-1:0]  sigN,
+  output [$clog2(NSYNCP + NSYNCN + 1)-1:0] nsync_count,
 
- 
-  output rx_sync_en, 
+  output peak_detect_stb,
+  output [DATA_WIDTH-1:0]  pow_mag_tdata,
+  output [DATA_WIDTH-1:0]  acorr_mag_tdata,
   output rx_trig, 
   output rx_out_mux,
   output [1:0] rx_state
 
 );
 
-  localparam GPIO_REG_WIDTH    = 12;
-  localparam GPIO_CLK_DIV_FAC  = 10;
-  localparam SYNC_SIG_N        = 8192;
-  localparam [GPIO_REG_WIDTH-1:0] SYNC_OUT_MASK = 12'h001;
-  localparam [GPIO_REG_WIDTH-1:0] RX_OUT_MASK   = 12'h010;
-  localparam [GPIO_REG_WIDTH-1:0] GPIO_OUT_MASK = SYNC_OUT_MASK | RX_OUT_MASK;
-  localparam [GPIO_REG_WIDTH-1:0] SYNC_IN_MASK  = 12'h004;
-  localparam [GPIO_REG_WIDTH-1:0] RX_IN_MASK    = 12'h040;
-  localparam [GPIO_REG_WIDTH-1:0] GPIO_IN_MASK  = SYNC_IN_MASK | RX_IN_MASK;
-  localparam [GPIO_REG_WIDTH-1:0] GPIO_IO_DDR   = GPIO_OUT_MASK;
 
-reg sync_en, start_rx, valid_rx;
-reg  [1:0] sync_state;
-wire rx_sync_ready, tx_trigger;
-wire [GPIO_REG_WIDTH-1:0] gpio_out, gpio_in, sync_io_out, rx_io_out;
-assign rx_valid = valid_rx;
+  reg  [1:0] state;
+  localparam LOC_SYNC = 2'b01;
+  localparam RX_START = 2'b10;
+  localparam LOC_RX   = 2'b11;
+  localparam INIT     = 2'b00;
+  
+  wire rx_sync_ready;
+  reg start_rx, valid_rx;
+  assign rx_valid    = valid_rx;
+  assign rx_trig     = start_rx;
+  assign rx_state    = state;
 
-assign rx_sync_en  = sync_en;
-assign rx_trig     = start_rx;
-assign rx_state    = sync_state;
+  wire [DATA_WIDTH-1:0] irx_bb, qrx_bb, irx_out, qrx_out;
+  wire [DATA_WIDTH-1:0] irx_sync;// qrx_sync;
 
-wire [DATA_WIDTH-1:0] irx_bb, qrx_bb;
-reg  [DATA_WIDTH-1:0] irx_sync, qrx_sync;
+  reg  [$clog2(NSYNCP + NSYNCN)-1:0] ncount;
+  assign nsync_count = ncount;
 
-reg  [PHASE_WIDTH-1:0]  ncnt;
 
-assign sync_io_out = rx_sync_ready ? SYNC_OUT_MASK : {(GPIO_REG_WIDTH){1'b0}};
-assign rx_io_out   = valid_rx ? RX_OUT_MASK : {(GPIO_REG_WIDTH){1'b0}};
-assign gpio_out    = sync_io_out | rx_io_out;
-assign tx_trigger  = |(gpio_in & SYNC_IN_MASK);
+  wire out_sel;
+  assign out_sel    = (state == LOC_SYNC) & (ncount < NSYNCP);
+  assign irx_sync   = out_sel ? 16384 : -16384;
+  assign irx_out    = (state == LOC_SYNC) ? irx_sync : irx_bb;
+  assign qrx_out    = (state == LOC_SYNC) ? 0        : qrx_bb;
+  assign rx_out_mux = out_sel;
 
-wire out_sel = ^sync_state ;
-assign irx_out_bb = out_sel ? irx_sync : irx_bb;
-assign qrx_out_bb = out_sel ? qrx_sync : qrx_bb;
+  wire in_tvalid, in_tlast, out_tready;
+  assign in_tvalid  = 1'b1;
+  assign in_tlast   = 1'b0;
+  assign out_tready = 1'b1;
 
-assign rx_out_mux  = out_sel;
+  axi_fifo_flop2 #(
+    .WIDTH(2*DATA_WIDTH)) 
+      fifo_flop2(
+        .clk(clk), .reset(reset), .clear(reset),
+        .i_tdata({irx_out, qrx_out}), .i_tvalid(in_tvalid), .i_tready(),
+        .o_tdata({irx_out_bb, qrx_out_bb}), .o_tready(out_tready)
+      );
 
-/*
-assign irx_out =  irx_bb;
-assign qrx_out =  qrx_bb;
-*/
-gpio_ctrl #(
-  .GPIO_REG_WIDTH(GPIO_REG_WIDTH), .CLK_DIV_FAC(GPIO_CLK_DIV_FAC),             
-  .OUT_MASK(GPIO_OUT_MASK), .IN_MASK(GPIO_IN_MASK), 
-  .IO_DDR(GPIO_IO_DDR))
-    GPIO_CTRL(.clk(clk),.reset(reset),
-              .fp_gpio_in(fp_gpio_in), 
-              .fp_gpio_out(fp_gpio_out),
-              .fp_gpio_ddr(fp_gpio_ddr),
-              .gpio_out(gpio_out),
-              .gpio_in(gpio_in));
-
-tag_rx #(
-  .DATA_WIDTH(DATA_WIDTH), .DDS_WIDTH(DDS_WIDTH), 
-  .SIN_COS_WIDTH(SIN_COS_WIDTH), .PHASE_WIDTH(PHASE_WIDTH),
-  .NSYMB_WIDTH(NSYMB_WIDTH), .SCALING_WIDTH(SCALING_WIDTH),
-  .NSYMB(NSYMB), .NSIG(NSIG), .DPH_INC(DPH_INC), 
-  .START_PH_INC(START_PH_INC), .START_PH(START_PH),
-  .NPH_SHIFT(NPH_SHIFT))
-    TAG_RXB(.clk(clk), .reset(reset), .srst(start_rx),
-
+  
+  tag_rx #(
+    .DATA_WIDTH(DATA_WIDTH), .DDS_WIDTH(DDS_WIDTH), 
+    .SIN_COS_WIDTH(SIN_COS_WIDTH), .PHASE_WIDTH(PHASE_WIDTH),
+    .NSYMB_WIDTH(NSYMB_WIDTH), .SCALING_WIDTH(SCALING_WIDTH),
+    .NSYMB(NSYMB), .NSIG(NSIG), .DPH_INC(DPH_INC), 
+    .START_PH_INC(START_PH_INC), .START_PH(START_PH),
+    .NPH_SHIFT(NPH_SHIFT), .NLOC_PER_SYNC(NLOC_PER_SYNC))
+      TAG_RXB(
+        .clk(clk), .reset(reset), .srst(start_rx),
             /* RX IQ input */
-            .irx_in(irx_in), .qrx_in(qrx_in),
-            .in_tvalid(1'b1), .in_tlast(1'b0), 
+        .irx_in(irx_in), .qrx_in(qrx_in),
+        .in_tvalid(in_tvalid), .in_tlast(in_tlast), 
+              /* phase valid*/
+        .phase_tvalid(in_tvalid), .phase_tlast(in_tlast), 
+              /* IQ BB output */
+        .out_tready(out_tready), .irx_bb(irx_bb), .qrx_bb(qrx_bb),
+              /*toggle for symbol transmission*/
+        .sync_ready(rx_sync_ready),
+              /*debug*/
+        .ph(ph), .symbN(symbN), .sigN(sigN), .sin(sin), .cos(cos)
+      );
 
-            /* phase valid*/
-            .phase_tvalid(1'b1), .phase_tlast(1'b0), 
+  localparam DEC_RATE       = 64;
+  localparam DEC_MAX_RATE   = 255;
+  localparam MAX_LEN        = 2047;
+  localparam LEN            = 2046;
+  localparam NRX_TRIG       = 16;
+  localparam NOISE_POW      = 100;
+  localparam [1:0] THRES_SEL = 2'b01;
+  wire peak_tvalid, peak_tlast, peak_stb;
+  assign peak_detect_stb  = peak_stb;
 
-            /* IQ BB output */
-            .out_tready(1'b1), .irx_bb(irx_bb), .qrx_bb(qrx_bb),
+  preamble_detect #(
+    .DATA_WIDTH(DATA_WIDTH), .DEC_MAX_RATE(DEC_MAX_RATE),
+    .DEC_RATE(DEC_RATE), .MAX_LEN(MAX_LEN), .LEN(LEN),
+    .THRES_SEL(THRES_SEL), .NOISE_POW(NOISE_POW))
+      PRMB(
+        .clk(clk), .reset(reset), .clear(reset),
+        .in_tvalid(in_tvalid), .in_tlast(in_tlast), .in_tready(),
+        .in_itdata(irx_in), .in_qtdata(qrx_in),
+        .out_tvalid(peak_tvalid), .out_tlast(peak_tlast), 
+        .out_tready(out_tready), .peak_stb(peak_stb),
+        .pow_mag_tdata(pow_mag_tdata), .acorr_mag_tdata(acorr_mag_tdata)
+      );
 
-            /*toggle for symbol transmission*/
-            .sync_ready(rx_sync_ready),
+  assign fp_gpio_ddr = 12'h0001;
+  assign fp_gpio_out = peak_stb ? 12'h0001 : 12'h0000;
 
-            /*debug*/
-            .ph(ph), .symbN(symbN), .sigN(sigN), .sin(sin), .cos(cos));
-
-always @(posedge clk) begin
-  if (reset) begin
-    sync_en    <= 1'b0;
-    valid_rx   <= 1'b0;
-    start_rx   <= 1'b0;
-    sync_state <= 2'b11;
-    ncnt <= 0;
-    irx_sync <= 0; qrx_sync <= 0;
+  always @(posedge clk) begin
+    if (reset) begin
+      valid_rx   <= 1'b0;
+      start_rx   <= 1'b0;
+      state <= INIT;
+      ncount  <= 0;
+    end
+    else  begin
+      case (state)
+        INIT: begin
+          if (peak_tvalid) begin
+            if (peak_stb) begin
+              state    <= LOC_SYNC;
+              valid_rx <= 1'b1;
+              ncount   <= 0;
+            end
+            else begin
+              valid_rx <= 1'b0;
+            end
+          end
+        end 
+        LOC_SYNC: begin
+          if ( ncount < (NSYNCP + NSYNCN - 1) ) begin
+            ncount   <= ncount + 1;
+            start_rx <= 1'b1;
+          end
+          else begin
+            start_rx <= 1'b0;
+            state    <= LOC_RX;
+          end
+        end
+        LOC_RX : begin
+          if (rx_sync_ready & peak_tvalid) begin
+            state    <= INIT;
+          end
+        end
+        default: state <= INIT;
+      endcase
+    end
   end
-  else if (tx_trigger & ~sync_en) begin
-    sync_en    <= 1'b1;
-    start_rx   <= 1'b0;
-    valid_rx   <= 1'b1;
-    sync_state <= 2'b11;
-    ncnt       <= SYNC_SIG_N;
-    irx_sync   <= 16384;
-  end
-  else if (sync_en && (ncnt == SYNC_SIG_N)) begin
-    ncnt    <= 1;
-    case (sync_state)
-      2'b00: begin
-        sync_en   <= 1'b0;
-        start_rx  <= 1'b0;
-      end
-      2'b11:begin
-        sync_state <= 2'b10;
-        start_rx   <= 1'b1;
-        irx_sync   <= 16384;
-      end
-      2'b10:begin
-        sync_state <= 2'b01;
-        start_rx   <= 1'b1;
-        irx_sync   <= -16384;
-      end
-      2'b01:begin
-        start_rx   <= 1'b0;
-        sync_state <= 2'b00;
-      end
-    endcase
-  end
-  else if(sync_en) begin
-    ncnt <= ncnt + 1;
-  end 
-  else if (~sync_en && rx_sync_ready) begin
-    valid_rx <= 1'b0;
-  end
-end
 
 endmodule

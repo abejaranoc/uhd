@@ -23,22 +23,26 @@ include $(BASE_DIR)/../tools/make/viv_sim_preamble.mak
 # dependencies.
 include $(BASE_DIR)/../lib/rfnoc/core/Makefile.srcs
 include $(BASE_DIR)/../lib/rfnoc/utils/Makefile.srcs
+include $(LIB_IP_DIR)/complex_multiplier/Makefile.inc
 include $(LIB_IP_DIR)/complex_multiplier_dds/Makefile.inc
 include $(LIB_IP_DIR)/dds_sin_cos_lut_only/Makefile.inc
 include $(BASE_DIR)/x300/coregen_dsp/Makefile.srcs
 include $(BASE_DIR)/../../dk_hdl/fp_gpio/Makefile.srcs
+include $(BASE_DIR)/../../dk_hdl/utils/Makefile.srcs
+include $(BASE_DIR)/../../dk_hdl/tag_anc/Makefile.srcs
 
 
 DESIGN_SRCS += $(abspath \
 $(RFNOC_CORE_SRCS) \
 $(RFNOC_UTIL_SRCS) \
+$(LIB_IP_COMPLEX_MULTIPLIER_SRCS) \
 $(LIB_IP_COMPLEX_MULTIPLIER_DDS_SRCS) \
 $(LIB_IP_DDS_SIN_COS_LUT_ONLY_SRCS) \
 $(COREGEN_DSP_SRCS) \
 $(RFNOC_BLOCK_DDC_SRCS) \
 $(DK_FP_GPIO_SRCS) \
-tag_rx.v   \
-tag_rx_ctrl.v \
+$(DK_UTILS_SRCS) \
+$(DK_TAG_ANC_SRCS) \
 )
 
 #-------------------------------------------------
