@@ -74,7 +74,7 @@ preamble_detect #(
 
 
 initial begin
-  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/utils/rx_test_vec.mem", input_memory);
+  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/rx_test_vec.mem", input_memory);
 end
 
 reg stop_write;
