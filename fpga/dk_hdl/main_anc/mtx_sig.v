@@ -2,9 +2,9 @@ module mtx_sig #(
   parameter SIN_COS_WIDTH = 16,
   parameter PHASE_WIDTH   = 24 ,
   parameter NSYMB_WIDTH   = 16,
-  parameter TX_SYNC_BITS  = 4,
-  parameter [NSYMB_WIDTH-1:0] NSYMB        = 256, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 4096,
+  parameter NLOC_PER_SYNC = 7,
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 32768,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
   parameter [PHASE_WIDTH-1:0] START_PH_INC = 8192,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
@@ -40,8 +40,8 @@ reg  [NSYMB_WIDTH-1:0]  symb_count;
 reg  [PHASE_WIDTH-1:0]  phase_inc, start_phase, phase;
 wire [PHASE_WIDTH-1:0]  phase_tdata = phase;
 
-reg  [TX_SYNC_BITS-1:0] tx_symb_per_synch;
-assign sync_ready = &tx_symb_per_synch;
+reg  [$clog2(NLOC_PER_SYNC)-1:0] num_loc;
+assign sync_ready = &num_loc;
 
 assign ph       = phase;
 assign ph_start = start_phase;
@@ -64,16 +64,16 @@ dds_sin_cos_lut_only dds_inst (
 always @(posedge clk) begin
     if (reset || srst) begin
       phase  <= START_PH;
-      ncount <= NSIG;
-      symb_count <= NSYMB;
+      ncount <= 1;
+      symb_count <= 1;
       phase_inc <= START_PH_INC;
       start_phase <= START_PH;
-      tx_symb_per_synch <= {(TX_SYNC_BITS){1'b1}};
+      num_loc <= 0;
     end 
     else if (ncount == NSIG) begin 
       ncount <= 1;
       if (symb_count == NSYMB) begin
-        tx_symb_per_synch <= tx_symb_per_synch + 1;
+        num_loc <= num_loc + 1;
         symb_count <= 1;
         phase  <= START_PH;
         phase_inc <= START_PH_INC;
