@@ -14,6 +14,7 @@ module tag_rx_ctrl_tb();
     localparam NDATA        = 1048576;
     reg reset;
     wire clk;
+    reg run_rx;
 
     wire [SIN_COS_WIDTH-1:0] sin;
     wire [SIN_COS_WIDTH-1:0] cos;
@@ -44,6 +45,7 @@ module tag_rx_ctrl_tb();
       TAG_RX_CTRL(
         .clk(clk),
         .reset(reset),
+        .run_rx(run_rx),
 
         .irx_in(irx_in), .qrx_in(qrx_in),
 
@@ -95,11 +97,14 @@ module tag_rx_ctrl_tb();
     reg stop_write;
     initial begin
         counter = 0;
+        run_rx = 0;
         reset   = 1'b1;
         fp_gpio_in = 12'h000;
         stop_write = 1'b0;
         reset = 1'b1;
         #100 reset = 1'b0; 
+        repeat(1000) @(posedge clk);
+        run_rx = 1'b1;
         repeat(12*NDATA) @(posedge clk);
         @(posedge clk);
         stop_write = 1'b1;

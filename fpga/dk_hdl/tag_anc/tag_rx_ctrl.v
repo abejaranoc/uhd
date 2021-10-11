@@ -18,6 +18,7 @@ module tag_rx_ctrl #(
 )(
   input   clk,
   input   reset,
+  input   run_rx, 
 
   /* RX IQ input */
   input [DATA_WIDTH-1:0]  irx_in,
@@ -51,7 +52,8 @@ module tag_rx_ctrl #(
 
 );
 
-
+  wire clear;
+  assign clear = ~run_rx;
   reg  [1:0] state;
   localparam LOC_SYNC = 2'b01;
   localparam RX_START = 2'b10;
@@ -86,7 +88,7 @@ module tag_rx_ctrl #(
   axi_fifo_flop2 #(
     .WIDTH(2*DATA_WIDTH)) 
       fifo_flop2(
-        .clk(clk), .reset(reset), .clear(reset),
+        .clk(clk), .reset(reset), .clear(clear),
         .i_tdata({irx_out, qrx_out}), .i_tvalid(in_tvalid), .i_tready(),
         .o_tdata({irx_out_bb, qrx_out_bb}), .o_tready(out_tready)
       );
@@ -129,7 +131,7 @@ module tag_rx_ctrl #(
     .DEC_RATE(DEC_RATE), .MAX_LEN(MAX_LEN), .LEN(LEN),
     .THRES_SEL(THRES_SEL), .NOISE_POW(NOISE_POW))
       PRMB(
-        .clk(clk), .reset(reset), .clear(reset),
+        .clk(clk), .reset(reset), .clear(clear),
         .in_tvalid(in_tvalid), .in_tlast(in_tlast), .in_tready(),
         .in_itdata(irx_in), .in_qtdata(qrx_in),
         .out_tvalid(peak_tvalid), .out_tlast(peak_tlast), 
@@ -141,7 +143,7 @@ module tag_rx_ctrl #(
   assign fp_gpio_out = peak_stb ? 12'h0001 : 12'h0000;
 
   always @(posedge clk) begin
-    if (reset) begin
+    if (reset | ~run_rx) begin
       valid_rx   <= 1'b0;
       start_rx   <= 1'b0;
       state <= INIT;

@@ -658,6 +658,7 @@ module x300_core #(
    tag_rx_ctrl #(.NSYMB(512))
       TAG_RX_CTRL(   .clk(radio_clk),
                      .reset(radio_rst),
+                     .run_rx(rx_running[0]),
 
                      .irx_in(irx_in), 
                      .qrx_in(qrx_in),
