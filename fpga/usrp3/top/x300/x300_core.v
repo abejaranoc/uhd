@@ -669,8 +669,8 @@ module x300_core #(
 
                      .rx_valid(rx_valid),
 
-                     .irx_out(irx_bb),
-                     .qrx_out(qrx_bb));
+                     .irx_out_bb(irx_bb),
+                     .qrx_out_bb(qrx_bb));
 
    //------------------------------------
    // Radio to ADC,DAC and IO Mapping
