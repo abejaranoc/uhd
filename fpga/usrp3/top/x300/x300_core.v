@@ -655,22 +655,22 @@ module x300_core #(
    assign rx_bb_dk = {irx_bb, qrx_bb};
    wire rx_valid;
 
-   tag_rx_ctrl #(.NSYMB(512))
-      TAG_RX_CTRL(   .clk(radio_clk),
-                     .reset(radio_rst),
-                     .run_rx(rx_running[0]),
+   tag_rx_ctrl TAG_RX_CTRL(   
+       .clk(radio_clk),
+       .reset(radio_rst),
+       .run_rx(rx_running[0]),
 
-                     .irx_in(irx_in), 
-                     .qrx_in(qrx_in),
+       .irx_in(irx_in), 
+       .qrx_in(qrx_in),
 
-                     .fp_gpio_out(gpio_out_dk), 
-                     .fp_gpio_ddr(gpio_ddr_dk),
-                     .fp_gpio_in(gpio_in_dk),
+       .fp_gpio_out(gpio_out_dk), 
+       .fp_gpio_ddr(gpio_ddr_dk),
+       .fp_gpio_in(gpio_in_dk),
 
-                     .rx_valid(rx_valid),
+       .rx_valid(rx_valid),
 
-                     .irx_out_bb(irx_bb),
-                     .qrx_out_bb(qrx_bb));
+       .irx_out_bb(irx_bb),
+       .qrx_out_bb(qrx_bb));
 
    //------------------------------------
    // Radio to ADC,DAC and IO Mapping

@@ -6,10 +6,10 @@ module tag_rx #(
   parameter NSYMB_WIDTH   = 16,
   parameter SCALING_WIDTH = 18,
   parameter NLOC_PER_SYNC = 7,
-  parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 32768,
-  parameter [PHASE_WIDTH-1:0] DPH_INC      = -16384, 
-  parameter [PHASE_WIDTH-1:0] START_PH_INC = 24'h000000,
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 64, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 262144,
+  parameter [PHASE_WIDTH-1:0] DPH_INC      = -131072, 
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = 24'd4194304,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(
@@ -179,11 +179,11 @@ always @(posedge clk) begin
       if (symb_count == NSYMB) begin
         symb_count <= 1;
         phase  <= START_PH;
-        phase_inc  <= START_PH_INC;
+        phase_inc   <= START_PH_INC;
         start_phase <= START_PH - NPH_SHIFT;
         num_loc <= num_loc + 1;
       end else begin
-        phase  <= start_phase;
+        phase       <= start_phase;
         symb_count  <= symb_count + 1;
         phase_inc   <= phase_inc + DPH_INC;
         start_phase <= start_phase - NPH_SHIFT;
