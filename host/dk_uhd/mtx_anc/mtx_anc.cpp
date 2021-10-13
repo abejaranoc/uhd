@@ -44,6 +44,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     size_t spb;
     double rate, freq, gain, power, wave_freq, bw, lo_offset;
     float ampl;
+    double gain_rf, freq_rf;
 
     // setup the program options
     po::options_description desc("Allowed options");
@@ -55,16 +56,18 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("nsamps", po::value<uint64_t>(&total_num_samps)->default_value(0), "total number of samples to transmit")
         ("rate", po::value<double>(&rate)->default_value(6.25e6), "rate of outgoing samples")
         ("freq", po::value<double>(&freq)->default_value(2.4e9), "RF center frequency in Hz")
+        ("freq-rf", po::value<double>(&freq_rf)->default_value(5.725e9), "RF center frequency in Hz")
         ("lo-offset", po::value<double>(&lo_offset)->default_value(0.0),
             "Offset for frontend LO in Hz (optional)")
-        ("ampl", po::value<float>(&ampl)->default_value(float(0.3)), "amplitude of the waveform [0 to 0.7]")
+        ("ampl", po::value<float>(&ampl)->default_value(float(0.7)), "amplitude of the waveform [0 to 0.7]")
         ("gain", po::value<double>(&gain)->default_value(0), "gain for the RF chain")
+        ("gain-rf", po::value<double>(&gain_rf)->default_value(0), "gain for the RF chain")
         ("power", po::value<double>(&power), "Transmit power (if USRP supports it)")
         ("ant", po::value<std::string>(&ant)->default_value("TX/RX"), "antenna selection")
         ("subdev", po::value<std::string>(&subdev)->default_value("A:0"), "subdevice specification")
         ("bw", po::value<double>(&bw)->default_value(160e6), "analog frontend filter bandwidth in Hz")
         ("wave-type", po::value<std::string>(&wave_type)->default_value("SINE"), "waveform type (CONST, SQUARE, RAMP, SINE)")
-        ("wave-freq", po::value<double>(&wave_freq)->default_value(100e3), "waveform frequency in Hz")
+        ("wave-freq", po::value<double>(&wave_freq)->default_value(62.5e3), "waveform frequency in Hz")
         ("ref", po::value<std::string>(&ref)->default_value("internal"), "clock reference (internal, external, mimo, gpsdo)")
         ("pps", po::value<std::string>(&pps), "PPS source (internal, external, mimo, gpsdo)")
         ("otw", po::value<std::string>(&otw)->default_value("sc16"), "specify the over-the-wire sample mode")
@@ -146,7 +149,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     size_t index = 0;
 
     for (size_t ch = 0; ch < channel_nums.size(); ch++) {
-        freq = (ch == 0) ? 2.4e9 : 5.75e9;
+        freq = (ch == 0) ? freq : freq_rf;
         std::cout << boost::format("Setting TX Freq: %f MHz...") % (freq / 1e6)
                   << std::endl;
         std::cout << boost::format("Setting TX LO Offset: %f MHz...") % (lo_offset / 1e6)
@@ -178,7 +181,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
                           << std::endl;
             }
         } else if (vm.count("gain")) {
-            //gain = (ch == 0) ? 20 : 30;
+            gain = (ch == 0) ? gain : gain_rf;
             std::cout << boost::format("Setting TX Gain: %f dB...") % gain << std::endl;
             usrp->set_tx_gain(gain, channel_nums[ch]);
             std::cout << boost::format("Actual TX Gain: %f dB...")
