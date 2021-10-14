@@ -1,11 +1,11 @@
 module preamble_detect_tb ();
 
-localparam NDATA        = 1048576;
+localparam NDATA        = 1048576*2;
 localparam DATA_WIDTH   = 16;
 localparam DEC_MAX_RATE = 255;
 localparam DEC_RATE     = 64;
-localparam MAX_LEN      = 2047;
-localparam LEN          = 2046;
+localparam MAX_LEN      = 4095;
+localparam LEN          = 4092;
 
 reg reset;
 wire clk;
@@ -74,7 +74,7 @@ preamble_detect #(
 
 
 initial begin
-  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/utils/rx_test_vec.mem", input_memory);
+  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/rx_test_vec.mem", input_memory);
 end
 
 reg stop_write;

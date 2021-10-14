@@ -55,10 +55,10 @@ moving_sum #(
       .o_tdata(q_mov_sum), .o_tlast(qout_tlast), 
       .o_tvalid(qout_tvalid), .o_tready(qout_tready)
     );
-
+localparam CLIP_AVG = $clog2(MAX_LEN+1) - $clog2(LEN) + 4;
 axi_round_and_clip #(
   .WIDTH_IN(DATA_WIDTH + $clog2(MAX_LEN+1)), .WIDTH_OUT(DATA_WIDTH),
-  .CLIP_BITS($clog2(MAX_LEN+1) - $clog2(LEN)), .FIFOSIZE(1))
+  .CLIP_BITS(CLIP_AVG), .FIFOSIZE(1))
     IRC(
       .clk(clk), .reset(reset),
       .i_tdata(i_mov_sum), .i_tlast(iout_tlast),
@@ -69,7 +69,7 @@ axi_round_and_clip #(
 
 axi_round_and_clip #(
   .WIDTH_IN(DATA_WIDTH + $clog2(MAX_LEN+1)), .WIDTH_OUT(DATA_WIDTH),
-  .CLIP_BITS($clog2(MAX_LEN+1) - $clog2(LEN)), .FIFOSIZE(1))
+  .CLIP_BITS(CLIP_AVG), .FIFOSIZE(1))
     QRC(
       .clk(clk), .reset(reset),
       .i_tdata(q_mov_sum), .i_tlast(qout_tlast),

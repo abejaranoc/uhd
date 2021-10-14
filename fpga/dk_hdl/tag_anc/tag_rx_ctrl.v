@@ -118,18 +118,18 @@ module tag_rx_ctrl #(
 
   localparam DEC_RATE       = 64;
   localparam DEC_MAX_RATE   = 255;
-  localparam MAX_LEN        = 2047;
-  localparam LEN            = 2046;
+  localparam MAX_LEN        = 4095;
+  localparam LEN            = 4092;
   localparam NRX_TRIG       = 16;
-  localparam NOISE_POW      = 100;
+  localparam NOISE_POW      = 50;
   localparam [1:0] THRES_SEL = 2'b01;
   wire peak_tvalid, peak_tlast, peak_stb;
   assign peak_detect_stb  = peak_stb;
 
   preamble_detect #(
-    .DATA_WIDTH(DATA_WIDTH), .DEC_MAX_RATE(DEC_MAX_RATE),
+    .DATA_WIDTH(DATA_WIDTH), .DEC_MAX_RATE(DEC_MAX_RATE), 
     .DEC_RATE(DEC_RATE), .MAX_LEN(MAX_LEN), .LEN(LEN),
-    .THRES_SEL(THRES_SEL), .NOISE_POW(NOISE_POW))
+    .THRES_SEL(THRES_SEL), .NOISE_POW(NOISE_POW), .NRX_TRIG(NRX_TRIG))
       PRMB(
         .clk(clk), .reset(reset), .clear(clear),
         .in_tvalid(in_tvalid), .in_tlast(in_tlast), .in_tready(),

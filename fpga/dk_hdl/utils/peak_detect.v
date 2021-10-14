@@ -34,7 +34,7 @@ module  peak_detect#(
   localparam TRIG = 2'b10;
   localparam IDLE = 2'b11;
 
-  reg [3:0] num_pks;
+  reg [7:0] num_pks;
   reg [$clog2(NRX_TRIG + 1)-1:0] nrx_after_peak;
   reg [DATA_WIDTH-1:0] max_peak;
 
@@ -46,7 +46,7 @@ module  peak_detect#(
       max_peak <= 0;
       nrx_after_peak <= 4'h00;
       peak_stb <= 1'b0;
-      num_pks  <= 4'h0;
+      num_pks  <= 8'h00;
     end
     else begin
       o_tvalid <= in_tvalid;
@@ -56,7 +56,7 @@ module  peak_detect#(
           INIT: begin
             max_peak <= in_tdata;
             nrx_after_peak <= 0;
-            num_pks  <= 4'h0;
+            num_pks  <= 8'h00;
             peak_stb <= 1'b0;
             if(peak_stb_in) begin
               state <= TRIG;
@@ -66,15 +66,23 @@ module  peak_detect#(
             if (nrx_after_peak >= NRX_TRIG) begin
               nrx_after_peak <= 0;
               state <= WAIT;
-              peak_stb <= (num_pks == 4'b1111) & peak_stb_in;
+              peak_stb <= (num_pks == 8'hff) & peak_stb_in;
             end
             else begin
-              if( in_tdata > max_peak ) begin 
+              if( in_tdata == max_peak ) begin
+                max_peak   <= in_tdata;
+                nrx_after_peak <= 0;
+              end
+              else if(in_tdata > max_peak ) begin 
                 max_peak   <= in_tdata;
                 num_pks[0] <= 1'b1;
                 num_pks[1] <= num_pks[0];
                 num_pks[2] <= num_pks[1];
                 num_pks[3] <= num_pks[2];
+                num_pks[4] <= num_pks[3];
+                num_pks[5] <= num_pks[4];
+                num_pks[6] <= num_pks[5];
+                num_pks[7] <= num_pks[6];
                 nrx_after_peak <= 0;
               end
               else begin
