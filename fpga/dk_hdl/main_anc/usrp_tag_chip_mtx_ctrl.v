@@ -5,7 +5,7 @@ module usrp_tag_chip_mtx_ctrl #(
   parameter GPIO_REG_WIDTH = 12,
   parameter NLOC_PER_SYNC  = 7,
   parameter NPRMB_BITS     = 2046,
-  parameter PRMB_OS        = 128,
+  parameter PRMB_OS        = 256,
   parameter NSYMB          = 512, 
   parameter NSIG           = 32768,
   parameter DDS_DELAY      = 32,
