@@ -6,7 +6,7 @@ module mtx_sig #(
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
   parameter [PHASE_WIDTH-1:0] NSIG         = 32768,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
-  parameter [PHASE_WIDTH-1:0] START_PH_INC = 8192,
+  parameter [PHASE_WIDTH-1:0] START_PH_INC = -4185088,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
 )(

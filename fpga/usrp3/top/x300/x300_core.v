@@ -650,7 +650,7 @@ module x300_core #(
    wire tx_valid;
    wire TX_EN = 1'b1;
 
-   usrp_tag_chip_mtx_ctrl #(.NSYMB(512))
+   mtx_ctrl #(.NSYMB(512))
         MTX_ANC(  .clk(radio_clk),
                   .reset(radio_rst),
 
