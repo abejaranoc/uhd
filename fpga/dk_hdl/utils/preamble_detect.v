@@ -6,8 +6,8 @@ module  preamble_detect#(
   parameter MAX_LEN         = 4095,
   parameter [$clog2(MAX_LEN+1)-1:0] LEN = 4092,
   parameter [1:0] THRES_SEL = 2'b01,
-  parameter NRX_TRIG        = 100, 
-  parameter [DATA_WIDTH-1:0] NOISE_POW = 15 
+  parameter NRX_TRIG        = 16, 
+  parameter [DATA_WIDTH-1:0] NOISE_POW = 100 
 )(
   input clk,
   input reset,

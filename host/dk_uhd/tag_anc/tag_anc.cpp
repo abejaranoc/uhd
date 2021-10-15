@@ -266,8 +266,10 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // variables to be set by po
     std::string args, file, type, ant, subdev, ref, wirefmt;
-    size_t channel, total_num_samps, spb, num_files;
+    size_t channel, total_num_samps, spb;
     double rate, freq, gain, bw, total_time, setup_time, lo_offset, wait_time;
+    size_t num_files;
+    uint32_t scale_val;
 
     // setup the program options
     po::options_description desc("Allowed options");
@@ -276,7 +278,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("help", "help message")
         ("args", po::value<std::string>(&args)->default_value("addr=192.168.10.2"), "multi uhd device address args")
         ("file", po::value<std::string>(&file)->default_value("usrp_samples.dat"), "name of the file to write binary samples to")
-        ("num_files", po::value<size_t>(&num_files)->default_value(1), "num of repeated file to write binary samples to")
+        ("num-files", po::value<size_t>(&num_files)->default_value(1), "num of repeated file to write binary samples to")
+        ("scale", po::value<uint32_t>(&scale_val)->default_value(1), "scaling applied to received samples")
         ("type", po::value<std::string>(&type)->default_value("short"), "sample type: double, float, or short")
         ("nsamps", po::value<size_t>(&total_num_samps)->default_value(0), "total number of samples to receive")
         ("duration", po::value<double>(&total_time)->default_value(0), "total number of seconds to receive")
@@ -399,9 +402,15 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         usrp->set_rx_antenna(ant, channel);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(int64_t(1000 * setup_time)));
-
+    /*
     std::cout << boost::format("Waiting: Connect GPIO in %f seconds...") % wait_time << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(int64_t(1000 * wait_time)));
+    */
+    /*Set scale value for USRP*/
+    uint32_t mask = 0xFFFFFFFF;
+    usrp->set_gpio_attr("FP0", "CTRL", 0, mask);
+    usrp->set_gpio_attr("FP0", "DDR", scale_val, mask);
+    usrp->set_gpio_attr("FP0", "OUT", scale_val, mask);
     std::cout << boost::format("Starting Reception Now...") << std::endl;
 
     // check Ref and LO Lock detect
@@ -493,7 +502,15 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
             throw std::runtime_error("Unknown type " + type);
     }
         /* code */
-    std::cout << "Next Location ID: ";
+    std::cout << "RX Input Scale Value: ";
+    
+    if (std::cin >> scale_val){ 
+        usrp->set_gpio_attr("FP0", "DDR", scale_val, mask);
+        usrp->set_gpio_attr("FP0", "OUT", scale_val, mask);
+    } else {
+        break;
+    }
+    std::cout << "Location ID: ";
     } while (std::cin >> loc_id);
 
     // finished

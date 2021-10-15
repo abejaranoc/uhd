@@ -54,7 +54,7 @@ module tag_rx_ctrl #(
 );
 
   wire clear;
-  assign clear = ~run_rx;
+  assign clear = ~reset;
   reg  [1:0] state;
   localparam LOC_SYNC = 2'b01;
   localparam RX_START = 2'b10;
