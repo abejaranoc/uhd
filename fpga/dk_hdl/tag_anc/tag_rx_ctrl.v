@@ -54,7 +54,7 @@ module tag_rx_ctrl #(
 );
 
   wire clear;
-  assign clear = ~reset;
+  assign clear = reset;
   reg  [1:0] state;
   localparam LOC_SYNC = 2'b01;
   localparam RX_START = 2'b10;
@@ -145,8 +145,9 @@ module tag_rx_ctrl #(
   localparam MAX_LEN         = 4095;
   localparam LEN             = 4092;
   localparam NRX_TRIG        = 16;
-  localparam NOISE_POW       = 100;
-  localparam [1:0] THRES_SEL = 2'b01;
+  localparam NOISE_POW       = 200;
+  localparam NRX_TRIG_DELAY  = (NRX_TRIG - 1) * DEC_RATE;
+  localparam [1:0] THRES_SEL = 2'b11;
   wire peak_tvalid, peak_tlast, peak_stb;
   assign peak_detect_stb  = peak_stb;
 
@@ -156,7 +157,7 @@ module tag_rx_ctrl #(
     .THRES_SEL(THRES_SEL), .NOISE_POW(NOISE_POW), .NRX_TRIG(NRX_TRIG))
       PRMB(
         .clk(clk), .reset(reset), .clear(clear),
-        .in_tvalid(scaled_tvalid), .in_tlast(scaled_tlast), .in_tready(scaled_tready),
+        .in_tvalid(scaled_tvalid), .in_tlast(scaled_tlast), .in_tready(scaled_tready), 
         .in_itdata(irx_scaled), .in_qtdata(qrx_scaled),
         .out_tvalid(peak_tvalid), .out_tlast(peak_tlast), 
         .out_tready(out_tready), .peak_stb(peak_stb),
@@ -190,7 +191,7 @@ module tag_rx_ctrl #(
           scale_reg <= (scale_val == 0) ? 1 : scale_val;
         end 
         LOC_SYNC: begin
-          if ( ncount < (NSYNCP + NSYNCN - 1) ) begin
+          if ( ncount < (NSYNCP + NSYNCN + NRX_TRIG_DELAY - 1) ) begin
             ncount   <= ncount + 1;
             start_rx <= 1'b1;
           end

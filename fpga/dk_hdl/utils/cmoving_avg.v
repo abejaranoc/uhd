@@ -55,7 +55,7 @@ moving_sum #(
       .o_tdata(q_mov_sum), .o_tlast(qout_tlast), 
       .o_tvalid(qout_tvalid), .o_tready(qout_tready)
     );
-localparam CLIP_AVG = $clog2(MAX_LEN+1) - $clog2(LEN);
+localparam CLIP_AVG = $clog2(MAX_LEN+1) - $clog2(LEN) + 2;
 axi_round_and_clip #(
   .WIDTH_IN(DATA_WIDTH + $clog2(MAX_LEN+1)), .WIDTH_OUT(DATA_WIDTH),
   .CLIP_BITS(CLIP_AVG), .FIFOSIZE(1))

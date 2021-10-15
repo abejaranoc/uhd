@@ -7,7 +7,7 @@ module  preamble_detect#(
   parameter [$clog2(MAX_LEN+1)-1:0] LEN = 4092,
   parameter [1:0] THRES_SEL = 2'b01,
   parameter NRX_TRIG        = 16, 
-  parameter [DATA_WIDTH-1:0] NOISE_POW = 100 
+  parameter [DATA_WIDTH-1:0] NOISE_POW = 200 
 )(
   input clk,
   input reset,
@@ -42,7 +42,6 @@ wire [DATA_WIDTH-1:0] iq_idec, iq_qdec;
 wire [2*DATA_WIDTH-1:0] dec_tdata;
 wire dec_tlast, dec_tvalid, dec_tready;
 
-wire pout_tready;
 wire dec_last_in, dec_stb_out, dec_stb_in, dec_last_out;
 assign dec_stb_in = in_tvalid; 
 assign dec_last_in = in_tlast;
@@ -205,6 +204,7 @@ wire acmag_tlast, acmag_tvalid, acmag_tready;
 wire [DATA_WIDTH-1:0] acmag_tdata, pmag_tdata;
 assign pow_mag_tdata   = pmag_tdata;
 assign acorr_mag_tdata = acmag_tdata;
+
 complex_to_mag_approx #(
   .SAMP_WIDTH(DATA_WIDTH))
     PMAG(
@@ -225,8 +225,11 @@ complex_to_mag_approx #(
       .o_tlast(acmag_tlast), .o_tready(acmag_tready)
     );
 
-reg peak_stb_in, peak_tvalid, peak_tlast;
+reg peak_stb_in;
+wire peak_tvalid, peak_tlast;
 wire peak_tready, peak_stb_out;
+assign peak_tvalid = pmag_tvalid & acmag_tvalid;
+assign peak_tlast  = pmag_tlast  & acmag_tlast; 
 assign pmag_tready  = peak_tready;
 assign acmag_tready = peak_tready; 
 wire [DATA_WIDTH-1:0] pow_12, pow_14, pow_18, pow_38, pow_58, comp_pow;
@@ -247,22 +250,23 @@ add2_and_clip #(
   );
 assign comp_pow = THRES_SEL[1] ?  (THRES_SEL[0] ? pow_58 : pow_12) : 
                                   (THRES_SEL[0] ? pow_38 : pow_14);
+
 always @(posedge clk) begin
   if (reset | clear) begin
     peak_stb_in <= 1'b0;
   end
   else begin
-    peak_tvalid <= pmag_tvalid & acmag_tvalid;
-    peak_tlast  <= pmag_tlast  & acmag_tlast; 
     if(acmag_tvalid & pmag_tvalid) begin
-      peak_stb_in <= (acmag_tdata > comp_pow) & (pmag_tdata > NOISE_POW);
+      peak_stb_in <=  (acmag_tdata > comp_pow) & 
+                      (pmag_tdata > NOISE_POW) & 
+                      (acmag_tdata > NOISE_POW);
     end
   end
 end
 
 peak_detect #(
   .DATA_WIDTH(DATA_WIDTH), .NRX_TRIG(NRX_TRIG))
-    DUT(
+    PKD(
       .clk(clk), .reset(reset), .clear(reset),
       .in_tvalid(peak_tvalid), .in_tlast(peak_tlast), 
       .in_tready(peak_tready), .in_tdata(acmag_tdata), 
