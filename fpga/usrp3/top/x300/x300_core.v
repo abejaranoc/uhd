@@ -645,23 +645,27 @@ module x300_core #(
       fp_gpio_ddr[11:0] <= gpio_ddr_dk;
    end
 
+   wire [15:0] scale_val;
    wire [15:0] irx_bb, qrx_bb, irx_in, qrx_in;
    wire [31:0] rx_bb_dk;
+   
 
    /*wire [31:0] tx_data_dk;*/
-
-   assign irx_in   = rx_data_r[0][31:16];
-   assign qrx_in   = rx_data_r[0][15:0];
-   assign rx_bb_dk = {irx_bb, qrx_bb};
+   localparam DB_IDX  = 0;
+   assign irx_in      = rx_data_r[DB_IDX][31:16];
+   assign qrx_in      = rx_data_r[DB_IDX][15:0];
+   assign scale_val   = fp_gpio_r_out[DB_IDX][15:0];
+   assign rx_bb_dk    = {irx_bb, qrx_bb};
    wire rx_valid;
 
    tag_rx_ctrl TAG_RX_CTRL(   
        .clk(radio_clk),
        .reset(radio_rst),
-       .run_rx(rx_running[0]),
+       .run_rx(rx_running[DB_IDX * 2]),
 
        .irx_in(irx_in), 
        .qrx_in(qrx_in),
+       .scale_val(scale_val),
 
        .fp_gpio_out(gpio_out_dk), 
        .fp_gpio_ddr(gpio_ddr_dk),

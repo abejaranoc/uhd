@@ -24,8 +24,9 @@ module tag_rx_ctrl_tb();
     wire [PHASE_WIDTH-1:0]  sigN;
     wire [$clog2(NSYNCP + NSYNCN + 1)-1:0] nsync_count;
 
+    reg  [DATA_WIDTH-1:0] scale_val;
     wire [DATA_WIDTH-1:0] irx_bb, qrx_bb; //, irx_out, qrx_out;
-    wire  [DATA_WIDTH-1:0] irx_in, qrx_in;
+    wire [DATA_WIDTH-1:0] irx_in, qrx_in;
     wire [DATA_WIDTH-1:0] pow_mag_tdata, acorr_mag_tdata;
     wire peak_stb;
     wire rx_trig, out_mux;
@@ -48,6 +49,7 @@ module tag_rx_ctrl_tb();
         .run_rx(run_rx),
 
         .irx_in(irx_in), .qrx_in(qrx_in),
+        .scale_val(scale_val),
 
         .fp_gpio_out(fp_gpio_out), 
         .fp_gpio_ddr(fp_gpio_ddr),
@@ -101,10 +103,12 @@ module tag_rx_ctrl_tb();
         reset   = 1'b1;
         fp_gpio_in = 12'h000;
         stop_write = 1'b0;
+        scale_val  = 0;
         reset = 1'b1;
         #100 reset = 1'b0; 
         repeat(1000) @(posedge clk);
         run_rx = 1'b1;
+        scale_val  = 100;
         repeat(4*NDATA) @(posedge clk);
         @(posedge clk);
         stop_write = 1'b1;

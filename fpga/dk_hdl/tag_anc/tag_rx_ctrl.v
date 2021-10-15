@@ -23,6 +23,7 @@ module tag_rx_ctrl #(
   /* RX IQ input */
   input [DATA_WIDTH-1:0]  irx_in,
   input [DATA_WIDTH-1:0]  qrx_in,
+  input [DATA_WIDTH-1:0]  scale_val,
   
   /*GPIO IO Registers*/
   input  [GPIO_REG_WIDTH-1:0] fp_gpio_in,
@@ -93,6 +94,29 @@ module tag_rx_ctrl #(
         .o_tdata({irx_out_bb, qrx_out_bb}), .o_tready(out_tready)
       );
 
+  reg  [DATA_WIDTH-1:0] scale_reg;
+  wire [DATA_WIDTH-1:0] scale_tdata;
+  wire [DATA_WIDTH-1:0] irx_scaled, qrx_scaled;
+  wire scaled_tlast, scaled_tready, scaled_tvalid;
+  assign scale_tdata = scale_reg;
+
+  mult_rc #(
+  .WIDTH_REAL(DATA_WIDTH), .WIDTH_CPLX(DATA_WIDTH),
+  .WIDTH_P(DATA_WIDTH), .DROP_TOP_P(21)) 
+    MULT_RC(
+      .clk(clk),
+      .reset(reset),
+
+      .real_tlast(in_tlast),
+      .real_tvalid(in_tvalid),
+      .real_tdata(scale_tdata),
+
+      .cplx_tlast(in_tlast),
+      .cplx_tvalid(in_tvalid),
+      .cplx_tdata({irx_in, qrx_in}),
+
+      .p_tready(scaled_tready), .p_tlast(scaled_tlast), .p_tvalid(scaled_tvalid),
+      .p_tdata({irx_scaled, qrx_scaled}));
   
   tag_rx #(
     .DATA_WIDTH(DATA_WIDTH), .DDS_WIDTH(DDS_WIDTH), 
@@ -104,10 +128,10 @@ module tag_rx_ctrl #(
       TAG_RXB(
         .clk(clk), .reset(reset), .srst(start_rx),
             /* RX IQ input */
-        .irx_in(irx_in), .qrx_in(qrx_in),
-        .in_tvalid(in_tvalid), .in_tlast(in_tlast), 
+        .irx_in(irx_scaled), .qrx_in(qrx_scaled),
+        .in_tvalid(scaled_tvalid), .in_tlast(scaled_tlast), 
               /* phase valid*/
-        .phase_tvalid(in_tvalid), .phase_tlast(in_tlast), 
+        .phase_tvalid(scaled_tvalid), .phase_tlast(scaled_tlast), 
               /* IQ BB output */
         .out_tready(out_tready), .irx_bb(irx_bb), .qrx_bb(qrx_bb),
               /*toggle for symbol transmission*/
@@ -116,12 +140,12 @@ module tag_rx_ctrl #(
         .ph(ph), .symbN(symbN), .sigN(sigN), .sin(sin), .cos(cos)
       );
 
-  localparam DEC_RATE       = 64;
-  localparam DEC_MAX_RATE   = 255;
-  localparam MAX_LEN        = 4095;
-  localparam LEN            = 4092;
-  localparam NRX_TRIG       = 16;
-  localparam NOISE_POW      = 15;
+  localparam DEC_RATE        = 64;
+  localparam DEC_MAX_RATE    = 255;
+  localparam MAX_LEN         = 4095;
+  localparam LEN             = 4092;
+  localparam NRX_TRIG        = 16;
+  localparam NOISE_POW       = 100;
   localparam [1:0] THRES_SEL = 2'b01;
   wire peak_tvalid, peak_tlast, peak_stb;
   assign peak_detect_stb  = peak_stb;
@@ -132,8 +156,8 @@ module tag_rx_ctrl #(
     .THRES_SEL(THRES_SEL), .NOISE_POW(NOISE_POW), .NRX_TRIG(NRX_TRIG))
       PRMB(
         .clk(clk), .reset(reset), .clear(clear),
-        .in_tvalid(in_tvalid), .in_tlast(in_tlast), .in_tready(),
-        .in_itdata(irx_in), .in_qtdata(qrx_in),
+        .in_tvalid(scaled_tvalid), .in_tlast(scaled_tlast), .in_tready(scaled_tready),
+        .in_itdata(irx_scaled), .in_qtdata(qrx_scaled),
         .out_tvalid(peak_tvalid), .out_tlast(peak_tlast), 
         .out_tready(out_tready), .peak_stb(peak_stb),
         .pow_mag_tdata(pow_mag_tdata), .acorr_mag_tdata(acorr_mag_tdata)
@@ -146,8 +170,9 @@ module tag_rx_ctrl #(
     if (reset | ~run_rx) begin
       valid_rx   <= 1'b0;
       start_rx   <= 1'b0;
-      state <= INIT;
-      ncount  <= 0;
+      state      <= INIT;
+      ncount     <= 0;
+      scale_reg  <= 1;
     end
     else  begin
       case (state)
@@ -162,6 +187,7 @@ module tag_rx_ctrl #(
               valid_rx <= 1'b0;
             end
           end
+          scale_reg <= (scale_val == 0) ? 1 : scale_val;
         end 
         LOC_SYNC: begin
           if ( ncount < (NSYNCP + NSYNCN - 1) ) begin
