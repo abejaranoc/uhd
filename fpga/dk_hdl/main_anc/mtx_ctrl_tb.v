@@ -13,7 +13,7 @@ module mtx_ctrl_tb();
     wire [DATA_WIDTH-1:0] itx, qtx;
     wire [PHASE_WIDTH-1:0] ph;
     wire [PHASE_WIDTH-1:0] sig_count;
-    wire [PHASE_WIDTH-1:0] st_ph;
+    //wire [PHASE_WIDTH-1:0] st_ph;
     wire [NSYMB_WIDTH-1:0] scount;
     wire [REG_WIDTH-1:0] fp_gpio_out, fp_gpio_ddr;
     reg  [REG_WIDTH-1:0] fp_gpio_in;
@@ -38,7 +38,6 @@ module mtx_ctrl_tb();
                   .symbN(scount),
                   .sigN(sig_count),
                   .ph(ph),
-                  .ph_start(st_ph),
                   
                   .sin(sin), 
                   .cos(cos));

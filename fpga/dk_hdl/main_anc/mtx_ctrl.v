@@ -11,8 +11,7 @@ module mtx_ctrl #(
   parameter DDS_DELAY      = 32,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
   parameter [PHASE_WIDTH-1:0] START_PH_INC = -4185088,
-  parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
-  parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
+  parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000
 )(
   input   clk,
   input   reset,
@@ -34,7 +33,6 @@ module mtx_ctrl #(
   output [DATA_WIDTH-1:0]  sin,
   output tx_trig,
   output [PHASE_WIDTH-1:0] ph,
-  output [PHASE_WIDTH-1:0] ph_start,
   output [PHASE_WIDTH-1:0] sigN,
   output [NSYMB_WIDTH-1:0] symbN
 );
@@ -50,26 +48,44 @@ module mtx_ctrl #(
 
   localparam NIDLE    = NSIG;
   reg start_tx;
-  reg [PHASE_WIDTH-1:0] nidle;
+  reg [$clog2(NSIG + 1)-1:0] nidle;
   wire sync_ready, out_sel;
+  assign tx_trig = start_tx;
 
   
   wire [DATA_WIDTH-1:0]  sin_tx, cos_tx;
   wire [DATA_WIDTH-1:0]  itx_out, qtx_out;
-  wire [DATA_WIDTH-1:0]  prmb_mod_tx;
-
-  assign out_sel  = (state == LOC_SYNC);
-  assign tx_valid = ~(state == LOC_IDLE);
-
-  assign itx_out  = out_sel ? prmb_mod_tx : cos_tx;
-  assign qtx_out  = out_sel ? prmb_mod_tx : sin_tx;
-
-  assign tx_trig = start_tx;
   assign sin     = sin_tx;
   assign cos     = cos_tx;
 
+  assign out_sel  =  (state == LOC_SYNC);
+  assign tx_valid = ~(state == LOC_IDLE);
+
+
   assign fp_gpio_ddr =  12'h0001;
   assign fp_gpio_out = out_sel ? 12'h0001 : 12'h0000;
+
+  reg [$clog2(PRMB_OS + 1)-1:0] os_count;
+  reg prmb_bits [0:NPRMB_BITS-1];
+  reg [$clog2(NPRMB_BITS + 1)-1:0] nbits;
+  initial begin
+    $readmemb("/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/prmb_bits.mem", prmb_bits);
+  end
+
+  //wire [DATA_WIDTH-1:0]  prmb_mod_tx;
+  //assign prmb_mod_tx = prmb_bits[nbits] ? 16384 : -16384; 
+  assign itx_out     = out_sel ? ( prmb_bits[nbits] ? 16384 : -16384 ) : cos_tx;
+  assign qtx_out     = out_sel ? ( prmb_bits[nbits] ? 16384 : -16384 ) : sin_tx;
+  
+
+  axi_fifo_flop2 #(
+    .WIDTH(2*DATA_WIDTH)) 
+      fifo_flop2(
+        .clk(clk), .reset(reset), .clear(reset),
+        .i_tdata({itx_out, qtx_out}), .i_tvalid(phase_tvalid), .i_tready(),
+        .o_tdata({itx, qtx}), .o_tready(out_tready)
+      );
+ 
 
   wire phase_tlast, phase_tvalid, out_tready;
   assign phase_tlast  = 1'b0;
@@ -79,9 +95,8 @@ module mtx_ctrl #(
   mtx_sig #(
     .SIN_COS_WIDTH(DATA_WIDTH),.PHASE_WIDTH(PHASE_WIDTH), 
     .NSYMB_WIDTH(NSYMB_WIDTH), .NSIG(NSIG), 
-    .NSYMB(NSYMB), .DPH_INC(DPH_INC), 
-    .START_PH_INC(START_PH_INC), .START_PH(START_PH), 
-    .NPH_SHIFT(NPH_SHIFT), .NLOC_PER_SYNC(NLOC_PER_SYNC))
+    .NSYMB(NSYMB), .DPH_INC(DPH_INC), .START_PH(START_PH),
+    .START_PH_INC(START_PH_INC), .NLOC_PER_SYNC(NLOC_PER_SYNC))
       MTX_SIG(
         .clk(clk),
         .reset(reset),
@@ -97,25 +112,9 @@ module mtx_ctrl #(
 
         .symbN(symbN),
         .sigN(sigN),
-        .ph(ph),
-        .ph_start(ph_start)
+        .ph(ph)
       );
 
-  axi_fifo_flop2 #(
-    .WIDTH(2*DATA_WIDTH)) 
-      fifo_flop2(
-        .clk(clk), .reset(reset), .clear(reset),
-        .i_tdata({itx_out, qtx_out}), .i_tvalid(phase_tvalid), .i_tready(),
-        .o_tdata({itx, qtx}), .o_tready(out_tready)
-      );
-  reg [$clog2(PRMB_OS + 1)-1:0] os_count;
-  reg prmb_bits [0:NPRMB_BITS-1];
-  reg [$clog2(NPRMB_BITS + 1)-1:0] nbits;
-  initial begin
-    $readmemb("/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/prmb_bits.mem", prmb_bits);
-  end
-
-  assign prmb_mod_tx = prmb_bits[nbits] ? 16384 : -16384; 
 
   always @(posedge clk) begin
       if(reset) begin

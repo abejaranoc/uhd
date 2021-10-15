@@ -12,8 +12,7 @@ module usrp_tag_chip_mtx_sig #(
   parameter [PHASE_WIDTH-1:0] PILOT_NSIG    = 262144,
   parameter [PHASE_WIDTH-1:0] PILOT_DPH_INC = 131072,
   parameter [PHASE_WIDTH-1:0] PILOT_SPH_INC = -4192256,
-  parameter [PHASE_WIDTH-1:0] START_PH      = 24'h000000,
-  parameter [PHASE_WIDTH-1:0] NPH_SHIFT     = 24'h000000
+  parameter [PHASE_WIDTH-1:0] START_PH      = 24'h000000
 )(
   input   clk,
   input   reset,
@@ -41,7 +40,7 @@ module usrp_tag_chip_mtx_sig #(
 
 reg  [PHASE_WIDTH-1:0]  mtx_ncount, pilot_ncount;
 reg  [NSYMB_WIDTH-1:0]  symb_count, pilot_nhop;
-reg  [PHASE_WIDTH-1:0]  mtx_ph_inc, start_phase, mtx_phase;
+reg  [PHASE_WIDTH-1:0]  mtx_ph_inc, mtx_phase;
 reg  [PHASE_WIDTH-1:0]  pilot_ph_inc,  pilot_phase;
 wire [PHASE_WIDTH-1:0]  mtx_phase_tdata   = mtx_phase;
 wire [PHASE_WIDTH-1:0]  pilot_phase_tdata = pilot_phase;
@@ -96,22 +95,18 @@ always @(posedge clk) begin
       mtx_ncount <= 1;
       symb_count <= 1;
       mtx_ph_inc <= START_PH_INC;
-      start_phase <= START_PH;
-      num_loc <= 0;
+      num_loc    <= 0;
     end 
     else if (mtx_ncount == NSIG) begin 
       mtx_ncount <= 1;
+      mtx_phase  <= START_PH;
       if (symb_count == NSYMB) begin
-        num_loc <= num_loc + 1;
+        num_loc    <= num_loc + 1;
         symb_count <= 1;
-        mtx_phase  <= START_PH;
         mtx_ph_inc <= START_PH_INC;
-        start_phase <= START_PH - NPH_SHIFT;
       end else begin
-        mtx_phase  <= start_phase;
         symb_count <= symb_count + 1;
         mtx_ph_inc <= mtx_ph_inc + DPH_INC;
-        start_phase <= start_phase - NPH_SHIFT;
       end   
     end
     else begin
@@ -145,6 +140,5 @@ always @(posedge clk) begin
   end
   
 end
-
 
 endmodule
