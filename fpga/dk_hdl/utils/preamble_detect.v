@@ -8,7 +8,7 @@ module  preamble_detect#(
   parameter [1:0] THRES_SEL = 2'b11,
   parameter NRX_TRIG        = 16, 
   parameter PMAG_WIDTH      = DATA_WIDTH + $clog2(MAX_LEN+1),
-  parameter [DATA_WIDTH-1:0] NOISE_POW = 200 
+  parameter [DATA_WIDTH-1:0] NOISE_POW = 2000 
 )(
   input clk,
   input reset,
