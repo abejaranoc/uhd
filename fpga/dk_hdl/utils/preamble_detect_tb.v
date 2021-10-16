@@ -6,6 +6,7 @@ localparam DEC_MAX_RATE = 255;
 localparam DEC_RATE     = 64;
 localparam MAX_LEN      = 4095;
 localparam LEN          = 4092;
+localparam PMAG_WIDTH   = DATA_WIDTH + $clog2(MAX_LEN+1);
 
 reg reset;
 wire clk;
@@ -20,12 +21,12 @@ wire [DATA_WIDTH-1:0] idec, qdec;
 wire [DATA_WIDTH-1:0] zi, zq;
 wire [DATA_WIDTH-1:0] ami, amq;
 wire [DATA_WIDTH-1:0] pmi, pmq;
-wire [DATA_WIDTH-1:0] pow_mag_tdata, acorr_mag_tdata;
-wire [DATA_WIDTH-1:0] pow_itdata, pow_qtdata;
-wire [DATA_WIDTH-1:0] acorr_itdata, acorr_qtdata;
-wire [2*DATA_WIDTH-1:0] pow_tdata, acorr_tdata;
-assign acorr_qtdata = acorr_tdata[DATA_WIDTH-1:0];
-assign acorr_itdata = acorr_tdata[2*DATA_WIDTH-1:DATA_WIDTH];
+wire [PMAG_WIDTH-1:0] pow_mag_tdata, acorr_mag_tdata;
+wire [PMAG_WIDTH-1:0] pow_itdata, pow_qtdata;
+wire [PMAG_WIDTH-1:0] acorr_itdata, acorr_qtdata;
+wire [2*PMAG_WIDTH-1:0] pow_tdata, acorr_tdata;
+assign acorr_qtdata = acorr_tdata[PMAG_WIDTH-1:0];
+assign acorr_itdata = acorr_tdata[2*PMAG_WIDTH-1:PMAG_WIDTH];
 assign pow_qtdata = pow_tdata[DATA_WIDTH-1:0];
 assign pow_itdata = pow_tdata[2*DATA_WIDTH-1:DATA_WIDTH];
 
@@ -56,7 +57,8 @@ end
 
 preamble_detect #(
   .DATA_WIDTH(DATA_WIDTH), .DEC_MAX_RATE(DEC_MAX_RATE),
-  .DEC_RATE(DEC_RATE), .MAX_LEN(MAX_LEN), .LEN(LEN))
+  .PMAG_WIDTH(PMAG_WIDTH), .DEC_RATE(DEC_RATE), 
+  .MAX_LEN(MAX_LEN), .LEN(LEN))
     DUT(
       .clk(clk), .reset(reset), .clear(reset),
       .in_tvalid(in_tvalid), .in_tlast(in_tlast), .in_tready(in_tready),

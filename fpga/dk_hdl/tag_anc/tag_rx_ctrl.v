@@ -45,8 +45,10 @@ module tag_rx_ctrl #(
   output [$clog2(NSYNCP + NSYNCN + 1)-1:0] nsync_count,
 
   output peak_detect_stb,
-  output [DATA_WIDTH-1:0]  pow_mag_tdata,
-  output [DATA_WIDTH-1:0]  acorr_mag_tdata,
+  /*
+  output [2*DATA_WIDTH-1:0]  pow_mag_tdata,
+  output [2*DATA_WIDTH-1:0]  acorr_mag_tdata,
+  */
   output rx_trig, 
   output rx_out_mux,
   output [1:0] rx_state
@@ -145,23 +147,27 @@ module tag_rx_ctrl #(
   localparam MAX_LEN         = 4095;
   localparam LEN             = 4092;
   localparam NRX_TRIG        = 16;
-  localparam NOISE_POW       = 200;
+  localparam NOISE_POW       = 40000;
   localparam NRX_TRIG_DELAY  = (NRX_TRIG - 1) * DEC_RATE;
+  localparam PMAG_WIDTH      = DATA_WIDTH + $clog2(MAX_LEN+1);
   localparam [1:0] THRES_SEL = 2'b11;
   wire peak_tvalid, peak_tlast, peak_stb;
   assign peak_detect_stb  = peak_stb;
 
+  wire [PMAG_WIDTH-1:0] pmag_tdata, acmag_tdata;
+
   preamble_detect #(
     .DATA_WIDTH(DATA_WIDTH), .DEC_MAX_RATE(DEC_MAX_RATE), 
     .DEC_RATE(DEC_RATE), .MAX_LEN(MAX_LEN), .LEN(LEN),
-    .THRES_SEL(THRES_SEL), .NOISE_POW(NOISE_POW), .NRX_TRIG(NRX_TRIG))
+    .THRES_SEL(THRES_SEL), .NOISE_POW(NOISE_POW), 
+    .PMAG_WIDTH(PMAG_WIDTH), .NRX_TRIG(NRX_TRIG))
       PRMB(
         .clk(clk), .reset(reset), .clear(clear),
         .in_tvalid(scaled_tvalid), .in_tlast(scaled_tlast), .in_tready(scaled_tready), 
         .in_itdata(irx_scaled), .in_qtdata(qrx_scaled),
         .out_tvalid(peak_tvalid), .out_tlast(peak_tlast), 
         .out_tready(out_tready), .peak_stb(peak_stb),
-        .pow_mag_tdata(pow_mag_tdata), .acorr_mag_tdata(acorr_mag_tdata)
+        .pow_mag_tdata(pmag_tdata), .acorr_mag_tdata(acmag_tdata)
       );
 
   assign fp_gpio_ddr = 12'h0001;
@@ -191,7 +197,7 @@ module tag_rx_ctrl #(
           scale_reg <= (scale_val == 0) ? 1 : scale_val;
         end 
         LOC_SYNC: begin
-          if ( ncount < (NSYNCP + NSYNCN + NRX_TRIG_DELAY - 1) ) begin
+          if ( ncount < ( NSYNCP + NSYNCN + NRX_TRIG_DELAY - 1 ) ) begin
             ncount   <= ncount + 1;
             start_rx <= 1'b1;
           end

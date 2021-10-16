@@ -1,5 +1,5 @@
 module tag_rx_ctrl_tb();
-    localparam PHASE_WIDTH    = 24;
+    localparam PHASE_WIDTH   = 24;
     localparam SIN_COS_WIDTH = 16;
     localparam NSYMB_WIDTH   = 16;
     localparam DATA_WIDTH    = 16;
@@ -27,7 +27,7 @@ module tag_rx_ctrl_tb();
     reg  [DATA_WIDTH-1:0] scale_val;
     wire [DATA_WIDTH-1:0] irx_bb, qrx_bb; //, irx_out, qrx_out;
     wire [DATA_WIDTH-1:0] irx_in, qrx_in;
-    wire [DATA_WIDTH-1:0] pow_mag_tdata, acorr_mag_tdata;
+    //wire [DATA_WIDTH-1:0] pow_mag_tdata, acorr_mag_tdata;
     wire peak_stb;
     wire rx_trig, out_mux;
 
@@ -63,8 +63,11 @@ module tag_rx_ctrl_tb();
         .rx_state(rx_state),  
         .rx_trig(rx_trig), .rx_out_mux(out_mux),
         .peak_detect_stb(peak_stb),
+
+        /*
         .pow_mag_tdata(pow_mag_tdata), 
         .acorr_mag_tdata(acorr_mag_tdata),
+        */
 
         .ph(ph), .symbN(scount), 
         .sigN(sigN), .nsync_count(nsync_count),
@@ -108,7 +111,7 @@ module tag_rx_ctrl_tb();
         #100 reset = 1'b0; 
         repeat(1000) @(posedge clk);
         run_rx = 1'b1;
-        scale_val  = 20;
+        scale_val  = 1;
         repeat(4*NDATA) @(posedge clk);
         @(posedge clk);
         stop_write = 1'b1;
