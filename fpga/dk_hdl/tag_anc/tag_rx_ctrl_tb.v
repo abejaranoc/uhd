@@ -11,7 +11,7 @@ module tag_rx_ctrl_tb();
     localparam NSYMB         = 1;
     localparam NLOC_PER_SYNC = 3;
 
-    localparam NDATA        = 1048576*4;
+    localparam NDATA        = 1048576*2;
     reg reset;
     wire clk;
     reg run_rx;

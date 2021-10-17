@@ -72,7 +72,7 @@ module tag_rx_ctrl #(
   wire [DATA_WIDTH-1:0] irx_bb, qrx_bb, irx_out, qrx_out;
   wire [DATA_WIDTH-1:0] irx_sync;// qrx_sync;
 
-  reg  [$clog2(NSYNCP + NSYNCN)-1:0] ncount;
+  reg  [$clog2(NSYNCP + NSYNCN + 1)-1:0] ncount;
   assign nsync_count = ncount;
 
 
@@ -197,7 +197,7 @@ module tag_rx_ctrl #(
           scale_reg <= (scale_val == 0) ? 1 : scale_val;
         end 
         LOC_SYNC: begin
-          if ( ncount < ( NSYNCP + NSYNCN + NRX_TRIG_DELAY - 1 ) ) begin
+          if ( ncount < ( NSYNCP + NSYNCN - NRX_TRIG_DELAY - 1 ) ) begin
             ncount   <= ncount + 1;
             start_rx <= 1'b1;
           end
