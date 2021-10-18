@@ -1,6 +1,7 @@
 module preamble_detect_tb ();
 
-localparam NDATA        = 1048576*2;
+localparam NDATA        = 1048576*4;
+//localparam NDATA        = 33554432;
 localparam DATA_WIDTH   = 16;
 localparam DEC_MAX_RATE = 255;
 localparam DEC_RATE     = 64;
@@ -55,14 +56,38 @@ always @(posedge clk) begin
   end 
 end
 
+reg [DATA_WIDTH-1:0] scale_reg;
+wire [DATA_WIDTH-1:0] irx_scaled, qrx_scaled, scale_tdata;
+wire scaled_tlast, scaled_tready, scaled_tvalid;
+assign scale_tdata = scale_reg;
+
+
+mult_rc #(
+  .WIDTH_REAL(DATA_WIDTH), .WIDTH_CPLX(DATA_WIDTH),
+  .WIDTH_P(DATA_WIDTH), .DROP_TOP_P(21)) 
+    MULT_RC(
+      .clk(clk),
+      .reset(reset),
+
+      .real_tlast(in_tlast),
+      .real_tvalid(in_tvalid),
+      .real_tdata(scale_tdata),
+
+      .cplx_tlast(in_tlast),
+      .cplx_tvalid(in_tvalid),
+      .cplx_tdata({in_itdata, in_qtdata}),
+
+      .p_tready(scaled_tready), .p_tlast(scaled_tlast), .p_tvalid(scaled_tvalid),
+      .p_tdata({irx_scaled, qrx_scaled}));
+
 preamble_detect #(
   .DATA_WIDTH(DATA_WIDTH), .DEC_MAX_RATE(DEC_MAX_RATE),
   .PMAG_WIDTH(PMAG_WIDTH), .DEC_RATE(DEC_RATE), 
   .MAX_LEN(MAX_LEN), .LEN(LEN))
     DUT(
       .clk(clk), .reset(reset), .clear(reset),
-      .in_tvalid(in_tvalid), .in_tlast(in_tlast), .in_tready(in_tready),
-      .in_itdata(in_itdata), .in_qtdata(in_qtdata),
+      .in_tvalid(scaled_tvalid), .in_tlast(scaled_tlast), .in_tready(scaled_tready),
+      .in_itdata(irx_scaled), .in_qtdata(qrx_scaled),
       .out_tvalid(out_tvalid), .out_tlast(out_tlast), .out_tready(out_tready),
       .peak_stb(peak_stb),
       .dec_stb(dec_stb), 
@@ -85,7 +110,9 @@ initial begin
   counter = 0;
   reset = 1'b1;
   stop_write = 1'b0;
+  scale_reg  = 1;
   #10 reset = 1'b0; 
+  scale_reg = 12;
   repeat(2*NDATA) @(posedge clk);
   @(posedge clk);
   stop_write = 1'b1;

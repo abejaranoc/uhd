@@ -56,7 +56,7 @@ module tag_rx_ctrl #(
 );
 
   wire clear;
-  assign clear = reset;
+  assign clear = reset | ~run_rx;
   reg  [1:0] state;
   localparam LOC_SYNC = 2'b01;
   localparam RX_START = 2'b10;
@@ -147,11 +147,11 @@ module tag_rx_ctrl #(
   localparam MAX_LEN         = 4095;
   localparam LEN             = 4092;
   localparam NRX_TRIG        = 16;
-  localparam NOISE_POW       = 2000;
+  localparam NOISE_POW       = 20000;
   localparam NRX_TRIG_DELAY  = (NRX_TRIG - 1) * DEC_RATE;
   localparam PMAG_WIDTH      = DATA_WIDTH + $clog2(MAX_LEN+1);
   localparam [1:0] THRES_SEL = 2'b11;
-  wire peak_tvalid, peak_tlast, peak_stb;
+  wire peak_tvalid, peak_tlast, peak_stb, peak_thres;
   assign peak_detect_stb  = peak_stb;
 
   wire [PMAG_WIDTH-1:0] pmag_tdata, acmag_tdata;
@@ -166,12 +166,29 @@ module tag_rx_ctrl #(
         .in_tvalid(scaled_tvalid), .in_tlast(scaled_tlast), .in_tready(scaled_tready), 
         .in_itdata(irx_scaled), .in_qtdata(qrx_scaled),
         .out_tvalid(peak_tvalid), .out_tlast(peak_tlast), 
-        .out_tready(out_tready), .peak_stb(peak_stb),
+        .out_tready(out_tready), .peak_stb(peak_stb), .peak_thres(peak_thres),
         .pow_mag_tdata(pmag_tdata), .acorr_mag_tdata(acmag_tdata)
       );
 
-  assign fp_gpio_ddr = 12'h0001;
-  assign fp_gpio_out = peak_stb ? 12'h0001 : 12'h0000;
+  localparam SYNC_OUT   = 12'h0001;
+  localparam THRES_TRIG = 12'h0010;
+  localparam DDR_GPIO   = SYNC_OUT | THRES_TRIG;
+
+  
+  wire [GPIO_REG_WIDTH-1:0] gpio_sync_out, gpio_thres_trig, gpio_out;
+  assign gpio_sync_out   = (state == LOC_SYNC) ? SYNC_OUT   : 12'h0000;
+  assign gpio_thres_trig = peak_thres          ? THRES_TRIG : 12'h0000;
+
+  assign fp_gpio_ddr = DDR_GPIO;
+  assign gpio_out    = gpio_thres_trig | gpio_sync_out;
+
+  axi_fifo_flop2 #(
+    .WIDTH(GPIO_REG_WIDTH)) 
+      gpio_flop2(
+        .clk(clk), .reset(reset), .clear(reset),
+        .i_tdata({gpio_out}), .i_tvalid(in_tvalid), .i_tready(),
+        .o_tdata(fp_gpio_out), .o_tready(out_tready)
+      );
 
   always @(posedge clk) begin
     if (reset | ~run_rx) begin

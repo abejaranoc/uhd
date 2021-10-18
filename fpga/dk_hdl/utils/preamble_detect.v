@@ -8,7 +8,7 @@ module  preamble_detect#(
   parameter [1:0] THRES_SEL = 2'b11,
   parameter NRX_TRIG        = 16, 
   parameter PMAG_WIDTH      = DATA_WIDTH + $clog2(MAX_LEN+1),
-  parameter [DATA_WIDTH-1:0] NOISE_POW = 2000 
+  parameter [DATA_WIDTH-1:0] NOISE_POW = 15000 
 )(
   input clk,
   input reset,
@@ -29,6 +29,7 @@ module  preamble_detect#(
 
   /*debug*/
   output dec_stb,
+  output peak_thres,
   output [DATA_WIDTH-1:0] idec, qdec,
   output [DATA_WIDTH-1:0] zi, zq,
   output [DATA_WIDTH-1:0] ami, amq,
@@ -235,10 +236,10 @@ assign peak_tvalid = pmag_tvalid & acmag_tvalid;
 assign peak_tlast  = pmag_tlast  & acmag_tlast; 
 assign pmag_tready  = peak_tready;
 assign acmag_tready = peak_tready; 
-wire [PMAG_WIDTH-1:0] pow_12, pow_14, pow_18, pow_38, pow_58, comp_pow;
-assign pow_12   = pow_mag_tdata >> 1;
-assign pow_14   = pow_mag_tdata >> 2;
-assign pow_18   = pow_mag_tdata >> 3;
+wire [PMAG_WIDTH-1:0] pow_12, pow_14, pow_18, pow_38, pow_58, pow_34, comp_pow;
+assign pow_12   = {1'b0,   pmag_tdata[PMAG_WIDTH-1:1]};
+assign pow_14   = {2'b00,  pmag_tdata[PMAG_WIDTH-1:2]};
+assign pow_18   = {3'b000, pmag_tdata[PMAG_WIDTH-1:3]};
 
 add2_and_clip #(
   .WIDTH(PMAG_WIDTH))
@@ -248,11 +249,17 @@ add2_and_clip #(
 
 add2_and_clip #(
   .WIDTH(PMAG_WIDTH))
-  P34(
+  P58(
     .in1(pow_18), .in2(pow_12), .sum(pow_58)
   );
-assign comp_pow = THRES_SEL[1] ?  (THRES_SEL[0] ? pow_58 : pow_12) : 
-                                  (THRES_SEL[0] ? pow_38 : pow_14);
+
+add2_and_clip #(
+  .WIDTH(PMAG_WIDTH))
+  P34(
+    .in1(pow_14), .in2(pow_12), .sum(pow_34)
+  );
+assign comp_pow = THRES_SEL[1] ?  (THRES_SEL[0] ? pow_34 : pow_58) : 
+                                  (THRES_SEL[0] ? pow_12 : pow_38);
 
 always @(posedge clk) begin
   if (reset | clear) begin
@@ -260,9 +267,9 @@ always @(posedge clk) begin
   end
   else begin
     if(acmag_tvalid & pmag_tvalid) begin
-      peak_stb_in <=  (acmag_tdata > comp_pow)  & 
-                      (pmag_tdata  > NOISE_POW) & 
-                      (acmag_tdata > NOISE_POW);
+      peak_stb_in <=  ((acmag_tdata > comp_pow)   & 
+                      (pmag_tdata   > NOISE_POW)) & 
+                      (acmag_tdata  > NOISE_POW);
     end
   end
 end
@@ -278,6 +285,7 @@ peak_detect #(
       .out_tready(out_tready)
     );
 assign peak_stb    = peak_stb_out; // & peak_stb_in;
+assign peak_thres  = peak_stb_in;
 assign in_tready   = ( out_tready | ~out_tvalid ) & ~reset;
 
 endmodule

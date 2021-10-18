@@ -1,8 +1,8 @@
 module  cmoving_sum #(
   parameter DATA_WIDTH = 16,
-  parameter MAX_LEN    = 2047,
+  parameter MAX_LEN    = 4095,
   parameter OUT_WIDTH  = DATA_WIDTH + $clog2(MAX_LEN+1),
-  parameter [$clog2(MAX_LEN+1)-1:0] LEN = 2046 
+  parameter [$clog2(MAX_LEN+1)-1:0] LEN = 4092 
 )(
   input clk,
   input reset,
