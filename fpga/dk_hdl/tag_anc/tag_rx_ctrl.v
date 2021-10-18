@@ -147,10 +147,10 @@ module tag_rx_ctrl #(
   localparam MAX_LEN         = 4095;
   localparam LEN             = 4092;
   localparam NRX_TRIG        = 16;
-  localparam NOISE_POW       = 20000;
+  localparam NOISE_POW       = 50000;
   localparam NRX_TRIG_DELAY  = (NRX_TRIG - 1) * DEC_RATE;
   localparam PMAG_WIDTH      = DATA_WIDTH + $clog2(MAX_LEN+1);
-  localparam [1:0] THRES_SEL = 2'b10;
+  localparam [1:0] THRES_SEL = 2'b11;
   wire peak_tvalid, peak_tlast, peak_stb, peak_thres;
   assign peak_detect_stb  = peak_stb;
 
