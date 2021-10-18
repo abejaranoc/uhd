@@ -24,7 +24,7 @@ module tag_rx_ctrl #(
   input [DATA_WIDTH-1:0]  irx_in,
   input [DATA_WIDTH-1:0]  qrx_in,
   input [DATA_WIDTH-1:0]  scale_val,
-  
+  input [2*DATA_WIDTH-1:0] noise_thres,
   /*GPIO IO Registers*/
   input  [GPIO_REG_WIDTH-1:0] fp_gpio_in,
   output [GPIO_REG_WIDTH-1:0] fp_gpio_out,
@@ -150,7 +150,7 @@ module tag_rx_ctrl #(
   localparam NOISE_POW       = 20000;
   localparam NRX_TRIG_DELAY  = (NRX_TRIG - 1) * DEC_RATE;
   localparam PMAG_WIDTH      = DATA_WIDTH + $clog2(MAX_LEN+1);
-  localparam [1:0] THRES_SEL = 2'b11;
+  localparam [1:0] THRES_SEL = 2'b10;
   wire peak_tvalid, peak_tlast, peak_stb, peak_thres;
   assign peak_detect_stb  = peak_stb;
 
@@ -166,7 +166,8 @@ module tag_rx_ctrl #(
         .in_tvalid(scaled_tvalid), .in_tlast(scaled_tlast), .in_tready(scaled_tready), 
         .in_itdata(irx_scaled), .in_qtdata(qrx_scaled),
         .out_tvalid(peak_tvalid), .out_tlast(peak_tlast), 
-        .out_tready(out_tready), .peak_stb(peak_stb), .peak_thres(peak_thres),
+        .out_tready(out_tready), .peak_stb(peak_stb), 
+        .noise_thres(noise_thres), .peak_thres(peak_thres),
         .pow_mag_tdata(pmag_tdata), .acorr_mag_tdata(acmag_tdata)
       );
 

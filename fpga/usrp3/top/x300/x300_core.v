@@ -646,6 +646,7 @@ module x300_core #(
    end
 
    wire [15:0] scale_val;
+   wire [31:0] noise_thres;
    wire [15:0] irx_bb, qrx_bb, irx_in, qrx_in;
    wire [31:0] rx_bb_dk;
    
@@ -655,6 +656,7 @@ module x300_core #(
    assign irx_in      = rx_data_r[DB_IDX][31:16];
    assign qrx_in      = rx_data_r[DB_IDX][15:0];
    assign scale_val   = fp_gpio_r_out[DB_IDX][15:0];
+   assign noise_thres = fp_gpio_r_ddr[DB_IDX];
    assign rx_bb_dk    = {irx_bb, qrx_bb};
    wire rx_valid;
 
@@ -666,6 +668,7 @@ module x300_core #(
        .irx_in(irx_in), 
        .qrx_in(qrx_in),
        .scale_val(scale_val),
+       .noise_thres(noise_thres),
 
        .fp_gpio_out(gpio_out_dk), 
        .fp_gpio_ddr(gpio_ddr_dk),

@@ -36,6 +36,7 @@ module tag_rx_ctrl_tb();
     wire rx_valid;
     wire [REG_WIDTH-1:0] fp_gpio_out, fp_gpio_ddr;
     reg  [REG_WIDTH-1:0] fp_gpio_in;
+    reg [2*DATA_WIDTH-1:0] noise_thres;
 
   tag_rx_ctrl #(
     .SIN_COS_WIDTH(SIN_COS_WIDTH),
@@ -50,6 +51,7 @@ module tag_rx_ctrl_tb();
 
         .irx_in(irx_in), .qrx_in(qrx_in),
         .scale_val(scale_val),
+        .noise_thres(noise_thres),
 
         .fp_gpio_out(fp_gpio_out), 
         .fp_gpio_ddr(fp_gpio_ddr),
@@ -105,6 +107,7 @@ module tag_rx_ctrl_tb();
         run_rx = 0;
         reset   = 1'b1;
         fp_gpio_in = 12'h000;
+        noise_thres = 50000;
         stop_write = 1'b0;
         scale_val  = 0;
         reset = 1'b1;

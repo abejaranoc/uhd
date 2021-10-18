@@ -21,6 +21,8 @@ module  preamble_detect#(
   input [DATA_WIDTH-1:0]  in_itdata,
   input [DATA_WIDTH-1:0]  in_qtdata,
 
+  input [2*DATA_WIDTH-1:0] noise_thres,
+
   /*output peak detect strobe*/
   output  out_tlast,
   output  out_tvalid,
@@ -261,6 +263,9 @@ add2_and_clip #(
 assign comp_pow = THRES_SEL[1] ?  (THRES_SEL[0] ? pow_34 : pow_58) : 
                                   (THRES_SEL[0] ? pow_12 : pow_38);
 
+wire [PMAG_WIDTH-1:0] thres;
+assign thres = (noise_thres[PMAG_WIDTH-1:0] == 0) ? NOISE_POW : noise_thres[PMAG_WIDTH-1:0];
+
 always @(posedge clk) begin
   if (reset | clear) begin
     peak_stb_in <= 1'b0;
@@ -268,8 +273,8 @@ always @(posedge clk) begin
   else begin
     if(acmag_tvalid & pmag_tvalid) begin
       peak_stb_in <=  ((acmag_tdata > comp_pow)   & 
-                      (pmag_tdata   > NOISE_POW)) & 
-                      (acmag_tdata  > NOISE_POW);
+                      (pmag_tdata   > thres)) & 
+                      (acmag_tdata  > thres);
     end
   end
 end

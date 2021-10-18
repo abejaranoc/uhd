@@ -60,7 +60,7 @@ reg [DATA_WIDTH-1:0] scale_reg;
 wire [DATA_WIDTH-1:0] irx_scaled, qrx_scaled, scale_tdata;
 wire scaled_tlast, scaled_tready, scaled_tvalid;
 assign scale_tdata = scale_reg;
-
+reg [2*DATA_WIDTH-1:0] noise_thres;
 
 mult_rc #(
   .WIDTH_REAL(DATA_WIDTH), .WIDTH_CPLX(DATA_WIDTH),
@@ -94,7 +94,7 @@ preamble_detect #(
       .idec(idec), .qdec(qdec), 
       .zi(zi), .zq(zq),
       .ami(ami), .amq(amq),
-      .pmi(pmi), .pmq(pmq),
+      .pmi(pmi), .pmq(pmq),  .noise_thres(noise_thres),
       .pow_tdata(pow_tdata), .acorr_tdata(acorr_tdata), 
       .pow_mag_tdata(pow_mag_tdata), .acorr_mag_tdata(acorr_mag_tdata)
     );
@@ -110,9 +110,11 @@ initial begin
   counter = 0;
   reset = 1'b1;
   stop_write = 1'b0;
+  noise_thres = 0;
   scale_reg  = 1;
   #10 reset = 1'b0; 
-  scale_reg = 12;
+  scale_reg = 2;
+  noise_thres = 50000;
   repeat(2*NDATA) @(posedge clk);
   @(posedge clk);
   stop_write = 1'b1;
