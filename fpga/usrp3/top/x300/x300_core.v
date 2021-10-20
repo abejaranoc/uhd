@@ -621,13 +621,14 @@ module x300_core #(
    // holds 2 bits per GPIO pin, which selects which source to use for GPIO
    // control. Currently, only daughter board 0 and daughter board 1 are
    // supported.
-   
+   /*
    for (i=0; i<FP_GPIO_WIDTH; i=i+1) begin : gen_fp_gpio_mux
       always @(posedge radio_clk) begin
          fp_gpio_out[i] <=  fp_gpio_r_out[fp_gpio_src[2*i +: 2] == 0 ? 0 : 1][i];
          fp_gpio_ddr[i] <=  fp_gpio_r_ddr[fp_gpio_src[2*i +: 2] == 0 ? 0 : 1][i];
       end
    end
+   */
 
    // Front-panel GPIO inputs are routed to all daughter boards
    for (i=0; i<NUM_DBOARDS; i=i+1) begin : gen_fp_gpio_inputs
@@ -636,22 +637,27 @@ module x300_core #(
 
 
 // dk wires for modules
-  /*
+  
    wire [11:0] gpio_out_dk, gpio_ddr_dk, gpio_in_dk;
    assign gpio_in_dk = fp_gpio_in[11:0];
+   assign gpio_out_dk = 0;
+   assign gpio_ddr_dk = 0;
 
    always @(posedge radio_clk) begin
       fp_gpio_out[11:0] <= gpio_out_dk;
       fp_gpio_ddr[11:0] <= gpio_ddr_dk;
    end
-   */
+   
+   localparam DB_IDX  = 0;
+   wire [15:0] scale_val;
    wire [15:0] irx_in, qrx_in, itx, qtx;
 
    wire [31:0] tx_data_dk = {itx, qtx};
    wire TX_EN = 1'b1;
 
-   assign irx_in   = rx_data_r[0][31:16];
-   assign qrx_in   = rx_data_r[0][15:0];
+   assign scale_val = fp_gpio_r_out[DB_IDX][15:0];
+   assign irx_in    = rx_data_r[DB_IDX][31:16];
+   assign qrx_in    = rx_data_r[DB_IDX][15:0];
 
 
    rx_anc RX_ANC(.clk(radio_clk), .reset(radio_rst), .srst(1'b0),
@@ -659,6 +665,7 @@ module x300_core #(
                   /* RX IQ input */
                   .irx_in(irx_in), .qrx_in(qrx_in),
                   .in_tvalid(1'b1), .in_tlast(1'b0), 
+                  .scale_val(scale_val),
 
                   /* phase valid*/
                   .phase_tvalid(1'b1), .phase_tlast(1'b0), 

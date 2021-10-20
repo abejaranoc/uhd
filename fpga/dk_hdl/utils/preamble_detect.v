@@ -3,11 +3,12 @@ module  preamble_detect#(
   parameter NDEC          = 4, 
   parameter DEC_MAX_RATE  = 255,
   parameter [$clog2(DEC_MAX_RATE+1)-1:0] DEC_RATE = 64,
-  parameter MAX_LEN         = 2047,
-  parameter [$clog2(MAX_LEN+1)-1:0] LEN = 2046,
-  parameter [1:0] THRES_SEL = 2'b01,
+  parameter MAX_LEN         = 4095,
+  parameter [$clog2(MAX_LEN+1)-1:0] LEN = 4092,
+  parameter [1:0] THRES_SEL = 2'b11,
   parameter NRX_TRIG        = 16, 
-  parameter [DATA_WIDTH-1:0] NOISE_POW = 100 
+  parameter PMAG_WIDTH      = DATA_WIDTH + $clog2(MAX_LEN+1),
+  parameter [DATA_WIDTH-1:0] NOISE_POW = 15000 
 )(
   input clk,
   input reset,
@@ -20,6 +21,8 @@ module  preamble_detect#(
   input [DATA_WIDTH-1:0]  in_itdata,
   input [DATA_WIDTH-1:0]  in_qtdata,
 
+  input [2*DATA_WIDTH-1:0] noise_thres,
+
   /*output peak detect strobe*/
   output  out_tlast,
   output  out_tvalid,
@@ -28,21 +31,21 @@ module  preamble_detect#(
 
   /*debug*/
   output dec_stb,
+  output peak_thres,
   output [DATA_WIDTH-1:0] idec, qdec,
   output [DATA_WIDTH-1:0] zi, zq,
   output [DATA_WIDTH-1:0] ami, amq,
   output [DATA_WIDTH-1:0] pmi, pmq, 
-  output [2*DATA_WIDTH-1:0]  pow_tdata,
-  output [2*DATA_WIDTH-1:0]  acorr_tdata,
-  output [DATA_WIDTH-1:0]  pow_mag_tdata,
-  output [DATA_WIDTH-1:0]  acorr_mag_tdata
+  output [2*PMAG_WIDTH-1:0]  pow_tdata,
+  output [2*PMAG_WIDTH-1:0]  acorr_tdata,
+  output [PMAG_WIDTH-1:0]  pow_mag_tdata,
+  output [PMAG_WIDTH-1:0]  acorr_mag_tdata
 );
 
 wire [DATA_WIDTH-1:0] iq_idec, iq_qdec;
 wire [2*DATA_WIDTH-1:0] dec_tdata;
 wire dec_tlast, dec_tvalid, dec_tready;
 
-wire pout_tready;
 wire dec_last_in, dec_stb_out, dec_stb_in, dec_last_out;
 assign dec_stb_in = in_tvalid; 
 assign dec_last_in = in_tlast;
@@ -174,11 +177,12 @@ cmul16 #(
     .out_tlast(ac_tlast), .out_tready(ac_tready)
   );
 
-wire [DATA_WIDTH-1:0] pow_itdata, pow_qtdata;
+wire [PMAG_WIDTH-1:0] pow_itdata, pow_qtdata;
 wire pow_tvalid, pow_tlast, pow_tready;
 assign pow_tdata = {pow_itdata, pow_qtdata};
-cmoving_avg #(
-  .DATA_WIDTH(DATA_WIDTH), .MAX_LEN(MAX_LEN), .LEN(LEN))
+cmoving_sum #(
+  .DATA_WIDTH(DATA_WIDTH), .MAX_LEN(MAX_LEN), 
+  .LEN(LEN), .OUT_WIDTH(PMAG_WIDTH))
     AVG_POW(
       .clk(clk), .reset(reset), .clear(clear),
       .in_tvalid(pdec_tvalid), .in_tlast(pdec_tlast), .in_tready(pdec_tready),
@@ -187,11 +191,12 @@ cmoving_avg #(
       .out_itdata(pow_itdata), .out_qtdata(pow_qtdata)
     );
 
-wire [DATA_WIDTH-1:0] acorr_itdata, acorr_qtdata;
+wire [PMAG_WIDTH-1:0] acorr_itdata, acorr_qtdata;
 wire acorr_tvalid, acorr_tlast, acorr_tready;
 assign acorr_tdata = {acorr_itdata, acorr_qtdata};
-cmoving_avg #(
-  .DATA_WIDTH(DATA_WIDTH), .MAX_LEN(MAX_LEN), .LEN(LEN))
+cmoving_sum #(
+  .DATA_WIDTH(DATA_WIDTH), .MAX_LEN(MAX_LEN), 
+  .LEN(LEN), .OUT_WIDTH(PMAG_WIDTH))
     ACORR(
       .clk(clk), .reset(reset), .clear(clear),
       .in_tvalid(ac_tvalid), .in_tlast(ac_tlast), .in_tready(ac_tready),
@@ -202,11 +207,12 @@ cmoving_avg #(
 
 wire pmag_tlast, pmag_tvalid, pmag_tready;
 wire acmag_tlast, acmag_tvalid, acmag_tready;
-wire [DATA_WIDTH-1:0] acmag_tdata, pmag_tdata;
+wire [PMAG_WIDTH-1:0] acmag_tdata, pmag_tdata;
 assign pow_mag_tdata   = pmag_tdata;
 assign acorr_mag_tdata = acmag_tdata;
+
 complex_to_mag_approx #(
-  .SAMP_WIDTH(DATA_WIDTH))
+  .SAMP_WIDTH(PMAG_WIDTH))
     PMAG(
       .clk(clk), .reset(reset), .clear(clear),
       .i_tdata({pow_itdata, pow_qtdata}), .i_tvalid(pow_tvalid),
@@ -216,7 +222,7 @@ complex_to_mag_approx #(
     );
 
 complex_to_mag_approx #(
-  .SAMP_WIDTH(DATA_WIDTH))
+  .SAMP_WIDTH(PMAG_WIDTH))
     ACMAG(
       .clk(clk), .reset(reset), .clear(clear),
       .i_tdata({acorr_itdata, acorr_qtdata}), .i_tvalid(acorr_tvalid),
@@ -225,44 +231,57 @@ complex_to_mag_approx #(
       .o_tlast(acmag_tlast), .o_tready(acmag_tready)
     );
 
-reg peak_stb_in, peak_tvalid, peak_tlast;
+reg peak_stb_in;
+wire peak_tvalid, peak_tlast;
 wire peak_tready, peak_stb_out;
+assign peak_tvalid = pmag_tvalid & acmag_tvalid;
+assign peak_tlast  = pmag_tlast  & acmag_tlast; 
 assign pmag_tready  = peak_tready;
 assign acmag_tready = peak_tready; 
-wire [DATA_WIDTH-1:0] pow_12, pow_14, pow_18, pow_38, pow_58, comp_pow;
-assign pow_12   = pow_mag_tdata >> 1;
-assign pow_14   = pow_mag_tdata >> 2;
-assign pow_18   = pow_mag_tdata >> 3;
+wire [PMAG_WIDTH-1:0] pow_12, pow_14, pow_18, pow_38, pow_58, pow_34, comp_pow;
+assign pow_12   = {1'b0,   pmag_tdata[PMAG_WIDTH-1:1]};
+assign pow_14   = {2'b00,  pmag_tdata[PMAG_WIDTH-1:2]};
+assign pow_18   = {3'b000, pmag_tdata[PMAG_WIDTH-1:3]};
 
 add2_and_clip #(
-  .WIDTH(DATA_WIDTH))
+  .WIDTH(PMAG_WIDTH))
   P38(
     .in1(pow_14), .in2(pow_18), .sum(pow_38)
   );
 
 add2_and_clip #(
-  .WIDTH(DATA_WIDTH))
-  P34(
+  .WIDTH(PMAG_WIDTH))
+  P58(
     .in1(pow_18), .in2(pow_12), .sum(pow_58)
   );
-assign comp_pow = THRES_SEL[1] ?  (THRES_SEL[0] ? pow_58 : pow_12) : 
-                                  (THRES_SEL[0] ? pow_38 : pow_14);
+
+add2_and_clip #(
+  .WIDTH(PMAG_WIDTH))
+  P34(
+    .in1(pow_14), .in2(pow_12), .sum(pow_34)
+  );
+assign comp_pow = THRES_SEL[1] ?  (THRES_SEL[0] ? pow_34 : pow_58) : 
+                                  (THRES_SEL[0] ? pow_12 : pow_38);
+
+wire [PMAG_WIDTH-1:0] thres;
+assign thres = (noise_thres[PMAG_WIDTH-1:0] == 0) ? NOISE_POW : noise_thres[PMAG_WIDTH-1:0];
+
 always @(posedge clk) begin
   if (reset | clear) begin
     peak_stb_in <= 1'b0;
   end
   else begin
-    peak_tvalid <= pmag_tvalid & acmag_tvalid;
-    peak_tlast  <= pmag_tlast  & acmag_tlast; 
     if(acmag_tvalid & pmag_tvalid) begin
-      peak_stb_in <= (acmag_tdata > comp_pow) & (pmag_tdata > NOISE_POW);
+      peak_stb_in <=  ((acmag_tdata > comp_pow)   & 
+                      (pmag_tdata   > thres)) & 
+                      (acmag_tdata  > thres);
     end
   end
 end
 
 peak_detect #(
-  .DATA_WIDTH(DATA_WIDTH), .NRX_TRIG(NRX_TRIG))
-    DUT(
+  .DATA_WIDTH(PMAG_WIDTH), .NRX_TRIG(NRX_TRIG))
+    PKD(
       .clk(clk), .reset(reset), .clear(reset),
       .in_tvalid(peak_tvalid), .in_tlast(peak_tlast), 
       .in_tready(peak_tready), .in_tdata(acmag_tdata), 
@@ -271,6 +290,7 @@ peak_detect #(
       .out_tready(out_tready)
     );
 assign peak_stb    = peak_stb_out; // & peak_stb_in;
+assign peak_thres  = peak_stb_in;
 assign in_tready   = ( out_tready | ~out_tvalid ) & ~reset;
 
 endmodule

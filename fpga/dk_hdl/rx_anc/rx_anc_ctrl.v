@@ -5,7 +5,7 @@ module rx_anc_ctrl #(
   parameter PHASE_WIDTH   = 24,
   parameter NSYMB_WIDTH   = 16,
   parameter SCALING_WIDTH = 18,
-
+  parameter GPIO_REG_WIDTH = 12,
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 512,
   parameter [PHASE_WIDTH-1:0] NSIG         = 16384,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384, 
@@ -49,7 +49,6 @@ module rx_anc_ctrl #(
 
 );
 
-  localparam GPIO_REG_WIDTH    = 12;
   localparam GPIO_CLK_DIV_FAC  = 10;
   localparam SYNC_SIG_N        = 8192;
   localparam [GPIO_REG_WIDTH-1:0] SYNC_OUT_MASK = 12'h001;
@@ -69,7 +68,7 @@ module rx_anc_ctrl #(
   assign rx_sync_en  = sync_en;
   assign rx_trig     = start_rx;
   assign rx_state    = sync_state;
-  assign rx_out_mux  = out_sel;
+  
 
 
   assign sync_io_out = valid_rx ? SYNC_OUT_MASK : {(GPIO_REG_WIDTH){1'b0}};
@@ -78,6 +77,7 @@ module rx_anc_ctrl #(
   assign tx_trigger  = |(gpio_in & SYNC_IN_MASK);
 
   wire out_sel = ^sync_state ;
+ assign rx_out_mux  = out_sel;
 
   gpio_ctrl #(
     .GPIO_REG_WIDTH(GPIO_REG_WIDTH), .CLK_DIV_FAC(GPIO_CLK_DIV_FAC),             
@@ -281,7 +281,7 @@ module rx_anc_ctrl #(
 
       .scale_val(scale_val),
 
-      .pdata(cm_tdata)
+      .pdata(cm_tdata),
       .out_tready(out_tready), .out_tvalid(out_tvalid),
       .out_tlast(out_tlast));
   

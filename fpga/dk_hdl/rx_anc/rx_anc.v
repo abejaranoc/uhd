@@ -5,8 +5,8 @@ module rx_anc #(
   parameter PHASE_WIDTH   = 24,
   parameter NSYMB_WIDTH   = 16,
   parameter SCALING_WIDTH = 18,
-  parameter [PHASE_WIDTH-1:0] NSIG     = 4096,
-  parameter [PHASE_WIDTH-1:0] DPH_INC  = 8192, 
+  parameter [PHASE_WIDTH-1:0] NSIG     = 32768,
+  parameter [PHASE_WIDTH-1:0] DPH_INC  = 2048, 
   parameter [PHASE_WIDTH-1:0] START_PH = 24'h000000
 
 )(
@@ -20,6 +20,8 @@ module rx_anc #(
   input  in_tvalid,
   input  in_tlast, 
   output in_tready,
+
+  input [DATA_WIDTH-1:0] scale_val,
 
   /* phase data*/
   input  phase_tvalid, 
@@ -40,7 +42,7 @@ module rx_anc #(
   output [SIN_COS_WIDTH-1:0]  cos
 );
 
-wire [PHASE_WIDTH-1:0] sigN ;
+//wire [PHASE_WIDTH-1:0] sigN ;
 reg  [PHASE_WIDTH-1:0]  ncount;
 //reg  [NSYMB_WIDTH-1:0]  symb_count;
 reg  [PHASE_WIDTH-1:0]  phase_inc, phase;
@@ -48,6 +50,30 @@ wire [PHASE_WIDTH-1:0]  phase_tdata = phase;
 
 assign sigN = ncount;
 assign ph  = phase;
+
+wire [DATA_WIDTH-1:0] scale_tdata;
+wire [DATA_WIDTH-1:0] irx_scaled, qrx_scaled;
+wire scaled_in_tlast, scaled_in_tready, scaled_in_tvalid;
+assign scale_tdata = (scale_val == 0) ? 1 : scale_val;
+
+mult_rc #(
+  .WIDTH_REAL(DATA_WIDTH), .WIDTH_CPLX(DATA_WIDTH),
+  .WIDTH_P(DATA_WIDTH), .DROP_TOP_P(21)) 
+    MULT_RC(
+      .clk(clk),
+      .reset(reset),
+
+      .real_tlast(in_tlast),
+      .real_tvalid(in_tvalid),
+      .real_tdata(scale_tdata),
+
+      .cplx_tlast(in_tlast),
+      .cplx_tvalid(in_tvalid),
+      .cplx_tdata({irx_in, qrx_in}),
+
+      .p_tready(scaled_in_tready), .p_tlast(scaled_in_tlast), .p_tvalid(scaled_in_tvalid),
+      .p_tdata({irx_scaled, qrx_scaled}));
+  
 wire [DDS_WIDTH-1:0]   fshift_in_q_tdata, fshift_in_i_tdata;
 wire [2*DDS_WIDTH-1:0] fshift_in_tdata = {fshift_in_q_tdata, fshift_in_i_tdata};
 wire [2*DDS_WIDTH-1:0] fshift_out_tdata;
@@ -68,13 +94,13 @@ assign cos = sin_cos_data[SIN_COS_WIDTH-1:0];
 sign_extend #(.bits_in(DATA_WIDTH), 
               .bits_out(DDS_WIDTH))
     sign_extend_fshift_i (
-        .in(irx_in), 
+        .in(irx_scaled), 
         .out(fshift_in_i_tdata));
 
 sign_extend #(.bits_in(DATA_WIDTH), 
               .bits_out(DDS_WIDTH))
     sign_extend_fshift_q (
-        .in(qrx_in), 
+        .in(qrx_scaled), 
         .out(fshift_in_q_tdata));
 
 dds_freq_tune #(.OUTPUT_WIDTH(DDS_WIDTH))
@@ -85,9 +111,9 @@ dds_freq_tune #(.OUTPUT_WIDTH(DDS_WIDTH))
     .rate_changed(1'b0),
 
     /* IQ input */
-    .s_axis_din_tlast(in_tlast),
-    .s_axis_din_tvalid(in_tvalid),
-    .s_axis_din_tready(in_tready),
+    .s_axis_din_tlast(scaled_in_tlast),
+    .s_axis_din_tvalid(scaled_in_tvalid),
+    .s_axis_din_tready(scaled_in_tready),
     .s_axis_din_tdata(fshift_in_tdata),
 
     /* Phase input from NCO */
@@ -106,12 +132,13 @@ dds_freq_tune #(.OUTPUT_WIDTH(DDS_WIDTH))
     .m_axis_dds_tdata_out(sin_cos_data)
 );
 
+
 /************************************************************************
   * Perform scaling on the IQ output
 ************************************************************************/
 wire [DDS_WIDTH+SCALING_WIDTH-1:0] scaled_i_tdata, scaled_q_tdata;
 wire scaled_tlast, scaled_tvalid, scaled_tready;
-wire [SCALING_WIDTH-1:0] scaling_tdata = {3'h0, {(SCALING_WIDTH-3){1'b1}}};
+wire [SCALING_WIDTH-1:0] scaling_tdata = {4'h0, {(SCALING_WIDTH-4){1'b1}}};
 
 mult #(
     .WIDTH_A(DDS_WIDTH),
