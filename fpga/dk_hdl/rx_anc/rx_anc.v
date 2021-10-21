@@ -6,7 +6,7 @@ module rx_anc #(
   parameter NSYMB_WIDTH   = 16,
   parameter SCALING_WIDTH = 18,
   parameter [PHASE_WIDTH-1:0] NSIG     = 32768,
-  parameter [PHASE_WIDTH-1:0] DPH_INC  = 2048, 
+  parameter [PHASE_WIDTH-1:0] DPH_INC  = 4096, 
   parameter [PHASE_WIDTH-1:0] START_PH = 24'h000000
 
 )(
