@@ -276,7 +276,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     // clang-format off
     desc.add_options()
         ("help", "help message")
-        ("args", po::value<std::string>(&args)->default_value("addr=192.168.10.2"), "multi uhd device address args")
+        ("args", po::value<std::string>(&args)->default_value("type=x300"), "multi uhd device address args")
         ("file", po::value<std::string>(&file)->default_value("usrp_samples.dat"), "name of the file to write binary samples to")
         ("num-files", po::value<size_t>(&num_files)->default_value(1), "num of repeated file to write binary samples to")
         ("scale", po::value<uint32_t>(&scale_val)->default_value(1), "scaling applied to received samples")
