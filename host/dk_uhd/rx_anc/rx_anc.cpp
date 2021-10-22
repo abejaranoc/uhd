@@ -209,6 +209,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     size_t total_num_samps, spb, save_file;
     double rx_rate, rx_freq, rx_gain, rx_bw;
     double settling;
+    uint32_t peak_thres, scale_val;
 
     // setup the program options
     po::options_description desc("Allowed options");
@@ -219,6 +220,8 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("rx-args", po::value<std::string>(&rx_args)->default_value("addr=192.168.10.2"), "uhd receive device address args")
         ("file", po::value<std::string>(&file)->default_value("usrp_samples.dat"), "name of the file to write binary samples to")
         ("save-file", po::value<size_t>(&save_file)->default_value(0), "save file option")
+        ("scale", po::value<uint32_t>(&scale_val)->default_value(1), "scaling value applied to received samples")
+        ("thres", po::value<uint32_t>(&peak_thres)->default_value(1), "thres for peak detection")
         ("type", po::value<std::string>(&type)->default_value("short"), "sample type in file: double, float, or short")
         ("nsamps", po::value<size_t>(&total_num_samps)->default_value(0), "total number of samples to receive")
         ("settling", po::value<double>(&settling)->default_value(double(0.2)), "settling time (seconds) before receiving")
@@ -431,6 +434,17 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         if (vm.count("rx-ant"))
             rx_usrp->set_rx_antenna(rx_ant, channel);
     }
+
+    // set the peak threshold and 
+    uint32_t mask = 0xFFFFFFFF;
+    tx_usrp->set_gpio_attr("FP0", "CTRL", 0, mask);
+    tx_usrp->set_gpio_attr("FP0", "DDR", scale_val, mask);
+    tx_usrp->set_gpio_attr("FP0", "OUT", scale_val, mask);
+    rx_usrp->set_gpio_attr("FP0", "CTRL", 0, mask);
+    rx_usrp->set_gpio_attr("FP0", "DDR", scale_val, mask);
+    rx_usrp->set_gpio_attr("FP0", "OUT", scale_val, mask);
+
+
 
     // for the const wave, set the wave freq for small samples per period
     if (wave_freq == 0 and wave_type == "CONST") {
