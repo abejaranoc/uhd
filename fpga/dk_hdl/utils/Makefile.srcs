@@ -16,4 +16,5 @@ peak_detect.v \
 cmoving_avg.v \
 cmoving_sum.v \
 conj_flop.v \
+decimate_and_lpf_iq.v \
 ))

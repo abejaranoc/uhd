@@ -10,6 +10,7 @@ module fir_filter_iq #(
 )(
   input   clk,
   input   reset,
+  input   clear,
 
   /* IQ input */
   input  in_tvalid,
@@ -37,7 +38,7 @@ axi_fir_filter #(.IN_WIDTH(DATA_WIDTH), .COEFF_WIDTH(COEFF_WIDTH),
                  .BLANK_OUTPUT(0), .SYMMETRIC_COEFFS(SYMMETRIC_COEFFS), 
                  .SKIP_ZERO_COEFFS(0), .USE_EMBEDDED_REGS_COEFFS(1)
 ) fir_real(
-  .clk(clk), .reset(reset), .clear(reset),
+  .clk(clk), .reset(reset), .clear(clear),
   .s_axis_data_tdata(in_i), .s_axis_data_tlast(in_tlast), 
   .s_axis_data_tvalid(in_tvalid), .s_axis_data_tready(in_tready),
   .m_axis_data_tdata(out_i), .m_axis_data_tlast(out_tlast), 
@@ -51,7 +52,7 @@ axi_fir_filter #(.IN_WIDTH(DATA_WIDTH), .COEFF_WIDTH(COEFF_WIDTH),
                  .BLANK_OUTPUT(0), .SYMMETRIC_COEFFS(SYMMETRIC_COEFFS), 
                  .SKIP_ZERO_COEFFS(0), .USE_EMBEDDED_REGS_COEFFS(1)
 ) fir_imag(
-  .clk(clk), .reset(reset), .clear(reset),
+  .clk(clk), .reset(reset), .clear(clear),
   .s_axis_data_tdata(in_q), .s_axis_data_tlast(in_tlast), 
   .s_axis_data_tvalid(in_tvalid), .s_axis_data_tready(in_tready),
   .m_axis_data_tdata(out_q), .m_axis_data_tlast(), 

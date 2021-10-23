@@ -47,10 +47,10 @@ $(DK_UTILS_SRCS) \
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = preamble_detect_tb 
+SIM_TOP = decimate_and_lpf_iq_tb
 SIM_RUNTIME_US = 100000
 SIM_SRCS = \
-$(abspath preamble_detect_tb.v) \
+$(abspath decimate_and_lpf_iq_tb.v) \
 
 
 #SIM_SRCS = \
