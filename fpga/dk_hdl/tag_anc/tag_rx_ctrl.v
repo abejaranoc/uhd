@@ -9,9 +9,9 @@ module tag_rx_ctrl #(
   parameter NSYNCP         = 16384,
   parameter NSYNCN         = 16384,
   parameter NLOC_PER_SYNC  = 7,
-  parameter [NSYMB_WIDTH-1:0] NSYMB        = 64, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 262144,
-  parameter [PHASE_WIDTH-1:0] DPH_INC      = -131072, 
+  parameter [NSYMB_WIDTH-1:0] NSYMB        = 512, 
+  parameter [PHASE_WIDTH-1:0] NSIG         = 32768,
+  parameter [PHASE_WIDTH-1:0] DPH_INC      = -16384, 
   parameter [PHASE_WIDTH-1:0] START_PH_INC = 24'd4194304,
   parameter [PHASE_WIDTH-1:0] START_PH     = 24'h000000,
   parameter [PHASE_WIDTH-1:0] NPH_SHIFT    = 24'h000000
