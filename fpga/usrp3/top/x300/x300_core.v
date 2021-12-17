@@ -649,19 +649,19 @@ module x300_core #(
    wire [31:0] tx_data_dk = {itx, qtx};
    wire tx_valid;
    wire TX_EN = 1'b1;
+   assign gpio_out_dk = 0;
+   assign gpio_ddr_dk = 0;
 
-   mtx_ctrl #(.NSYMB(512))
-        MTX_ANC(  .clk(radio_clk),
+   mtx_single_tone MTX_ANC(  
+                  .clk(radio_clk),
                   .reset(radio_rst),
 
-                  .itx(itx), 
-                  .qtx(qtx), 
+                  .phase_tlast(1'b0),
+                  .phase_tvalid(1'b1),
+                  .out_tready(1'b1),
 
-                  .fp_gpio_out(gpio_out_dk), 
-                  .fp_gpio_ddr(gpio_ddr_dk),
-                  .fp_gpio_in(gpio_in_dk),
-
-                  .tx_valid(tx_valid));
+                  .cos(itx), 
+                  .sin(qtx));
 
    //------------------------------------
    // Radio to ADC,DAC and IO Mapping

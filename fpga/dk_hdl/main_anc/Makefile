@@ -45,10 +45,10 @@ $(DK_MTX_ANC_SRCS) \
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = mtx_ctrl_tb 
+SIM_TOP = mtx_single_tone_tb 
 SIM_RUNTIME_US = 200000
 SIM_SRCS = \
-$(abspath mtx_ctrl_tb.v) \
+$(abspath mtx_single_tone_tb.v) \
 
 #SIM_SRCS = \
 $(abspath $(IP_BUILD_DIR)/dds_sin_cos_lut_only/sim/dds_sin_cos_lut_only.vhd) \
