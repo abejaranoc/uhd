@@ -6,6 +6,10 @@ localparam COEFF_WIDTH = 16;
 localparam NUM_COEFFS  = 128;
 localparam DEC_RATE    = 128;
 localparam RELOADABLE_COEFFS = 0;
+localparam SYMMETRIC_COEFFS = 1;
+localparam NUM_SLICES       = SYMMETRIC_COEFFS ?
+                                    NUM_COEFFS/2 + NUM_COEFFS[0] :  // Manual round up, Vivado complains when using $ceil()
+                                    NUM_COEFFS;
 
 reg reset;
 wire clk, clear;
@@ -52,7 +56,7 @@ assign out_tready = 1'b1;
 `include "coeffs.vh"
 decimate_and_lpf_iq#(
   .DATA_WIDTH(DATA_WIDTH),  .DEC_RATE(DEC_RATE),
-  .COEFF_WIDTH(COEFF_WIDTH), .NUM_COEFFS(NUM_COEFFS), 
+  .COEFF_WIDTH(COEFF_WIDTH), .NUM_COEFFS(NUM_COEFFS), .SYMMETRIC_COEFFS(SYMMETRIC_COEFFS),
   .COEFFS_VEC(COEFFS_VEC), .RELOADABLE_COEFFS(RELOADABLE_COEFFS)) 
   DLPF_DUT(
       .clk(clk),
@@ -84,7 +88,7 @@ initial begin
   coeff_in = 0;
   stop_write = 1'b0;
   #10 reset = 1'b0; 
-  repeat(NDATA * 2) @(posedge clk);
+  repeat(NDATA * 8) @(posedge clk);
   @(posedge clk);
   stop_write = 1'b1;
   $finish();
