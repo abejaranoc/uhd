@@ -27,7 +27,7 @@ module mtx_ctrl_tag_chip_tb();
               .DATA_WIDTH(DATA_WIDTH),
               .PHASE_WIDTH(PHASEWIDTH), 
               .NSYMB_WIDTH(NSYMB_WIDTH), 
-              /*.NSIG(8192), */
+              .NSIG(8192), 
               .PILOT_PH_INC(4096),
               .NSYMB(9))
         MTX_ANC(  .clk(clk),
