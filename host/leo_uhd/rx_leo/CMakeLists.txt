@@ -6,7 +6,7 @@
 #
 
 cmake_minimum_required(VERSION 3.5.1)
-project(ANC_RX_TX CXX)
+project(rx_leo CXX)
 
 #list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
@@ -52,7 +52,7 @@ include_directories(
 link_directories(${Boost_LIBRARY_DIRS})
 
 ### Make the executable #######################################################
-add_executable(anc_rx_tx anc_rx_tx.cpp)
+add_executable(rx_leo rx_leo.cpp)
 
 set(CMAKE_BUILD_TYPE "Release")
 message(STATUS "******************************************************************************")
@@ -66,12 +66,12 @@ message(STATUS "****************************************************************
 # anything else we need (in this case, some Boost libraries):
 if(NOT UHD_USE_STATIC_LIBS)
     message(STATUS "Linking against shared UHD library.")
-    target_link_libraries(anc_rx_tx ${UHD_LIBRARIES} ${Boost_LIBRARIES})
+    target_link_libraries(rx_leo ${UHD_LIBRARIES} ${Boost_LIBRARIES})
 # Shared library case: All we need to do is link against the library, and
 # anything else we need (in this case, some Boost libraries):
 else(NOT UHD_USE_STATIC_LIBS)
     message(STATUS "Linking against static UHD library.")
-    target_link_libraries(anc_rx_tx
+    target_link_libraries(rx_leo
         # We could use ${UHD_LIBRARIES}, but linking requires some extra flags,
         # so we use this convenience variable provided to us
         ${UHD_STATIC_LIB_LINK_FLAG}

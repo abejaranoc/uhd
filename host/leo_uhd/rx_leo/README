@@ -9,7 +9,7 @@ currently installed on the current machine.
 To try it out, run these commands:
 $ mkdir build/ # Creates a new build directory
 $ cd build/
-$ cmake ..
+$ cmake -DCMAKE_INSTALL_PREFIX=/home/user/.local/lib/uhd-4.0 ../
 $ make
 
 This will find the UHD libraries, and link and compile the example
