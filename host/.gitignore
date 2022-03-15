@@ -1,5 +1,6 @@
 !debian
 /build
 /leo_uhd
+/.vscode
 tags
 *~
