@@ -65,7 +65,6 @@ void send_from_buffer(uhd::tx_streamer::sptr tx_stream, std::vector<std::complex
     TX_time();
     // send out packet
     const size_t samples_sent = tx_stream->send(buffs, buff_size, md);
-    std::cout << "Buff2[250000] is" << samples_sent << std::endl;
 
 }
 
@@ -86,7 +85,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     desc.add_options()
         ("help", "help message")
         ("args", po::value<std::string>(&args)->default_value("type=x300"), "single uhd device address args")
-		("file1", po::value<std::string>(&file1)->default_value("tx_data1"), "name of the file to read binary samples from")
+	("file1", po::value<std::string>(&file1)->default_value("tx_data1"), "name of the file to read binary samples from")
         ("file2", po::value<std::string>(&file2)->default_value("tx_data2"), "name of the file to read binary samples from")
         ("spb", po::value<size_t>(&spb)->default_value(1e6), "samples per buffer, 0 for default")
         ("rate", po::value<double>(&rate)->default_value(1e6), "rate of outgoing samples")
@@ -98,11 +97,11 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("gain", po::value<double>(&gain)->default_value(0), "gain for the RF chain")
         ("gain-rf", po::value<double>(&gain_rf)->default_value(0), "gain for the RF chain")
         ("ant", po::value<std::string>(&ant)->default_value("TX/RX"), "antenna selection")
-        ("subdev", po::value<std::string>(&subdev)->default_value("A:0"), "subdevice specification")
+        ("subdev", po::value<std::string>(&subdev)->default_value("A:0 B:0"), "subdevice specification")
         ("bw", po::value<double>(&bw)->default_value(10e6), "analog frontend filter bandwidth in Hz")
         ("ref", po::value<std::string>(&ref)->default_value("internal"), "clock reference (internal, external, mimo, gpsdo)")
         ("otw", po::value<std::string>(&otw)->default_value("sc16"), "specify the over-the-wire sample mode")
-        ("channels", po::value<std::string>(&channel_list)->default_value("0"), "which channels to use (specify \"0\", \"1\", \"0,1\", etc)")
+        ("channels", po::value<std::string>(&channel_list)->default_value("0,1"), "which channels to use (specify \"0\", \"1\", \"0,1\", etc)")
         ("int-n", "tune USRP with integer-N tuning")
     ;
 	// repeat transmission
