@@ -650,12 +650,14 @@ module x300_core #(
    
    localparam DB_IDX  = 0;
    wire [15:0] scale_val;
+   wire [31:0] ppm_val;
    wire [15:0] irx_in, qrx_in, itx, qtx;
 
    wire [31:0] tx_data_dk = {itx, qtx};
    wire TX_EN = 1'b1;
 
    assign scale_val = fp_gpio_r_out[DB_IDX][15:0];
+   assign ppm_val   = fp_gpio_r_ddr[DB_IDX][31:0];
    assign irx_in    = rx_data_r[DB_IDX][31:16];
    assign qrx_in    = rx_data_r[DB_IDX][15:0];
 
@@ -666,6 +668,7 @@ module x300_core #(
                   .irx_in(irx_in), .qrx_in(qrx_in),
                   .in_tvalid(1'b1), .in_tlast(1'b0), 
                   .scale_val(scale_val),
+                  .ppm_val(ppm_val),
 
                   /* phase valid*/
                   .phase_tvalid(1'b1), .phase_tlast(1'b0), 

@@ -5,8 +5,9 @@ module rx_anc #(
   parameter PHASE_WIDTH   = 24,
   parameter NSYMB_WIDTH   = 16,
   parameter SCALING_WIDTH = 18,
+  parameter PPM_WIDTH     = 32,
   parameter [PHASE_WIDTH-1:0] NSIG     = 32768,
-  parameter [PHASE_WIDTH-1:0] DPH_INC  = 4096, 
+  parameter [PHASE_WIDTH-1:0] DPH_INC  = 2048, 
   parameter [PHASE_WIDTH-1:0] START_PH = 24'h000000
 
 )(
@@ -22,7 +23,7 @@ module rx_anc #(
   output in_tready,
 
   input [DATA_WIDTH-1:0] scale_val,
-
+  input [PPM_WIDTH-1:0] ppm_val,
   /* phase data*/
   input  phase_tvalid, 
   input  phase_tlast, 
@@ -42,8 +43,11 @@ module rx_anc #(
   output [SIN_COS_WIDTH-1:0]  cos
 );
 
-localparam PPM_PERIOD = 7666667;
-reg [PHASE_WIDTH-1:0] ppm_track;
+wire [DATA_WIDTH-1:0] scale_tdata;
+
+wire[PPM_WIDTH-1:0] PPM_PERIOD;
+assign PPM_PERIOD = (ppm_val <= 1) ? 868393 : ppm_val;
+reg [PPM_WIDTH-1:0] ppm_track ;
 
 //wire [PHASE_WIDTH-1:0] sigN ;
 reg  [PHASE_WIDTH-1:0]  ncount;
@@ -195,8 +199,9 @@ always @(posedge clk) begin
       ppm_track <= 1;
     end 
     else if (ppm_track == PPM_PERIOD) begin 
-      ncount    <= ncount - 1;
+      ncount    <= ncount + 2;
       ppm_track <= 1;
+      phase     <= phase + (2*phase_inc);
     end
     else begin
       if (ncount >= NSIG) begin 
@@ -205,10 +210,12 @@ always @(posedge clk) begin
       end
       
       else begin
-        phase  <= phase + phase_inc;
-        ncount <= ncount + 1;
+        phase   <= phase + phase_inc;
+        ncount  <= ncount + 1;
       end
+      ppm_track <= ppm_track + 1;
     end
+    
 end
 
 endmodule
