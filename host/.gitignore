@@ -1,4 +1,5 @@
 !debian
+/.vscode
 /build
 /dk_uhd
 tags
