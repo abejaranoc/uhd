@@ -658,9 +658,9 @@ module x300_core #(
    assign scale_val   = fp_gpio_r_out[DB_IDX][15:0];
    assign noise_thres = fp_gpio_r_ddr[DB_IDX];
    assign rx_bb_dk    = {irx_bb, qrx_bb};
-   wire rx_valid;
+   wire rx_valid, sync_sel;
 
-   tag_rx_ctrl TAG_RX_CTRL(   
+   usrp_tag_chip_tag_rx_ctrl TAG_RX_CTRL(   
        .clk(radio_clk),
        .reset(radio_rst),
        .run_rx(rx_running[DB_IDX * 2]),
@@ -675,6 +675,7 @@ module x300_core #(
        .fp_gpio_in(gpio_in_dk),
 
        .rx_valid(rx_valid),
+       .rx_out_mux(sync_sel),
 
        .irx_out_bb(irx_bb),
        .qrx_out_bb(qrx_bb));
@@ -707,8 +708,8 @@ module x300_core #(
 
    assign rx_data[0] = rx_valid ? rx_bb_dk : rx_data_r[0][31:0] ;
    assign rx_data[1] = rx_valid ? rx_bb_dk : rx_data_r[0][63:32];
-   assign rx_data[2] = rx_valid ? rx_bb_dk : rx_data_r[1][31:0] ;
-   assign rx_data[3] = rx_valid ? rx_bb_dk : rx_data_r[1][63:32];
+   assign rx_data[2] = sync_sel ? rx_bb_dk : rx_data_r[1][31:0] ;
+   assign rx_data[3] = sync_sel ? rx_bb_dk : rx_data_r[1][63:32];
 
    assign rx_stb[0] = rx_stb_r[0][0];
    assign rx_stb[1] = rx_stb_r[0][1];

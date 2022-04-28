@@ -48,7 +48,7 @@ module hop_ctrl #(
           hop_ctrl_valid <= 1'b0;
           nbits_tx <= {(BIT_CNT_WIDTH){1'b1}};
         end
-      else begin
+        else begin
           nbits_tx <= nbits_tx + 1;
         end
       end

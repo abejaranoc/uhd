@@ -11,4 +11,6 @@ hop_ctrl.v \
 if_codes.mem \
 tag_rx_ctrl_tag_chip.v \
 tag_rx_ctrl_tag_chip_nb.v \
+usrp_tag_chip_tag_rx.v \
+usrp_tag_chip_tag_rx_ctrl.v\
 ))
