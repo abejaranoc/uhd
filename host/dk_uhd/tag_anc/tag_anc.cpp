@@ -10,6 +10,7 @@
 #include <uhd/usrp/multi_usrp.hpp>
 #include <uhd/utils/safe_main.hpp>
 #include <uhd/utils/thread.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
@@ -36,7 +37,7 @@ void sig_int_handler(int)
 //! Change to filename, e.g. from usrp_samples.dat to usrp_samples.00.dat,
 //  but only if multiple names are to be generated.
 std::string generate_out_filename(
-    const std::string& base_fn, size_t n_names, size_t this_name)
+    const std::string& base_fn, size_t n_names, size_t this_name, size_t ch = 0)
 {
     /*
     if (n_names == 1) {
@@ -45,7 +46,7 @@ std::string generate_out_filename(
     */
     boost::filesystem::path base_fn_fp(base_fn);
     base_fn_fp.replace_extension(boost::filesystem::path(
-        str(boost::format("%05d%s%05d%s") % this_name % "_" % n_names % base_fn_fp.extension().string())));
+        str(boost::format("%s%02d%s%03d%s%03d%s") % "ch" % ch % "_" % this_name % "_" % n_names % base_fn_fp.extension().string())));
         //str(boost::format("%02d%s") % this_name % base_fn_fp.extension().string())));
     return base_fn_fp.string();
 }
@@ -54,7 +55,7 @@ template <typename samp_type>
 void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     const std::string& cpu_format,
     const std::string& wire_format,
-    const size_t& channel,
+    const std::vector<size_t>& channel_nums,
     const std::string& file,
     size_t samps_per_buff,
     unsigned long long num_requested_samples,
@@ -70,21 +71,34 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
 {
     
     size_t file_num = 0;
-    const std::string this_filename = generate_out_filename(file, file_num, loc_id);
     unsigned long long num_loc_samps = 0;
     unsigned long long num_total_samps = 0;
+
+    size_t num_channels = channel_nums.size();
+    
     // create a receive streamer
     uhd::stream_args_t stream_args(cpu_format, wire_format);
-    std::vector<size_t> channel_nums;
-    channel_nums.push_back(channel);
+    //std::vector<size_t> channel_nums;
+    //channel_nums.push_back(channel);
     stream_args.channels             = channel_nums;
     uhd::rx_streamer::sptr rx_stream = usrp->get_rx_stream(stream_args);
-
     uhd::rx_metadata_t md;
-    std::vector<samp_type> buff(samps_per_buff);
-    std::ofstream outfile;
+
+    std::vector<std::vector<samp_type>> buffs(
+        num_channels, std::vector<samp_type>(samps_per_buff));
+    //std::vector<samp_type> buff(samps_per_buff);
+    std::vector<samp_type*> buff_ptrs;
+    std::vector <std::shared_ptr<std::ofstream>> outfiles;
+    for (size_t ch = 0; ch < num_channels ; ch++){
+        buff_ptrs.push_back(&buffs[ch].front());
+        const std::string this_filename = generate_out_filename(file, file_num, loc_id, ch);
+        outfiles.push_back(std::shared_ptr<std::ofstream>( 
+                           new std::ofstream(this_filename.c_str(), std::ofstream::binary)));
+    }
+    /*
     if (not null)
         outfile.open(this_filename.c_str(), std::ofstream::binary);
+    */
     bool overflow_message = true;
 
     // setup streaming
@@ -93,11 +107,12 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
                                      ? uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS
                                      : uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
     */
-    double timeout = 0.5f;
+    usrp->set_time_now(uhd::time_spec_t(0.0));
+    double timeout = 1.6f;
     uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
     stream_cmd.num_samps  = size_t(num_requested_samples);
-    stream_cmd.stream_now = true;
-    stream_cmd.time_spec  = uhd::time_spec_t();
+    stream_cmd.stream_now = false;
+    stream_cmd.time_spec  = uhd::time_spec_t(1.5);
     rx_stream->issue_stream_cmd(stream_cmd);
 
     typedef std::map<size_t, size_t> SizeMap;
@@ -121,7 +136,7 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
         const auto now = std::chrono::steady_clock::now();
 
         size_t num_rx_samps =
-            rx_stream->recv(&buff.front(), buff.size(), md, timeout, enable_size_map);
+            rx_stream->recv(buff_ptrs, samps_per_buff, md, timeout, enable_size_map);
         timeout = 0.2f;
 
         if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
@@ -138,7 +153,7 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
                            "  Dropped samples will not be written to the file.\n"
                            "  Please modify this example for your purposes.\n"
                            "  This message will not appear again.\n")
-                           % (usrp->get_rx_rate(channel) * sizeof(samp_type) / 1e6);
+                           % (usrp->get_rx_rate() * sizeof(samp_type) / 1e6);
             }
             continue;
         }
@@ -160,20 +175,25 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
 
         num_total_samps += num_rx_samps;
         
-        if (outfile.is_open()) {
-            outfile.write((const char*)&buff.front(), num_rx_samps * sizeof(samp_type));
+        for (size_t ch = 0; ch < num_channels; ch++){
+            if (outfiles[ch]->is_open()) {
+                outfiles[ch]->write((const char*)buff_ptrs[ch], num_rx_samps * sizeof(samp_type));
+            }
         }
-
         num_loc_samps   += num_rx_samps;
         if (num_loc_samps >= num_requested_samples ){
+            for (size_t ch = 0; ch < num_channels; ch++){
+                outfiles[ch]->close();
+            }
             num_loc_samps = 0;
-            outfile.close();
             file_num +=1;
             if (file_num >= files_per_loc){
                 break;
             }
-            const std::string this_filename = generate_out_filename(file, file_num, loc_id);
-            outfile.open(this_filename.c_str(), std::ofstream::binary);
+            for (size_t ch = 0; ch < num_channels; ch++){
+                const std::string this_filename = generate_out_filename(file, file_num, loc_id, ch);
+                outfiles[ch]->open(this_filename.c_str(), std::ofstream::binary);
+            }
         }
 
         if (bw_summary) {
@@ -194,8 +214,8 @@ void recv_to_file(uhd::usrp::multi_usrp::sptr usrp,
     stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
     rx_stream->issue_stream_cmd(stream_cmd);
 
-    if (outfile.is_open()) {
-        outfile.close();
+    for (size_t ch = 0; ch < num_channels; ch++){
+        outfiles[ch]->close();
     }
 
     if (stats) {
@@ -266,8 +286,10 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 {
     // variables to be set by po
     std::string args, file, type, ant, subdev, ref, wirefmt;
+    std::string ant2, channel_list;
     size_t channel, total_num_samps, spb;
     double rate, freq, gain, bw, total_time, setup_time, lo_offset, wait_time;
+    double freq2, gain2, bw2;
     size_t num_files;
     uint32_t scale_val, peak_thres;
 
@@ -280,20 +302,25 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
         ("file", po::value<std::string>(&file)->default_value("usrp_samples.dat"), "name of the file to write binary samples to")
         ("num-files", po::value<size_t>(&num_files)->default_value(1), "num of repeated file to write binary samples to")
         ("scale", po::value<uint32_t>(&scale_val)->default_value(1), "scaling applied to received samples")
-        ("thres", po::value<uint32_t>(&peak_thres)->default_value(0), "thres for peak detection")
+        ("thres", po::value<uint32_t>(&peak_thres)->default_value(500000), "thres for peak detection")
         ("type", po::value<std::string>(&type)->default_value("short"), "sample type: double, float, or short")
         ("nsamps", po::value<size_t>(&total_num_samps)->default_value(0), "total number of samples to receive")
         ("duration", po::value<double>(&total_time)->default_value(0), "total number of seconds to receive")
         ("spb", po::value<size_t>(&spb)->default_value(10000), "samples per buffer")
         ("rate", po::value<double>(&rate)->default_value(12.5e6), "rate of incoming samples")
         ("freq", po::value<double>(&freq)->default_value(2.45e9), "RF center frequency in Hz")
+        ("freq2", po::value<double>(&freq2)->default_value(0), "RF center frequency for db 2 in Hz")
         ("lo-offset", po::value<double>(&lo_offset)->default_value(0.0),
             "Offset for frontend LO in Hz (optional)")
         ("gain", po::value<double>(&gain)->default_value(0), "gain for the RF chain")
+        ("gain2", po::value<double>(&gain2)->default_value(0), "gain for the RF chain DB2")
         ("ant", po::value<std::string>(&ant)->default_value("TX/RX"), "antenna selection")
-        ("subdev", po::value<std::string>(&subdev)->default_value("A:0"), "subdevice specification")
+        ("ant2", po::value<std::string>(&ant2)->default_value("BA"), "antenna selection")
+        ("subdev", po::value<std::string>(&subdev)->default_value("A:0 B:0"), "subdevice specification")
         ("channel", po::value<size_t>(&channel)->default_value(0), "which channel to use")
+        ("channels", po::value<std::string>(&channel_list)->default_value("0,1"), "which channels to use (specify \"0\", \"1\", \"0,1\", etc)")
         ("bw", po::value<double>(&bw)->default_value(160e6), "analog frontend filter bandwidth in Hz")
+        ("bw2", po::value<double>(&bw2)->default_value(12.5e6), "analog frontend filter bandwidth DB2 in Hz")
         ("ref", po::value<std::string>(&ref)->default_value("internal"), "reference source (internal, external, mimo)")
         ("wirefmt", po::value<std::string>(&wirefmt)->default_value("sc16"), "wire format (sc8, sc16 or s16)")
         ("setup", po::value<double>(&setup_time)->default_value(1.0), "seconds of setup time")
@@ -349,6 +376,19 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
 
     std::cout << boost::format("Using Device: %s") % usrp->get_pp_string() << std::endl;
 
+
+    // detect which channels to use
+    std::vector<std::string> channel_strings;
+    std::vector<size_t> channel_nums;
+    boost::split(channel_strings, channel_list, boost::is_any_of("\"',"));
+    for (size_t ch = 0; ch < channel_strings.size(); ch++) {
+        size_t chan = std::stoi(channel_strings[ch]);
+        if (chan >= usrp->get_rx_num_channels())
+            throw std::runtime_error("Invalid channel(s) specified.");
+        else
+            channel_nums.push_back(std::stoi(channel_strings[ch]));
+    }
+
     // set the sample rate
     if (rate <= 0.0) {
         std::cerr << "Please specify a valid sample rate" << std::endl;
@@ -362,46 +402,59 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
               << std::endl;
 
     // set the center frequency
-    if (vm.count("freq")) { // with default of 0.0 this will always be true
-        std::cout << boost::format("Setting RX Freq: %f MHz...") % (freq / 1e6)
-                  << std::endl;
-        std::cout << boost::format("Setting RX LO Offset: %f MHz...") % (lo_offset / 1e6)
-                  << std::endl;
-        uhd::tune_request_t tune_request(freq, lo_offset);
-        if (vm.count("int-n"))
-            tune_request.args = uhd::device_addr_t("mode_n=integer");
-        usrp->set_rx_freq(tune_request, channel);
-        std::cout << boost::format("Actual RX Freq: %f MHz...")
-                         % (usrp->get_rx_freq(channel) / 1e6)
-                  << std::endl
-                  << std::endl;
+    if (not vm.count("freq")) {
+        std::cerr << "Please specify the center frequency with --freq" << std::endl;
+        return ~0;
     }
+    double ch_freq, ch_gain, ch_bw;
+    std::string ch_ant;
+    for (size_t ch = 0; ch < channel_nums.size(); ch++) {
+        channel = channel_nums[ch];
+        ch_freq = (channel == 0) ? freq : freq2;
+        ch_gain = (channel == 0) ? gain : gain2;
+        ch_bw   = (channel == 0) ? bw   : bw2;
+        ch_ant  = (channel == 0) ? ant  : ant2;
+        // set the center frequency
+        if (vm.count("freq")) { // with default of 0.0 this will always be true
+            std::cout << boost::format("Setting RX Freq: %f MHz...") % (ch_freq / 1e6)
+                    << std::endl;
+            std::cout << boost::format("Setting RX LO Offset: %f MHz...") % (lo_offset / 1e6)
+                    << std::endl;
+            uhd::tune_request_t tune_request(ch_freq, lo_offset);
+            if (vm.count("int-n"))
+                tune_request.args = uhd::device_addr_t("mode_n=integer");
+            usrp->set_rx_freq(tune_request, channel);
+            std::cout << boost::format("Actual RX Freq: %f MHz...")
+                            % (usrp->get_rx_freq(channel) / 1e6)
+                    << std::endl
+                    << std::endl;
+        }
 
-    // set the rf gain
-    if (vm.count("gain")) {
-        std::cout << boost::format("Setting RX Gain: %f dB...") % gain << std::endl;
-        usrp->set_rx_gain(gain, channel);
-        std::cout << boost::format("Actual RX Gain: %f dB...")
-                         % usrp->get_rx_gain(channel)
-                  << std::endl
-                  << std::endl;
+        // set the rf gain
+        if (vm.count("gain")) {
+            std::cout << boost::format("Setting RX Gain: %f dB...") % ch_gain << std::endl;
+            usrp->set_rx_gain(ch_gain, channel);
+            std::cout << boost::format("Actual RX Gain: %f dB...")
+                            % usrp->get_rx_gain(channel)
+                    << std::endl
+                    << std::endl;
+        }
+
+        // set the IF filter bandwidth
+        if (vm.count("bw")) {
+            std::cout << boost::format("Setting RX Bandwidth: %f MHz...") % (ch_bw / 1e6)
+                    << std::endl;
+            usrp->set_rx_bandwidth(ch_bw, channel);
+            std::cout << boost::format("Actual RX Bandwidth: %f MHz...")
+                            % (usrp->get_rx_bandwidth(channel) / 1e6)
+                    << std::endl
+                    << std::endl;
+        }
+
+        // set the antenna
+        if (vm.count("ant"))
+            usrp->set_rx_antenna(ch_ant, channel);
     }
-
-    // set the IF filter bandwidth
-    if (vm.count("bw")) {
-        std::cout << boost::format("Setting RX Bandwidth: %f MHz...") % (bw / 1e6)
-                  << std::endl;
-        usrp->set_rx_bandwidth(bw, channel);
-        std::cout << boost::format("Actual RX Bandwidth: %f MHz...")
-                         % (usrp->get_rx_bandwidth(channel) / 1e6)
-                  << std::endl
-                  << std::endl;
-    }
-
-    // set the antenna
-    if (vm.count("ant"))
-        usrp->set_rx_antenna(ant, channel);
-
     std::this_thread::sleep_for(std::chrono::milliseconds(int64_t(1000 * setup_time)));
     /*
     std::cout << boost::format("Waiting: Connect GPIO in %f seconds...") % wait_time << std::endl;
@@ -468,7 +521,7 @@ int UHD_SAFE_MAIN(int argc, char* argv[])
     (usrp,                        \
         format,                   \
         wirefmt,                  \
-        channel,                  \
+        channel_nums,             \
         file,                     \
         spb,                      \
         total_num_samps,          \
