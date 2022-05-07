@@ -34,6 +34,7 @@ module usrp_tag_chip_mtx_ctrl #(
 
   /*debug*/
   output [1:0] tx_state,
+  output sync_sel, 
   output [DATA_WIDTH-1:0]  imtx,
   output [DATA_WIDTH-1:0]  qmtx,
   output tx_trig,
@@ -65,6 +66,8 @@ module usrp_tag_chip_mtx_ctrl #(
   
   assign out_sel  = (state == LOC_SYNC);
   assign tx_valid = ~(state == LOC_IDLE);
+
+  assign sync_sel = out_sel & (state == LOC_IDLE);
 
   assign fp_gpio_ddr =  12'h0001;
   assign fp_gpio_out = out_sel ? 12'h0001 : 12'h0000;

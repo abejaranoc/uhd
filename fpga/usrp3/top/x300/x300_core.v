@@ -647,10 +647,10 @@ module x300_core #(
 
    wire [15:0] itx, qtx;
    wire [31:0] tx_data_dk = {itx, qtx};
-   wire tx_valid;
+   wire tx_valid, sync_sel;
    wire TX_EN = 1'b1;
 
-   mtx_ctrl #(.NSYMB(512))
+   usrp_tag_chip_mtx_ctrl #(.NSYMB(512))
         MTX_ANC(  .clk(radio_clk),
                   .reset(radio_rst),
 
@@ -660,6 +660,7 @@ module x300_core #(
                   .fp_gpio_out(gpio_out_dk), 
                   .fp_gpio_ddr(gpio_ddr_dk),
                   .fp_gpio_in(gpio_in_dk),
+                  .sync_sel(sync_sel),
 
                   .tx_valid(tx_valid));
 
@@ -672,8 +673,8 @@ module x300_core #(
    
    assign tx_data_r[0][31:0]  = TX_EN ? tx_data_dk : tx_data[0];
    assign tx_data_r[0][63:32] = TX_EN ? tx_data_dk : tx_data[1];
-   assign tx_data_r[1][31:0]  = TX_EN ? tx_data_dk : tx_data[2];
-   assign tx_data_r[1][63:32] = TX_EN ? tx_data_dk : tx_data[3];
+   assign tx_data_r[1][31:0]  = TX_EN ? (sync_sel ? 0 : tx_data_dk) : tx_data[2];
+   assign tx_data_r[1][63:32] = TX_EN ? (sync_sel ? 0 : tx_data_dk) : tx_data[3];
    
    
    assign tx_data_out[0] = tx_data_out_r[0][31:0] ;
