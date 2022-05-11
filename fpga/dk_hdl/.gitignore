@@ -5,6 +5,7 @@ build-ip
 .Xil
 xsim.dir
 work/
+utils/MATLAB_FFT/
 xvlog.pb
 *.str
 *.log
