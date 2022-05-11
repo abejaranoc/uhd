@@ -5,5 +5,6 @@
 ##################################################
 DK_RX_ANC_SRCS = $(abspath $(addprefix $(BASE_DIR)/../../dk_hdl/rx_anc/, \
 rx_anc.v \
+rx_anc_ppm.v \
 rx_anc_ctrl.v \
 ))

@@ -1,4 +1,4 @@
-module rx_anc #(
+module rx_anc_ppm #(
   parameter DATA_WIDTH    = 16,
   parameter DDS_WIDTH     = 24,
   parameter SIN_COS_WIDTH = 16,
@@ -45,9 +45,9 @@ module rx_anc #(
 
 wire [DATA_WIDTH-1:0] scale_tdata;
 
-//wire[PPM_WIDTH-1:0] PPM_PERIOD;
-//assign PPM_PERIOD = (ppm_val <= 1) ? 868393 : ppm_val;
-//reg [PPM_WIDTH-1:0] ppm_track ;
+wire[PPM_WIDTH-1:0] PPM_PERIOD;
+assign PPM_PERIOD = (ppm_val <= 1) ? 868393 : ppm_val;
+reg [PPM_WIDTH-1:0] ppm_track ;
 
 //wire [PHASE_WIDTH-1:0] sigN ;
 reg  [PHASE_WIDTH-1:0]  ncount;
@@ -196,16 +196,26 @@ always @(posedge clk) begin
       phase     <= START_PH;
       ncount    <= NSIG;
       phase_inc <= DPH_INC;
+      ppm_track <= 1;
     end 
-    else if (ncount >= NSIG) begin 
-      ncount <= 1;
-      phase  <= START_PH;
+    else if (ppm_track == PPM_PERIOD) begin 
+      ncount    <= ncount + 2;
+      ppm_track <= 1;
+      phase     <= phase + (2*phase_inc);
     end
-      
     else begin
-      phase   <= phase + phase_inc;
-      ncount  <= ncount + 1;
-    end 
+      if (ncount >= NSIG) begin 
+        ncount <= 1;
+        phase  <= START_PH;
+      end
+      
+      else begin
+        phase   <= phase + phase_inc;
+        ncount  <= ncount + 1;
+      end
+      ppm_track <= ppm_track + 1;
+    end
+    
 end
 
 endmodule
