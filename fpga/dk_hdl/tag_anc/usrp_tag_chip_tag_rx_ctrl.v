@@ -154,7 +154,7 @@ module usrp_tag_chip_tag_rx_ctrl #(
   localparam NOISE_POW       = 51000;
   localparam NRX_TRIG_DELAY  = (NRX_TRIG - 1) * DEC_RATE;
   localparam PMAG_WIDTH      = DATA_WIDTH + $clog2(MAX_LEN+1);
-  localparam [1:0] THRES_SEL = 2'b11;
+  localparam [1:0] THRES_SEL = 2'b01;
   wire peak_tvalid, peak_tlast, peak_stb, peak_thres;
   assign peak_detect_stb  = peak_stb;
 
@@ -209,7 +209,7 @@ module usrp_tag_chip_tag_rx_ctrl #(
   localparam MEM_WIDTH         = 32;
   localparam BIT_CNT_WIDTH     = 7;
   localparam TX_BITS_WIDTH     = 128;
-  localparam USRP_CLK_NSCAN    = 12640;
+  localparam USRP_CLK_NSCAN    = 512;
   localparam NUM_HOPS          = 64;
 
   //reg hop_reset;
