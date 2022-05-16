@@ -1,0 +1,13 @@
+vlib work
+vlog  TWDLROM.v
+vlog  MINRESRX2FFT_CTRL.v
+vlog  SimpleDualPortRAM_generic.v
+vlog  MINRESRX2FFT_MEMORY.v
+vlog  MINRESRX2FFT_BTFSEL.v
+vlog  Complex4Multiply.v
+vlog  MINRESRX2_BUTTERFLY.v
+vlog  MINRESRX2FFT_MEMSEL.v
+vlog  MINRESRX2FFT_OUTMux.v
+vlog  FFT.v
+vlog  FFT_Burst.v
+vlog  FFT_Burst_tb.v

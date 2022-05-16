@@ -1,0 +1,18 @@
+
+
+##################################################
+# DK Sources
+##################################################
+MAT_FFT_SRCS = $(abspath $(addprefix $(BASE_DIR)/../../dk_hdl/utils/MATLAB_FFT/, \
+TWDLROM.v \
+MINRESRX2FFT_CTRL.v \
+SimpleDualPortRAM_generic.v \
+MINRESRX2FFT_MEMORY.v \
+MINRESRX2FFT_BTFSEL.v \
+Complex4Multiply.v \
+MINRESRX2_BUTTERFLY.v \
+MINRESRX2FFT_MEMSEL.v \
+MINRESRX2FFT_OUTMux.v \
+FFT.v \
+FFT_Burst.v \
+))
