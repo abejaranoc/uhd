@@ -47,10 +47,10 @@ $(DK_UTILS_SRCS) \
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = key_mem_tb 
+SIM_TOP = ltf_detect_tb 
 SIM_RUNTIME_US = 100000
 SIM_SRCS = \
-$(abspath key_mem_tb.v) \
+$(abspath ltf_detect_tb.v) \
 
 
 #SIM_SRCS = \

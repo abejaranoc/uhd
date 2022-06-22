@@ -12,7 +12,9 @@ cic_interpolate_iq.v \
 freq_shift_iq.v \
 freq_shift_and_lpf_iq.v \
 preamble_detect.v \
+ltf_detect.v \
 peak_detect.v \
+peak_detect_nrx.v \
 cmoving_avg.v \
 cmoving_sum.v \
 conj_flop.v \
