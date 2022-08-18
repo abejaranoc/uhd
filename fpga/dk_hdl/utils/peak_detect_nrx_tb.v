@@ -23,7 +23,8 @@ assign in_tlast   = 1'b0;
 assign out_tready = 1'b1;
 assign peak_stb_in = (in_data > 10000 ); 
 
-
+wire [DATA_WIDTH-1:0] pow_in, pow_out;
+assign pow_in   = in_tdata;
 assign in_tdata = in_data;
 
 
@@ -52,7 +53,8 @@ peak_detect_nrx #(
       .in_tready(in_tready), .in_tdata(in_tdata), 
       .peak_stb_in(peak_stb_in), .peak_stb_out(peak_stb_out),
       .out_tvalid(out_tvalid), .out_tlast(out_tlast), 
-      .out_tready(out_tready), .nrx_after_peak(nrx_after_peak)
+      .out_tready(out_tready), .nrx_after_peak(nrx_after_peak), 
+      .pow_in(pow_in), .pow_out(pow_out)
     );
 
 

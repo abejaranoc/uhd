@@ -21,4 +21,5 @@ conj_flop.v \
 key_mem.v \
 fftm16.v \
 ifftm16.v \
+resample_iq.v \
 ))

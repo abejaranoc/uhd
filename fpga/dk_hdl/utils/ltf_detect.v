@@ -27,6 +27,7 @@ module  ltf_detect#(
   input   out_tready,
   output  peak_stb, 
   output [NRX_WIDTH-1:0] nrx_after_peak,
+  output [PMAG_WIDTH-1:0] pow,
 
   /*debug*/
   output peak_thres,
@@ -253,7 +254,8 @@ peak_detect_nrx #(
       .in_tready(peak_tready), .in_tdata(acmag_tdata), 
       .peak_stb_in(peak_stb_in), .peak_stb_out(peak_stb_out),
       .out_tvalid(out_tvalid), .out_tlast(out_tlast), 
-      .out_tready(out_tready), .nrx_after_peak(nrx_after_peak)
+      .out_tready(out_tready), .nrx_after_peak(nrx_after_peak),
+      .pow_in(pmag_tdata), .pow_out(pow)
     );
 assign peak_stb    = peak_stb_out; // & peak_stb_in;
 assign peak_thres  = peak_stb_in;

@@ -21,7 +21,10 @@ module  peak_detect_nrx#(
   input   out_tready,
   
   output  peak_stb_out,
-  output [NRX_WIDTH-1:0] nrx_after_peak
+  output [NRX_WIDTH-1:0] nrx_after_peak,
+
+  input  [DATA_WIDTH-1:0] pow_in,
+  output [DATA_WIDTH-1:0] pow_out
 );
 
 
@@ -39,8 +42,9 @@ module  peak_detect_nrx#(
 
   reg [7:0] num_pks;
   reg [NRX_WIDTH-1:0]  nrx_after_max_peak, nrx_after_trig;
-  reg [DATA_WIDTH-1:0] max_peak;
+  reg [DATA_WIDTH-1:0] max_peak, pow;
 
+  assign pow_out = pow;
   assign nrx_after_peak = nrx_after_max_peak;
 
   always @(posedge clk) begin
@@ -50,6 +54,7 @@ module  peak_detect_nrx#(
       state    <= INIT;
       max_peak <= 0;
       nrx_after_max_peak <= 0;
+      pow       <= 0;
       nrx_after_trig <= 0;
       peak_stb <= 1'b0;
       num_pks  <= 8'h00;
@@ -61,6 +66,7 @@ module  peak_detect_nrx#(
         case (state)
           INIT: begin
             max_peak <= in_tdata;
+            pow      <= pow_in;
             nrx_after_max_peak <= 0;
             nrx_after_trig <= 0;
             peak_stb       <= 1'b0;
@@ -73,6 +79,7 @@ module  peak_detect_nrx#(
             if(peak_stb_in) begin
               nrx_after_trig <= nrx_after_trig + 1;
               if(in_tdata > max_peak ) begin
+                pow      <= pow_in;
                 max_peak <= in_tdata;
                 nrx_after_max_peak <= 0;
                 num_pks[0] <= 1'b1;

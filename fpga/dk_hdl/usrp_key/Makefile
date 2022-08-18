@@ -29,6 +29,7 @@ include $(LIB_IP_DIR)/dds_sin_cos_lut_only/Makefile.inc
 include $(BASE_DIR)/x300/coregen_dsp/Makefile.srcs
 include $(BASE_DIR)/../../dk_hdl/fp_gpio/Makefile.srcs
 include $(BASE_DIR)/../../dk_hdl/utils/Makefile.srcs
+include $(BASE_DIR)/../../dk_hdl/usrp_key/Makefile.srcs
 include $(BASE_DIR)/../../dk_hdl/utils/MATLAB_FFT/Makefile.srcs
 
 
@@ -42,6 +43,7 @@ $(COREGEN_DSP_SRCS) \
 $(RFNOC_BLOCK_DDC_SRCS) \
 $(DK_FP_GPIO_SRCS) \
 $(DK_UTILS_SRCS) \
+$(DK_KEY_SRCS) \
 $(MAT_FFT_SRCS) \
 )
 
@@ -49,10 +51,10 @@ $(MAT_FFT_SRCS) \
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = cic_interpolate_tb 
+SIM_TOP = key_rx_tb 
 SIM_RUNTIME_US = 100000
 SIM_SRCS = \
-$(abspath cic_interpolate_tb.v) \
+$(abspath key_rx_tb.v) \
 
 
 #SIM_SRCS = \
