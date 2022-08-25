@@ -18,12 +18,12 @@ module rx_anc_tb();
     
     rx_anc RX_ANC(.clk(clk), .reset(reset), .srst(srst),
                   /* RX IQ input */
-                  .irx_in(irx_in), .qrx_in(qrx_in),
+                  .irx_in(irx_in),  .qrx_in(qrx_in),
                   .in_tvalid(1'b1), .in_tlast(1'b0),
-                  .scale_val(scale_val),
+                  .scale_val(scale_val), .ppm_val(16384),
 
                   /* phase valid*/
-                  .phase_tvalid(1'b1), .phase_tlast(1'b0), 
+                  .phase_tvalid(1'b1), .phase_tlast(1'b0),  
 
                   /* IQ BB output */
                   .out_tready(1'b1), .itx(itx), .qtx(qtx),

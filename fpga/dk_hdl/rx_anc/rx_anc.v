@@ -43,10 +43,10 @@ module rx_anc #(
   output [SIN_COS_WIDTH-1:0]  cos
 );
 
-wire [DATA_WIDTH-1:0] scale_tdata;
+//wire [DATA_WIDTH-1:0] scale_tdata;
 
-//wire[PPM_WIDTH-1:0] PPM_PERIOD;
-//assign PPM_PERIOD = (ppm_val <= 1) ? 868393 : ppm_val;
+wire[PHASE_WIDTH-1:0] ph_inc_ppm;
+assign ph_inc_ppm = (ppm_val == 0) ? DPH_INC : ppm_val[PHASE_WIDTH-1:0];
 //reg [PPM_WIDTH-1:0] ppm_track ;
 
 //wire [PHASE_WIDTH-1:0] sigN ;
@@ -194,16 +194,17 @@ axi_round_and_clip_complex #(.WIDTH_IN(DDS_WIDTH+SCALING_WIDTH),
 always @(posedge clk) begin
     if (reset || srst) begin
       phase     <= START_PH;
-      ncount    <= NSIG;
+      ncount    <= 1;
       phase_inc <= DPH_INC;
     end 
+    /*
     else if (ncount >= NSIG) begin 
       ncount <= 1;
       phase  <= START_PH;
     end
-      
+    */
     else begin
-      phase   <= phase + phase_inc;
+      phase   <= phase + ph_inc_ppm;
       ncount  <= ncount + 1;
     end 
 end
