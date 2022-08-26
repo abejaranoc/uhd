@@ -14,7 +14,7 @@ assign in_tvalid = 1'b1;
 assign in_tlast  = 1'b0;
 assign out_tready = 1'b1;
 wire [DATA_WIDTH-1:0] in_itdata, in_qtdata, nrx_after_peak;
-wire   peak_stb;
+wire   peak_stb, peak_thres;
 wire [DATA_WIDTH-1:0] zi, zq;
 wire [DATA_WIDTH-1:0] ami, amq;
 wire [DATA_WIDTH-1:0] pmi, pmq;
@@ -86,6 +86,7 @@ ltf_detect #(
       .in_itdata(irx_scaled), .in_qtdata(qrx_scaled),
       .out_tvalid(out_tvalid), .out_tlast(out_tlast), .out_tready(out_tready),
       .peak_stb(peak_stb), .nrx_after_peak(nrx_after_peak), .pow(pow),
+      .peak_thres(peak_thres),
       .zi(zi), .zq(zq),
       .ami(ami), .amq(amq),
       .pmi(pmi), .pmq(pmq),  .noise_thres(noise_thres),
@@ -112,25 +113,25 @@ initial begin
   repeat(2*NDATA) @(posedge clk);
   @(posedge clk);
   stop_write = 1'b1;
-  $finish();
+  //$finish();
 end
 
-/*
 integer file_id;
 initial begin
-  file_id = $fopen("/home/user/Desktop/sim/out_cic_decim.txt", "wb");
+  file_id = $fopen("/home/user/Desktop/data/sim/ltf_detect_out.txt", "wb");
   $display("Opened file ..................");
   @(negedge reset);
+  //@(negedge stop_write);
   $display("start writing ................");
   while (!stop_write) begin
-    @(negedge istrobe_out); 
-    $fwrite(file_id, "%d %d \n", out_idata, out_qdata);    
+    @(negedge clk); 
+    $fwrite(file_id, "%d %d %d %d %d %d %d %d %d\n", irx_scaled, qrx_scaled,
+            pow_tdata, acorr_tdata, pow_mag_tdata, acorr_mag_tdata, 
+            peak_thres, peak_stb, nrx_after_peak);    
   end
   $fclose(file_id);
   $display("File closed ..................");
   $finish();    
 end
-
-*/
 
 endmodule
