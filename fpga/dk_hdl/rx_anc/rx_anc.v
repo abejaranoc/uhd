@@ -45,8 +45,8 @@ module rx_anc #(
 
 //wire [DATA_WIDTH-1:0] scale_tdata;
 
-wire[PHASE_WIDTH-1:0] ph_inc_ppm;
-assign ph_inc_ppm = (ppm_val == 0) ? DPH_INC : ppm_val[PHASE_WIDTH-1:0];
+//wire[PHASE_WIDTH-1:0] ph_inc_ppm;
+//assign ph_inc_ppm = (ppm_val == 0) ? DPH_INC : ppm_val[PHASE_WIDTH-1:0];
 //reg [PPM_WIDTH-1:0] ppm_track ;
 
 //wire [PHASE_WIDTH-1:0] sigN ;
@@ -195,7 +195,7 @@ always @(posedge clk) begin
     if (reset || srst) begin
       phase     <= START_PH;
       ncount    <= 1;
-      phase_inc <= DPH_INC;
+      phase_inc <= (ppm_val == 0) ? DPH_INC : ppm_val[PHASE_WIDTH-1:0];
     end 
     /*
     else if (ncount >= NSIG) begin 
@@ -204,7 +204,7 @@ always @(posedge clk) begin
     end
     */
     else begin
-      phase   <= phase + ph_inc_ppm;
+      phase   <= phase + phase_inc;
       ncount  <= ncount + 1;
     end 
 end
