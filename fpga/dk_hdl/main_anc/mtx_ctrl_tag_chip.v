@@ -101,7 +101,7 @@ module mtx_ctrl_tag_chip #(
   localparam INIT      = 2'b00;
   localparam NUM_HOPS  = 64;
   localparam [PHASE_WIDTH-1:0] HOP_DPH_INC      = 131072;
-  localparam [PHASE_WIDTH-1:0] HOP_START_PH_INC = 0; //-24'd4194304;
+  localparam [PHASE_WIDTH-1:0] HOP_START_PH_INC = -24'd4194304;
 
   reg [PHASE_WIDTH-1:0] synch_count;
   reg [BIT_CNT_WIDTH-1:0] hop_n;
