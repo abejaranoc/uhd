@@ -663,7 +663,7 @@ module x300_core #(
 
    wire rf_run;
    assign rf_run = tx_running[DB_IDX * 2] || rx_running[DB_IDX * 2];
-   rx_anc RX_ANC(.clk(radio_clk), .reset(radio_rst), .srst(~rf_run)),
+   rx_anc RX_ANC(.clk(radio_clk), .reset(radio_rst), .srst(~rf_run),
 
                   /* RX IQ input */
                   .irx_in(irx_in), .qrx_in(qrx_in),
