@@ -49,10 +49,10 @@ $(MAT_FFT_SRCS) \
 # Testbench Specific
 #-------------------------------------------------
 MODELSIM_LIBS += unimacro_ver
-SIM_TOP = ltf_detect_tb 
+SIM_TOP = prmb_detect_tb 
 SIM_RUNTIME_US = 100000
 SIM_SRCS = \
-$(abspath ltf_detect_tb.v) \
+$(abspath prmb_detect_tb.v) \
 
 
 #SIM_SRCS = \

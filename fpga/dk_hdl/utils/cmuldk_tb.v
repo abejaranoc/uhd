@@ -1,8 +1,9 @@
-module cmul16_tb ();
+module cmuldk_tb ();
 
-localparam DATA_WIDTH    = 16;
 localparam NDATA         = 4096;
-localparam NWIDTH = 14;
+localparam DATA_WIDTH    = 16;
+localparam PWIDTH        = 16*2;
+localparam CLIP_BITS     = 0;
 
 
 
@@ -13,11 +14,11 @@ reg [2*DATA_WIDTH-1:0] ain_data;
 reg [2*DATA_WIDTH-1:0] bin_data;
 reg [2*DATA_WIDTH-1:0] input_memory [0:NDATA-1];
 reg [2*DATA_WIDTH-1:0] input_memory2 [0:NDATA-1];
-wire [2*DATA_WIDTH-1:0] prod_data;
-wire [DATA_WIDTH-1:0] out_idata, out_qdata;
+wire [2*PWIDTH-1:0] prod_data;
+wire [PWIDTH-1:0] out_idata, out_qdata;
 
-assign out_idata = prod_data[2*DATA_WIDTH-1:DATA_WIDTH];
-assign out_qdata = prod_data[DATA_WIDTH-1:0];
+assign out_idata = prod_data[2*PWIDTH-1:PWIDTH];
+assign out_qdata = prod_data[PWIDTH-1:0];
 assign ain_idata = ain_data[2*DATA_WIDTH-1:DATA_WIDTH];
 assign ain_qdata = ain_data[DATA_WIDTH-1:0];
 assign bin_idata = bin_data[2*DATA_WIDTH-1:DATA_WIDTH];
@@ -44,7 +45,8 @@ end
 wire out_tvalid;
 reg  in_tvalid;
 
-cmul16 CMUL_DUT(
+cmuldk #(.DATA_WIDTH(DATA_WIDTH), .CLIP_BITS(CLIP_BITS), .PWIDTH(PWIDTH))
+ CMUL_DUT(
       .clk(clk),
       .reset(reset),
 
@@ -82,7 +84,7 @@ end
 
 integer file_id;
 initial begin
-  file_id = $fopen("/home/user/Desktop/data/sim/out_data_cmul16_tb.txt", "wb");
+  file_id = $fopen("/home/user/Desktop/data/sim/out_data_cmuldk_tb.txt", "wb");
   $display("Opened file ..................");
   @(negedge reset);
   $display("start writing ................");

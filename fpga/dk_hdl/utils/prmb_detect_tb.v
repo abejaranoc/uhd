@@ -1,11 +1,14 @@
-module ltf_detect_tb ();
+module prmb_detect_tb ();
 
-localparam NDATA        = 1024*16;
+localparam NDATA        = 1048576*4;
+//localparam NDATA        = 33554432;
 localparam DATA_WIDTH   = 16;
 localparam PWIDTH       = DATA_WIDTH * 2;
 localparam PCLIP_BITS   = 0;
-localparam MAX_LEN      = 512;
-localparam LEN          = 512;
+localparam DEC_MAX_RATE = 255;
+localparam DEC_RATE     = 64;
+localparam MAX_LEN      = 4095;
+localparam LEN          = 4092;
 localparam PMAG_WIDTH   = PWIDTH + $clog2(MAX_LEN+1);
 
 reg reset;
@@ -15,13 +18,14 @@ wire out_tvalid, out_tready, out_tlast;
 assign in_tvalid = 1'b1;
 assign in_tlast  = 1'b0;
 assign out_tready = 1'b1;
-wire [DATA_WIDTH-1:0] in_itdata, in_qtdata, nrx_after_peak;
-wire   peak_stb, peak_thres;
+wire [DATA_WIDTH-1:0] in_itdata, in_qtdata;
+wire  dec_stb, peak_stb;
+wire [DATA_WIDTH-1:0] idec, qdec;
 wire [DATA_WIDTH-1:0] zi, zq;
 wire [PWIDTH-1:0] ami, amq;
 wire [PWIDTH-1:0] pmi, pmq;
 wire [PMAG_WIDTH-1:0] pow_mag_tdata, acorr_mag_tdata;
-wire [PMAG_WIDTH-1:0] pow_itdata, pow_qtdata, pow;
+wire [PMAG_WIDTH-1:0] pow_itdata, pow_qtdata;
 wire [PMAG_WIDTH-1:0] acorr_itdata, acorr_qtdata;
 wire [2*PMAG_WIDTH-1:0] pow_tdata, acorr_tdata;
 assign acorr_qtdata = acorr_tdata[PMAG_WIDTH-1:0];
@@ -54,18 +58,43 @@ always @(posedge clk) begin
   end 
 end
 
+reg [DATA_WIDTH-1:0] scale_reg;
+wire [DATA_WIDTH-1:0] irx_scaled, qrx_scaled, scale_tdata;
+wire scaled_tlast, scaled_tready, scaled_tvalid;
+assign scale_tdata = scale_reg;
 reg [2*DATA_WIDTH-1:0] noise_thres;
 
-ltf_detect #(
-  .DATA_WIDTH(DATA_WIDTH), .PWIDTH(PWIDTH), .PCLIP_BITS(PCLIP_BITS),
-  .PMAG_WIDTH(PMAG_WIDTH), .MAX_LEN(MAX_LEN), .LEN(LEN))
+mult_rc #(
+  .WIDTH_REAL(DATA_WIDTH), .WIDTH_CPLX(DATA_WIDTH),
+  .WIDTH_P(DATA_WIDTH), .DROP_TOP_P(21)) 
+    MULT_RC(
+      .clk(clk),
+      .reset(reset),
+
+      .real_tlast(in_tlast),
+      .real_tvalid(in_tvalid),
+      .real_tdata(scale_tdata),
+
+      .cplx_tlast(in_tlast),
+      .cplx_tvalid(in_tvalid),
+      .cplx_tdata({in_itdata, in_qtdata}),
+
+      .p_tready(scaled_tready), .p_tlast(scaled_tlast), .p_tvalid(scaled_tvalid),
+      .p_tdata({irx_scaled, qrx_scaled}));
+
+prmb_detect #(
+  .DATA_WIDTH(DATA_WIDTH), .DEC_MAX_RATE(DEC_MAX_RATE),
+  .PWIDTH(PWIDTH), .PCLIP_BITS(PCLIP_BITS),
+  .PMAG_WIDTH(PMAG_WIDTH), .DEC_RATE(DEC_RATE), 
+  .MAX_LEN(MAX_LEN), .LEN(LEN))
     DUT(
       .clk(clk), .reset(reset), .clear(reset),
-      .in_tvalid(in_tvalid), .in_tlast(in_tlast), .in_tready(in_tready),
-      .in_itdata(in_itdata), .in_qtdata(in_qtdata),
+      .in_tvalid(scaled_tvalid), .in_tlast(scaled_tlast), .in_tready(scaled_tready),
+      .in_itdata(irx_scaled), .in_qtdata(qrx_scaled),
       .out_tvalid(out_tvalid), .out_tlast(out_tlast), .out_tready(out_tready),
-      .peak_stb(peak_stb), .nrx_after_peak(nrx_after_peak), .pow(pow),
-      .peak_thres(peak_thres),
+      .peak_stb(peak_stb),
+      .dec_stb(dec_stb), 
+      .idec(idec), .qdec(qdec), 
       .zi(zi), .zq(zq),
       .ami(ami), .amq(amq),
       .pmi(pmi), .pmq(pmq),  .noise_thres(noise_thres),
@@ -75,7 +104,7 @@ ltf_detect #(
 
 
 initial begin
-  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/ltf_test_vec.mem", input_memory);
+  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/rx_test_vec.mem", input_memory);
 end
 
 reg stop_write;
@@ -84,31 +113,33 @@ initial begin
   counter = 0;
   reset = 1'b1;
   stop_write = 1'b0;
-  noise_thres = 15000;
+  noise_thres = 0;
+  scale_reg  = 1;
   #10 reset = 1'b0; 
+  scale_reg = 2;
   noise_thres = 50000;
   repeat(2*NDATA) @(posedge clk);
   @(posedge clk);
   stop_write = 1'b1;
-  //$finish();
+  $finish();
 end
 
+/*
 integer file_id;
 initial begin
-  file_id = $fopen("/home/user/Desktop/data/sim/ltf_detect_out_03.txt", "wb");
+  file_id = $fopen("/home/user/Desktop/sim/out_cic_decim.txt", "wb");
   $display("Opened file ..................");
   @(negedge reset);
-  //@(negedge stop_write);
   $display("start writing ................");
   while (!stop_write) begin
-    @(negedge clk); 
-    $fwrite(file_id, "%d %d %d %d %d %d %d %d %d\n", in_itdata, in_qtdata,
-            pow_tdata, acorr_tdata, pow_mag_tdata, acorr_mag_tdata, 
-            peak_thres, peak_stb, nrx_after_peak);    
+    @(negedge istrobe_out); 
+    $fwrite(file_id, "%d %d \n", out_idata, out_qdata);    
   end
   $fclose(file_id);
   $display("File closed ..................");
   $finish();    
 end
+
+*/
 
 endmodule

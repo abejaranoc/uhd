@@ -1,14 +1,16 @@
-module  ltf_detect#(
+module  prmb_detect#(
   parameter DATA_WIDTH    = 16,
-  parameter PWIDTH        = DATA_WIDTH,
-  parameter PCLIP_BITS    = 1,
-  parameter MAX_LEN       = 1023,
-  parameter [$clog2(MAX_LEN+1)-1:0] LEN = 512,
-  parameter [1:0] THRES_SEL = 2'b10,
-  parameter NRX_TRIG        = 64, 
-  parameter NRX_WIDTH       = 16, 
+  parameter PWIDTH        = 2*DATA_WIDTH,
+  parameter PCLIP_BITS    = 0,
+  parameter NDEC          = 4, 
+  parameter DEC_MAX_RATE  = 255,
+  parameter [$clog2(DEC_MAX_RATE+1)-1:0] DEC_RATE = 64,
+  parameter MAX_LEN         = 4095,
+  parameter [$clog2(MAX_LEN+1)-1:0] LEN = 4092,
+  parameter [1:0] THRES_SEL = 2'b11,
+  parameter NRX_TRIG        = 16, 
   parameter PMAG_WIDTH      = PWIDTH + $clog2(MAX_LEN+1),
-  parameter NOISE_POW       = 15000 
+  parameter [DATA_WIDTH-1:0] NOISE_POW = 15000 
 )(
   input clk,
   input reset,
@@ -28,11 +30,11 @@ module  ltf_detect#(
   output  out_tvalid,
   input   out_tready,
   output  peak_stb, 
-  output [NRX_WIDTH-1:0] nrx_after_peak,
-  output [PMAG_WIDTH-1:0] pow,
 
   /*debug*/
+  output dec_stb,
   output peak_thres,
+  output [DATA_WIDTH-1:0] idec, qdec,
   output [DATA_WIDTH-1:0] zi, zq,
   output [PWIDTH-1:0] ami, amq,
   output [PWIDTH-1:0] pmi, pmq, 
@@ -42,7 +44,39 @@ module  ltf_detect#(
   output [PMAG_WIDTH-1:0]  acorr_mag_tdata
 );
 
-wire [2*DATA_WIDTH-1:0] in_tdata = {in_itdata, in_qtdata};
+wire [DATA_WIDTH-1:0] iq_idec, iq_qdec;
+wire [2*DATA_WIDTH-1:0] dec_tdata;
+wire dec_tlast, dec_tvalid, dec_tready;
+
+wire dec_last_in, dec_stb_out, dec_stb_in, dec_last_out;
+assign dec_stb_in = in_tvalid; 
+assign dec_last_in = in_tlast;
+
+assign idec = iq_idec;
+assign qdec = iq_qdec;
+assign dec_stb = dec_stb_out;
+
+
+cic_decimate_iq #(
+  .DATA_WIDTH(DATA_WIDTH), .N(NDEC), .MAX_RATE(DEC_MAX_RATE))
+    DEC_IQ(
+      .clk(clk), .reset(reset), 
+      .rate_stb(reset), .rate(DEC_RATE),
+      .strobe_in(dec_stb_in), .strobe_out(dec_stb_out),
+      .last_in(dec_last_in), .last_out(dec_last_out),
+      .in_itdata(in_itdata), .in_qtdata(in_qtdata),
+      .out_itdata(iq_idec), .out_qtdata(iq_qdec)
+    );
+
+strobed_to_axi #(
+    .WIDTH(2*DATA_WIDTH))
+  strobed_to_axi (
+    .clk(clk), .reset(reset), 
+    .clear(clear), .in_stb(dec_stb_out), 
+    .in_data({iq_idec, iq_qdec}), .in_last(dec_last_out),
+    .o_tdata(dec_tdata), .o_tlast(dec_tlast),
+    .o_tvalid(dec_tvalid), .o_tready(dec_tready)
+  );
 
 
 wire [DATA_WIDTH-1:0] ziq_itdata, ziq_qtdata;
@@ -61,8 +95,8 @@ delay_fifo #(
     ZIQ (
       .clk(clk), .reset(reset), 
       .clear(clear), .len(LEN),
-      .i_tdata(in_tdata), .i_tlast(in_tlast),
-      .i_tvalid(in_tvalid), .i_tready(),
+      .i_tdata(dec_tdata), .i_tlast(dec_tlast),
+      .i_tvalid(dec_tvalid), .i_tready(dec_tready),
       .o_tdata(ziq_tdata), .o_tlast(ziq_tlast),
       .o_tvalid(ziq_tvalid), .o_tready(ziq_tready)
     );
@@ -71,59 +105,59 @@ wire [2*DATA_WIDTH-1:0] aziq_tdata;
 wire aziq_tlast, aziq_tvalid, aziq_tready;
 
 axi_fifo #(.WIDTH(2*DATA_WIDTH+1), .SIZE(1)) 
-  FLOP_ZIQ(
+  flop_delay(
     .clk(clk), .reset(reset), .clear(clear),
     .i_tdata({ziq_tlast, ziq_tdata}), 
     .i_tvalid(ziq_tvalid), .i_tready(ziq_tready),
     .o_tdata({aziq_tlast, aziq_tdata}), .o_tvalid(aziq_tvalid), .o_tready(aziq_tready),
     .occupied(), .space());
 
-wire [2*DATA_WIDTH-1:0] a_tdata;
-wire a_tlast, a_tvalid, a_tready;
+wire [2*DATA_WIDTH-1:0] adec_tdata;
+wire adec_tlast, adec_tvalid, adec_tready;
 
 
-wire [2*DATA_WIDTH-1:0] b_tdata;
-wire b_tlast, b_tvalid, b_tready;
+wire [2*DATA_WIDTH-1:0] bdec_tdata;
+wire bdec_tlast, bdec_tvalid, bdec_tready;
 
-assign a_tready = b_tready;
+assign adec_tready = bdec_tready;
 
 axi_fifo #(.WIDTH(2*DATA_WIDTH+1), .SIZE(1)) 
-  FLOP_IN(
+  flop_dec(
     .clk(clk), .reset(reset), .clear(clear),
-    .i_tdata({in_tlast, in_tdata}), 
-    .i_tvalid(in_tvalid), .i_tready(),
-    .o_tdata({a_tlast, a_tdata}), .o_tvalid(a_tvalid), .o_tready(a_tready),
+    .i_tdata({dec_tlast, dec_tdata}), 
+    .i_tvalid(dec_tvalid), .i_tready(),
+    .o_tdata({adec_tlast, adec_tdata}), .o_tvalid(adec_tvalid), .o_tready(adec_tready),
     .occupied(), .space());
 
 
 
 conj_flop #(
   .WIDTH(DATA_WIDTH), .FIFOSIZE(1))
-    CFLOP_IN(
+    CDEC(
       .clk(clk), .reset(reset), .clear(clear),
-      .i_tdata(in_tdata), .i_tvalid(in_tvalid), 
-      .i_tlast(in_tlast), .i_tready(),
-      .o_tdata(b_tdata), .o_tvalid(b_tvalid),
-      .o_tlast(b_tlast), .o_tready(b_tready)
+      .i_tdata(dec_tdata), .i_tvalid(dec_tvalid), 
+      .i_tlast(dec_tlast), .i_tready(),
+      .o_tdata(bdec_tdata), .o_tvalid(bdec_tvalid),
+      .o_tlast(bdec_tlast), .o_tready(bdec_tready)
     );
 
-wire [2*PWIDTH-1:0] p_tdata;
-wire [PWIDTH-1:0] p_itdata, p_qtdata;
-wire p_tlast, p_tvalid, p_tready;
-assign p_qtdata = p_tdata[PWIDTH-1:0];
-assign p_itdata = p_tdata[2*PWIDTH-1:PWIDTH];
+wire [2*PWIDTH-1:0] pdec_tdata;
+wire [PWIDTH-1:0] pdec_itdata, pdec_qtdata;
+wire pdec_tlast, pdec_tvalid, pdec_tready;
+assign pdec_qtdata = pdec_tdata[PWIDTH-1:0];
+assign pdec_itdata = pdec_tdata[2*PWIDTH-1:PWIDTH];
 
-assign pmi = p_itdata;
-assign pmq = p_qtdata;
+assign pmi = pdec_itdata;
+assign pmq = pdec_qtdata;
 
 cmuldk #(
   .DATA_WIDTH(DATA_WIDTH), .CLIP_BITS(PCLIP_BITS), .PWIDTH(PWIDTH))
   PMUL(
     .clk(clk), .reset(reset),
-    .in_tvalid(b_tvalid), .in_tlast(b_tlast), .in_tready(b_tready),
-    .adata(a_tdata), .bdata(b_tdata), 
-    .pdata(p_tdata), .out_tvalid(p_tvalid), 
-    .out_tlast(p_tlast), .out_tready(p_tready)
+    .in_tvalid(bdec_tvalid), .in_tlast(bdec_tlast), .in_tready(bdec_tready),
+    .adata(adec_tdata), .bdata(bdec_tdata), 
+    .pdata(pdec_tdata), .out_tvalid(pdec_tvalid), 
+    .out_tlast(pdec_tlast), .out_tready(pdec_tready)
   );
 
 wire [2*PWIDTH-1:0] ac_tdata;
@@ -140,7 +174,7 @@ cmuldk #(
   ACMUL(
     .clk(clk), .reset(reset),
     .in_tvalid(aziq_tvalid), .in_tlast(aziq_tlast), .in_tready(aziq_tready),
-    .adata(aziq_tdata), .bdata(b_tdata), 
+    .adata(aziq_tdata), .bdata(bdec_tdata), 
     .pdata(ac_tdata), .out_tvalid(ac_tvalid), 
     .out_tlast(ac_tlast), .out_tready(ac_tready)
   );
@@ -153,8 +187,8 @@ cmoving_sum #(
   .LEN(LEN), .OUT_WIDTH(PMAG_WIDTH))
     AVG_POW(
       .clk(clk), .reset(reset), .clear(clear),
-      .in_tvalid(p_tvalid), .in_tlast(p_tlast), .in_tready(p_tready),
-      .in_itdata(p_itdata), .in_qtdata(p_qtdata),
+      .in_tvalid(pdec_tvalid), .in_tlast(pdec_tlast), .in_tready(pdec_tready),
+      .in_itdata(pdec_itdata), .in_qtdata(pdec_qtdata),
       .out_tvalid(pow_tvalid), .out_tlast(pow_tlast), .out_tready(pow_tready),
       .out_itdata(pow_itdata), .out_qtdata(pow_qtdata)
     );
@@ -235,7 +269,7 @@ wire [PMAG_WIDTH-1:0] thres, nthres;
 assign nthres = (PMAG_WIDTH > 2*DATA_WIDTH) ? 
                 {{(PMAG_WIDTH-2*DATA_WIDTH){1'b0}}, noise_thres} :
                 noise_thres[PMAG_WIDTH-1:0];
-assign thres  = (noise_thres == 0) ? NOISE_POW : nthres;
+assign thres = (noise_thres == 0) ? NOISE_POW : nthres;
 
 always @(posedge clk) begin
   if (reset | clear) begin
@@ -250,16 +284,15 @@ always @(posedge clk) begin
   end
 end
 
-peak_detect_nrx #(
-  .DATA_WIDTH(PMAG_WIDTH), .NRX_TRIG(NRX_TRIG), .NRX_WIDTH(NRX_WIDTH))
+peak_detect #(
+  .DATA_WIDTH(PMAG_WIDTH), .NRX_TRIG(NRX_TRIG))
     PKD(
       .clk(clk), .reset(reset), .clear(reset),
       .in_tvalid(peak_tvalid), .in_tlast(peak_tlast), 
       .in_tready(peak_tready), .in_tdata(acmag_tdata), 
       .peak_stb_in(peak_stb_in), .peak_stb_out(peak_stb_out),
       .out_tvalid(out_tvalid), .out_tlast(out_tlast), 
-      .out_tready(out_tready), .nrx_after_peak(nrx_after_peak),
-      .pow_in(pmag_tdata), .pow_out(pow)
+      .out_tready(out_tready)
     );
 assign peak_stb    = peak_stb_out; // & peak_stb_in;
 assign peak_thres  = peak_stb_in;
