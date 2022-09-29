@@ -2,8 +2,8 @@ module cmuldk_tb ();
 
 localparam NDATA         = 4096;
 localparam DATA_WIDTH    = 16;
-localparam PWIDTH        = 16*2;
-localparam CLIP_BITS     = 0;
+localparam PWIDTH        = 16;
+localparam CLIP_BITS     = 2;
 
 
 
@@ -84,7 +84,7 @@ end
 
 integer file_id;
 initial begin
-  file_id = $fopen("/home/user/Desktop/data/sim/out_data_cmuldk_tb.txt", "wb");
+  file_id = $fopen("/home/user/Desktop/data/sim/cmuldk.txt", "wb");
   $display("Opened file ..................");
   @(negedge reset);
   $display("start writing ................");

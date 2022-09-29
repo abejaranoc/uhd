@@ -24,4 +24,6 @@ key_mem.v \
 fftm16.v \
 ifftm16.v \
 resample_iq.v \
+lin1D.v \
+usrp2puf.v \
 ))

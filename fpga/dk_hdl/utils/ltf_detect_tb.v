@@ -3,9 +3,10 @@ module ltf_detect_tb ();
 localparam NDATA        = 1024*16;
 localparam DATA_WIDTH   = 16;
 localparam PWIDTH       = DATA_WIDTH * 2;
+localparam [1:0] THRES_SEL = 2'b10;
 localparam PCLIP_BITS   = 0;
-localparam MAX_LEN      = 512;
-localparam LEN          = 512;
+localparam MAX_LEN      = 640;
+localparam LEN          = 640;
 localparam PMAG_WIDTH   = PWIDTH + $clog2(MAX_LEN+1);
 
 reg reset;
@@ -57,8 +58,8 @@ end
 reg [2*DATA_WIDTH-1:0] noise_thres;
 
 ltf_detect #(
-  .DATA_WIDTH(DATA_WIDTH), .PWIDTH(PWIDTH), .PCLIP_BITS(PCLIP_BITS),
-  .PMAG_WIDTH(PMAG_WIDTH), .MAX_LEN(MAX_LEN), .LEN(LEN))
+  .DATA_WIDTH(DATA_WIDTH), .PWIDTH(PWIDTH), .THRES_SEL(THRES_SEL),
+  .PCLIP_BITS(PCLIP_BITS), .PMAG_WIDTH(PMAG_WIDTH), .MAX_LEN(MAX_LEN), .LEN(LEN))
     DUT(
       .clk(clk), .reset(reset), .clear(reset),
       .in_tvalid(in_tvalid), .in_tlast(in_tlast), .in_tready(in_tready),
@@ -75,7 +76,7 @@ ltf_detect #(
 
 
 initial begin
-  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/ltf_test_vec.mem", input_memory);
+  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/ltf_detect_tv_03.mem", input_memory);
 end
 
 reg stop_write;
@@ -95,7 +96,7 @@ end
 
 integer file_id;
 initial begin
-  file_id = $fopen("/home/user/Desktop/data/sim/ltf_detect_out_03.txt", "wb");
+  file_id = $fopen("/home/user/Desktop/data/sim/ltf_detect_03.txt", "wb");
   $display("Opened file ..................");
   @(negedge reset);
   //@(negedge stop_write);
