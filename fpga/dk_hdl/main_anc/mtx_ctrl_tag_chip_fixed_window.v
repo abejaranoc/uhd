@@ -6,9 +6,11 @@ module mtx_ctrl_tag_chip_fixed_window #(
   parameter GPIO_REG_WIDTH = 12,
   parameter TX_BITS_WIDTH  = 128,
   parameter BIT_CNT_WIDTH  = 7,
+  parameter WIN_LEN_WIDTH  = 20,
+  parameter SAMPLE_WIDTH   = 21,
 
   parameter [NSYMB_WIDTH-1:0] NSYMB        = 9, 
-  parameter [PHASE_WIDTH-1:0] NSIG         = 32768,
+  parameter [PHASE_WIDTH-1:0] NSIG         = 65536,
   parameter [PHASE_WIDTH-1:0] DPH_INC      = 16384,
   parameter [PHASE_WIDTH-1:0] START_PH_INC = 12288,
   parameter [PHASE_WIDTH-1:0] PILOT_PH_INC = 4096,
@@ -60,7 +62,7 @@ module mtx_ctrl_tag_chip_fixed_window #(
 
   wire start_tx;
   reg [1:0] state;
-  wire sync_ready;
+  //wire sync_ready;
   wire sync_sel, csel;
 
   assign mtx_state = state;
@@ -94,7 +96,6 @@ module mtx_ctrl_tag_chip_fixed_window #(
 
   assign sync_io_out  = SCAN_ID | SCAN_PHI | SCAN_PHI_BAR | SCAN_DATA_IN | SCAN_LOAD_CHIP | SYNCH_OUT;
 
-  
   localparam LOC_SYNCH = 2'b01;
   localparam HOP_SYNCH = 2'b10;
   localparam HOP_TX    = 2'b11;
@@ -107,14 +108,17 @@ module mtx_ctrl_tag_chip_fixed_window #(
   reg [BIT_CNT_WIDTH-1:0] hop_n;
   reg [PHASE_WIDTH-1:0] hop_phase_inc;
 
+  wire hop_done;
   assign nhop = hop_n;
   assign hop_ph_inc = hop_phase_inc;
 
-  assign csel = (synch_count <= (SYNC_SIG_N/4)) ? 1'b1 : 1'b0;
+  //assign csel = (synch_count <= (SYNC_SIG_N/4)) ? 1'b1 : 1'b0;
+  assign csel = (synch_count <= SYNC_SIG_N) ? 1'b1 : 1'b0;
   assign sync_sel = (state == HOP_SYNCH) ? 1'b1 : 1'b0;
-  assign start_tx  = csel & sync_sel ; 
-  assign itx = start_tx ? 0 : mtx_idata;
-  assign qtx = start_tx ? 0 : mtx_qdata;
+  assign start_tx  = sync_sel ; 
+  // assign start_tx  = csel & sync_sel ; 
+  // assign itx = start_tx ? 0 : mtx_idata;
+  // assign qtx = start_tx ? 0 : mtx_qdata;
  
   reg hop_reset_reg;
   assign hop_reset = hop_reset_reg;
@@ -124,9 +128,12 @@ module mtx_ctrl_tag_chip_fixed_window #(
 
   localparam MEM_WIDTH = 32;
   reg [MEM_WIDTH-1:0] if_hop_codes [0:NUM_HOPS];
-  reg [] fixed_win_len [0:NUM_HOPS];
+  reg [WIN_LEN_WIDTH-1:0] fixed_win_len [0:NUM_HOPS];
   wire [TX_BITS_WIDTH-1:0] hop_code;
+  wire [WIN_LEN_WIDTH-1:0] win_len;
+
   assign hop_code = { {(TX_BITS_WIDTH - MEM_WIDTH){1'b0}}, if_hop_codes[hop_n] };
+  assign win_len = fixed_win_len[hop_n];
 
   initial begin
     $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/if_codes.mem", if_hop_codes);
@@ -193,6 +200,50 @@ module mtx_ctrl_tag_chip_fixed_window #(
               .mtx_data(mtx_data),
               .pilot_data(pilot_data));
 
+  localparam NPRMB_BITS     = 2048;
+  localparam PRMB_OS        = 256;
+  reg [$clog2(PRMB_OS + 1)-1:0] os_count;
+  reg prmb_bits [0:NPRMB_BITS-1];
+  reg [$clog2(NPRMB_BITS + 1)-1:0] nbits;
+  initial begin
+    $readmemb("/home/user/programs/usrp/uhd/fpga/dk_hdl/main_anc/prmb_bits.mem", prmb_bits);
+  end
+  wire [DATA_WIDTH-1:0]  prmb_mod_tx, itx_out, qtx_out;
+  assign prmb_mod_tx = prmb_bits[nbits] ? 16384 : -16384;
+
+  wire out_sel;
+  assign out_sel = csel & (state == LOC_SYNCH);
+  assign itx_out = out_sel ? prmb_mod_tx : mtx_idata;
+  assign qtx_out = out_sel ? prmb_mod_tx : mtx_qdata;
+
+  axi_fifo_flop2 #(
+    .WIDTH(2*DATA_WIDTH)) 
+      fifo_flop2(
+        .clk(clk), .reset(reset), .clear(reset),
+        .i_tdata({itx_out, qtx_out}), .i_tvalid(1'b1), .i_tready(),
+        .o_tdata({itx, qtx}), .o_tready(1'b1)
+      );
+
+  reg [SAMPLE_WIDTH-1:0] usrp_clk_cnt;
+  wire win_done;
+
+  assign win_done = (usrp_clk_cnt == 'b0)? 1'b0: 
+                    (usrp_clk_cnt == win_len)? 1'b1: 1'b0;
+
+  always @(posedge clk) begin
+    if (reset) begin
+      usrp_clk_cnt <= 0;
+    end
+    else begin
+      case (state)
+        INIT: usrp_clk_cnt <= 0;
+        LOC_SYNCH: usrp_clk_cnt <= 0;
+        HOP_SYNCH: usrp_clk_cnt <= 0;
+        HOP_TX: usrp_clk_cnt <= usrp_clk_cnt + 1;
+        default: usrp_clk_cnt <= 0;
+      endcase
+    end
+  end
 
 
   always @(posedge clk ) begin
@@ -202,23 +253,40 @@ module mtx_ctrl_tag_chip_fixed_window #(
       hop_phase_inc <= HOP_START_PH_INC;
       synch_count   <= 2*SYNC_SIG_N;
       hop_reset_reg <= 1'b1;
+      nbits    <= 0;
+      os_count <= 0;
     end
     else begin
       case (state)
         INIT: begin
-          hop_reset_reg <= 1'b0;
+          hop_reset_reg <= 1'b1;
           state <= LOC_SYNCH;
           synch_count   <= 2*SYNC_SIG_N - 1;
           hop_n <= 0;
           hop_phase_inc <= HOP_START_PH_INC;
+          nbits    <= 0;
+          os_count <= 0;
         end 
         LOC_SYNCH: begin
           if (synch_count > SYNC_SIG_N) begin
+            hop_reset_reg <= 1'b0;
             synch_count <= synch_count - 1;
           end
           else begin
+            if (os_count >= (PRMB_OS-1)) begin
+              os_count <= 0;
+              if (nbits >= (NPRMB_BITS-1)) begin
+                nbits <= 0;
             state <= HOP_SYNCH;
             hop_reset_reg <= 1'b1;
+              end
+              else begin
+                nbits <= nbits + 1;
+              end
+            end
+            else begin
+              os_count <= os_count + 1;
+            end 
           end
         end
         HOP_SYNCH: begin
@@ -231,16 +299,17 @@ module mtx_ctrl_tag_chip_fixed_window #(
           end 
         end
         HOP_TX: begin
-          if (hop_done) begin
+          if (win_done) begin
+            hop_reset_reg <= 1'b1;
             if(hop_n < (NUM_HOPS - 1)) begin
               hop_n <= hop_n + 1;
               state <= HOP_SYNCH;
               synch_count <= SYNC_SIG_N;
               hop_phase_inc <= hop_phase_inc + HOP_DPH_INC;
-              hop_reset_reg <= 1'b1;
             end
             else begin
               state <= INIT;
+              hop_n <= 0;
             end
           end
         end
